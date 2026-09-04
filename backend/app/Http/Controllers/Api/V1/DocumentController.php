@@ -1,0 +1,93 @@
+<?php
+
+namespace App\Http\Controllers\Api\V1;
+
+use App\Domain\Documents\Models\Document;
+use App\Domain\Leasing\Models\Lease;
+use App\Domain\Portfolio\Services\StorageUsageService;
+use App\Domain\Properties\Models\Property;
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
+
+class DocumentController extends Controller
+{
+    public function __construct(private readonly StorageUsageService $storageUsage) {}
+
+    public function index(Request $request)
+    {
+        $query = Document::where('portfolio_id', $request->user()->portfolio()->id)
+            ->with(['property', 'lease.property']);
+        if ($request->filled('category')) {
+            $query->where('category', $request->string('category'));
+        }
+        if ($request->filled('property_id')) {
+            $query->where('property_id', $request->integer('property_id'));
+        }
+        if ($request->input('status') === 'expired') {
+            $query->whereDate('expires_at', '<', today());
+        } elseif ($request->input('status') === 'upcoming') {
+            $query->whereBetween('expires_at', [today(), today()->addDays(60)]);
+        }
+
+        return $query->orderByRaw('expires_at is null, expires_at asc')->latest('created_at')->paginate(30);
+    }
+
+    public function store(Request $request)
+    {
+        $portfolio = $request->user()->portfolio();
+        $data = $request->validate(['file' => ['required', 'file', 'max:10240', 'mimes:pdf,jpg,jpeg,png,doc,docx'], 'name' => ['nullable', 'string', 'max:150'], 'category' => ['required', Rule::in(['contract', 'invoice', 'insurance', 'tax', 'certificate', 'other'])], 'property_id' => ['nullable', 'integer'], 'lease_id' => ['nullable', 'integer'], 'issued_at' => ['nullable', 'date'], 'expires_at' => ['nullable', 'date', 'after_or_equal:issued_at']]);
+        if (! empty($data['property_id'])) {
+            Property::where('portfolio_id', $portfolio->id)->findOrFail($data['property_id']);
+        }if (! empty($data['lease_id'])) {
+            Lease::where('portfolio_id', $portfolio->id)->findOrFail($data['lease_id']);
+        }$file = $request->file('file');
+        $this->storageUsage->assertCanStore($portfolio, $file->getSize());
+        unset($data['file']);
+        $key = $file->store("portfolios/{$portfolio->id}/documents", 'local');
+        $document = Document::create([...$data, 'portfolio_id' => $portfolio->id, 'name' => $data['name'] ?: pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME), 'storage_key' => $key, 'original_filename' => $file->getClientOriginalName(), 'mime_type' => $file->getMimeType(), 'size' => $file->getSize(), 'uploaded_by' => $request->user()->id]);
+
+        return response()->json($document, 201);
+    }
+
+    public function download(Request $request, Document $document)
+    {
+        abort_unless($document->portfolio_id === $request->user()->portfolio()->id, 404);
+
+        return Storage::disk('local')->download($document->storage_key, $document->original_filename);
+    }
+
+    public function update(Request $request, Document $document)
+    {
+        $this->ensureOwned($request, $document);
+        $portfolio = $request->user()->portfolio();
+        $data = $request->validate([
+            'name' => ['sometimes', 'string', 'max:150'],
+            'category' => ['sometimes', Rule::in(['contract', 'invoice', 'insurance', 'tax', 'certificate', 'other'])],
+            'property_id' => ['sometimes', 'nullable', 'integer'],
+            'issued_at' => ['sometimes', 'nullable', 'date'],
+            'expires_at' => ['sometimes', 'nullable', 'date', 'after_or_equal:issued_at'],
+        ]);
+        if (array_key_exists('property_id', $data) && $data['property_id']) {
+            Property::where('portfolio_id', $portfolio->id)->findOrFail($data['property_id']);
+        }
+        $document->update($data);
+
+        return $document->fresh('property');
+    }
+
+    public function destroy(Request $request, Document $document)
+    {
+        $this->ensureOwned($request, $document);
+        Storage::disk('local')->delete($document->storage_key);
+        $document->delete();
+
+        return response()->noContent();
+    }
+
+    private function ensureOwned(Request $request, Document $document): void
+    {
+        abort_unless($document->portfolio_id === $request->user()->portfolio()->id, 404);
+    }
+}

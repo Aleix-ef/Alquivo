@@ -1,0 +1,144 @@
+.drawer textarea {
+  padding: 11px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  resize: vertical;
+  font: inherit;
+}
+.priority {
+  font-size: 10px;
+  text-transform: uppercase;
+  font-weight: 700;
+  padding: 5px 8px;
+  border-radius: 15px;
+}
+.priority.high {
+  background: #f8e8e6;
+  color: #9b4039;
+}
+.priority.medium {
+  background: #f8f0df;
+  color: #916829;
+}
+.priority.low {
+  background: #e8f1eb;
+  color: #22664a;
+}
+.document-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+.filters {
+  display: flex;
+  gap: 9px;
+  margin-bottom: 16px;
+}
+.filters select {
+  padding: 9px 11px;
+  border: 1px solid var(--line);
+  background: #fff;
+  border-radius: 8px;
+}
+.expiry-alert {
+  color: #a53c36 !important;
+}
+.document-card {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 13px;
+  align-items: center;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  padding: 16px;
+  color: var(--green);
+}
+.document-card div {
+  display: grid;
+  color: var(--ink);
+}
+.document-card small {
+  color: var(--muted);
+  font-size: 11px;
+}
+.document-card button {
+  border: 0;
+  background: transparent;
+  color: var(--green);
+  cursor: pointer;
+}
+.document-actions {
+  display: flex;
+  gap: 5px;
+}
+.document-actions button {
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border-radius: 7px;
+}
+.document-actions button:hover {
+  background: #edf2ee;
+}
+.timeline {
+  display: grid;
+}
+.timeline-day {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 25px;
+  border-top: 1px solid var(--line);
+  padding: 20px 0;
+}
+.timeline-day time {
+  font: 600 13px Manrope;
+}
+.timeline-day > div {
+  display: grid;
+  gap: 8px;
+}
+.timeline article {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  padding: 13px;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 12px;
+}
+.timeline article > span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #708a78;
+}
+.timeline article > div {
+  display: grid;
+}
+.event-check {
+  border: 0;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  color: var(--green);
+  background: var(--pale);
+  cursor: pointer;
+}
+.timeline small {
+  font-size: 11px;
+  color: var(--muted);
+}
+@media (max-width: 650px) {
+  .document-grid {
+    grid-template-columns: 1fr;
+  }
+  .timeline-day {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+}

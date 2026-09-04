@@ -1,0 +1,58 @@
+<?php
+
+namespace App\Http\Controllers\Api\V1;
+
+use App\Domain\Leasing\Models\Contact;
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
+
+class ContactController extends Controller
+{
+    public function index(Request $request)
+    {
+        return Contact::where('portfolio_id', $request->user()->portfolio()->id)
+            ->with(['leases.property'])->latest()->paginate(30);
+    }
+
+    public function store(Request $request)
+    {
+        $data = $request->validate([
+            'kind' => ['required', Rule::in(['person', 'company'])],
+            'name' => ['required', 'string', 'max:120'],
+            'tax_id' => ['nullable', 'string', 'max:30'], 'email' => ['nullable', 'email', 'max:255'],
+            'phone' => ['nullable', 'string', 'max:30'], 'notes' => ['nullable', 'string'],
+        ]);
+
+        return response()->json(Contact::create([...$data, 'portfolio_id' => $request->user()->portfolio()->id]), 201);
+    }
+
+    public function update(Request $request, Contact $contact)
+    {
+        $this->ensureOwned($request, $contact);
+        $contact->update($request->validate([
+            'kind' => ['sometimes', Rule::in(['person', 'company'])],
+            'name' => ['sometimes', 'string', 'max:120'],
+            'tax_id' => ['sometimes', 'nullable', 'string', 'max:30'],
+            'email' => ['sometimes', 'nullable', 'email', 'max:255'],
+            'phone' => ['sometimes', 'nullable', 'string', 'max:30'],
+            'notes' => ['sometimes', 'nullable', 'string'],
+        ]));
+
+        return $contact->fresh();
+    }
+
+    public function destroy(Request $request, Contact $contact)
+    {
+        $this->ensureOwned($request, $contact);
+        abort_if($contact->leases()->exists(), 422, 'No puedes archivar un contacto vinculado a un alquiler.');
+        $contact->delete();
+
+        return response()->noContent();
+    }
+
+    private function ensureOwned(Request $request, Contact $contact): void
+    {
+        abort_unless($contact->portfolio_id === $request->user()->portfolio()->id, 404);
+    }
+}

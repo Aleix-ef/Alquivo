@@ -1,0 +1,11 @@
+import { createApp } from "vue";
+import { createPinia } from "pinia";
+import App from "./App.vue";
+import router from "./router";
+import "./style.css";
+import "./finance.css";
+import "./attention.css";
+import "./detail.css";
+import "./reports.css";
+import "./plans.css";
+createApp(App).use(createPinia()).use(router).mount("#app");

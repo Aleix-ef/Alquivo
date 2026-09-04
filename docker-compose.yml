@@ -1,0 +1,90 @@
+x-app-environment: &app-environment
+  APP_URL: http://localhost:8080
+  FRONTEND_URL: http://localhost:8080
+  FRONTEND_URLS: http://localhost:8080,http://127.0.0.1:8080
+  DB_CONNECTION: pgsql
+  DB_HOST: postgres
+  DB_PORT: 5432
+  DB_DATABASE: ${DB_DATABASE:-inmogest}
+  DB_USERNAME: ${DB_USERNAME:-inmogest}
+  DB_PASSWORD: ${DB_PASSWORD:-change-me}
+  SESSION_DOMAIN: "null"
+  SANCTUM_STATEFUL_DOMAINS: localhost:8080,127.0.0.1:8080
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: ${DB_DATABASE:-inmogest}
+      POSTGRES_USER: ${DB_USERNAME:-inmogest}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-change-me}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-inmogest} -d ${DB_DATABASE:-inmogest}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  backend:
+    build: ./backend
+    env_file:
+      - .env.docker.example
+      - ${APP_ENV_FILE:-backend/.env}
+    environment: *app-environment
+    command: ["sh", "-c", "php artisan migrate --force && php-fpm"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - private_storage:/app/storage/app
+    restart: unless-stopped
+
+  scheduler:
+    build: ./backend
+    env_file:
+      - .env.docker.example
+      - ${APP_ENV_FILE:-backend/.env}
+    environment: *app-environment
+    command: ["php", "artisan", "schedule:work"]
+    depends_on:
+      backend:
+        condition: service_started
+    volumes:
+      - private_storage:/app/storage/app
+    restart: unless-stopped
+
+  worker:
+    build: ./backend
+    env_file:
+      - .env.docker.example
+      - ${APP_ENV_FILE:-backend/.env}
+    environment: *app-environment
+    command: ["php", "artisan", "queue:work", "--sleep=2", "--tries=3", "--timeout=90"]
+    depends_on:
+      backend:
+        condition: service_started
+    volumes:
+      - private_storage:/app/storage/app
+    restart: unless-stopped
+
+  web:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_URL: /api/v1
+    ports:
+      - "${APP_PORT:-8080}:80"
+    depends_on:
+      - backend
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost/up >/dev/null || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  private_storage:

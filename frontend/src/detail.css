@@ -1,0 +1,181 @@
+.forgot {
+  display: block;
+  text-align: right;
+  color: var(--green);
+  font-size: 11px;
+  margin-top: -8px;
+}
+.success {
+  background: #e8f3ec;
+  color: #256746;
+  padding: 11px;
+  border-radius: 8px;
+}
+.user {
+  position: relative;
+}
+.back {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  color: var(--muted);
+  font-size: 12px;
+  margin-bottom: 18px;
+}
+.property-hero {
+  min-height: 300px;
+  border-radius: 15px;
+  padding: 32px;
+  background: linear-gradient(120deg, #1a3529, #44705b);
+  background-size: cover;
+  background-position: center;
+  color: #fff;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+}
+.property-hero h1 {
+  font: 600 38px Manrope;
+  margin: 12px 0 3px;
+}
+.property-hero p {
+  margin: 0;
+  color: #d9e3dd;
+}
+.photo-button {
+  background: #ffffffde;
+  color: var(--ink);
+}
+.hero-actions {
+  display: flex;
+  gap: 8px;
+}
+.asset-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin: 14px 0;
+}
+.asset-metrics article {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  padding: 18px;
+  display: grid;
+}
+.asset-metrics span {
+  font-size: 11px;
+  color: var(--muted);
+}
+.asset-metrics strong {
+  font: 600 20px Manrope;
+  margin-top: 5px;
+}
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+.detail-panel {
+  min-height: 190px;
+}
+.detail-panel header {
+  display: flex;
+  gap: 11px;
+  color: var(--green);
+}
+.detail-panel header h2 {
+  color: var(--ink);
+}
+.detail-panel dl {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 22px;
+}
+.detail-panel dl div {
+  display: grid;
+}
+.detail-panel dt {
+  font-size: 10px;
+  color: var(--muted);
+}
+.detail-panel dd {
+  margin: 4px 0;
+  font-weight: 600;
+}
+.detail-panel > a {
+  color: var(--green);
+  font-size: 12px;
+  font-weight: 600;
+}
+.lease-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+.lease-heading h1 {
+  font: 600 32px Manrope;
+  margin: 0;
+}
+.lease-heading p:not(.eyebrow),
+.muted {
+  color: var(--muted);
+}
+.tenant-list,
+.charge-history {
+  display: grid;
+  gap: 9px;
+  margin: 18px 0;
+}
+.tenant-list > div,
+.charge-history > div {
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 9px;
+  display: grid;
+}
+.tenant-list small,
+.charge-history small {
+  color: var(--muted);
+  font-size: 10px;
+}
+.charge-history > div {
+  grid-template-columns: 1fr auto;
+}
+.charge-history span {
+  display: grid;
+}
+.charge-history span:last-child {
+  text-align: right;
+}
+.drawer select[multiple] {
+  min-height: 110px;
+}
+@media (max-width: 750px) {
+  .asset-metrics,
+  .detail-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .property-hero {
+    min-height: 240px;
+  }
+  .lease-heading {
+    align-items: flex-start;
+    gap: 18px;
+  }
+  .property-hero h1 {
+    font-size: 28px;
+  }
+}
+@media (max-width: 500px) {
+  .asset-metrics,
+  .detail-grid {
+    grid-template-columns: 1fr;
+  }
+  .property-hero {
+    align-items: flex-start;
+    flex-direction: column;
+    justify-content: flex-end;
+  }
+}
