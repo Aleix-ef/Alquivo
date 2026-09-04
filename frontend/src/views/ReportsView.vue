@@ -35,7 +35,7 @@ async function download(resource) {
     const url = URL.createObjectURL(response.data);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `inmogest-${resource}.csv`;
+    link.download = `nareo-${resource}.csv`;
     link.click();
     URL.revokeObjectURL(url);
   } finally {

@@ -33,16 +33,16 @@
   box-shadow: 0 12px 35px #234e3820;
 }
 .plan-grid h2 {
-  font: 600 22px Manrope;
+  font: 600 22px Plus Jakarta Sans;
   margin: 0;
 }
 .plan-price {
   display: block;
-  font: 600 34px Manrope;
+  font: 600 34px Plus Jakarta Sans;
   margin: 18px 0 5px;
 }
 .plan-price small {
-  font: 500 12px "DM Sans";
+  font: 500 12px "Plus Jakarta Sans";
   color: var(--muted);
 }
 .plan-grid article > p:not(.eyebrow) {
@@ -140,7 +140,7 @@
 }
 .plan-modal h2 {
   margin: 5px 0 10px;
-  font: 600 22px Manrope;
+  font: 600 22px Plus Jakarta Sans;
 }
 .plan-modal > p:not(.eyebrow) {
   color: var(--muted);

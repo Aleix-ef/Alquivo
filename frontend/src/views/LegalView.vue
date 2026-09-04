@@ -1,22 +1,21 @@
 <script setup>
 import { computed } from "vue";
 import { useRoute } from "vue-router";
+import BrandLogo from "../components/BrandLogo.vue";
 const route = useRoute();
 const privacy = computed(() => route.name === "privacy");
 </script>
 <template>
   <main class="legal-page">
-    <RouterLink class="brand" to="/login"
-      ><b class="mark">I</b><span>InmoGest</span></RouterLink
-    >
+    <RouterLink class="brand" to="/login"><BrandLogo /></RouterLink>
     <article>
       <p class="eyebrow">Versión 2026-07</p>
       <h1>{{ privacy ? "Política de privacidad" : "Condiciones de uso" }}</h1>
       <template v-if="privacy"
         ><p>
-          InmoGest trata los datos necesarios para prestar el servicio de
-          gestión patrimonial. Los documentos y datos inmobiliarios pertenecen
-          al usuario y no se venden a terceros.
+          Nareo trata los datos necesarios para prestar el servicio de gestión
+          patrimonial. Los documentos y datos inmobiliarios pertenecen al
+          usuario y no se venden a terceros.
         </p>
         <h2>Datos y conservación</h2>
         <p>
@@ -31,7 +30,7 @@ const privacy = computed(() => route.name === "privacy");
         </p></template
       ><template v-else
         ><p>
-          InmoGest es una herramienta de organización patrimonial. No presta
+          Nareo es una herramienta de organización patrimonial. No presta
           asesoramiento fiscal, jurídico ni financiero.
         </p>
         <h2>Responsabilidad del usuario</h2>

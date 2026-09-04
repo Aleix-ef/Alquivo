@@ -1,6 +1,6 @@
-# InmoGest Frontend
+# Nareo Frontend
 
-Cliente Vue 3 de la nueva aplicación InmoGest.
+Cliente Vue 3 de la nueva aplicación Nareo.
 
 ```bash
 npm install

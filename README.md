@@ -1,6 +1,6 @@
-# InmoGest Next
+# Nareo
 
-Reconstrucción comercial de InmoGest. Este directorio es independiente del proyecto académico anterior.
+Producto SaaS Nareo. Este directorio es independiente del proyecto académico anterior.
 
 ## Estado actual
 
@@ -186,4 +186,4 @@ No deben incorporarse al MVP sin validación integraciones bancarias, IA, market
 - Al menos algunos usuarios pagan sin necesitar descuentos permanentes.
 - Varias personas solicitan espontáneamente la misma mejora.
 
-Las peticiones aisladas se registran; las repetidas que refuercen la promesa principal se priorizan. El objetivo de la beta es aprender qué hace imprescindible InmoGest, no cerrar anticipadamente una lista infinita de funciones.
+Las peticiones aisladas se registran; las repetidas que refuercen la promesa principal se priorizan. El objetivo de la beta es aprender qué hace imprescindible Nareo, no cerrar anticipadamente una lista infinita de funciones.

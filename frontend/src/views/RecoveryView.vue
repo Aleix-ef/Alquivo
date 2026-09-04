@@ -2,6 +2,7 @@
 import { computed, ref } from "vue";
 import { useRoute } from "vue-router";
 import api from "../api";
+import BrandLogo from "../components/BrandLogo.vue";
 const route = useRoute(),
   reset = computed(() => route.name === "reset"),
   done = ref(false),
@@ -29,7 +30,7 @@ async function submit() {
 <template>
   <main class="auth">
     <section class="story">
-      <div class="brand"><b class="mark">I</b><span>InmoGest</span></div>
+      <div class="brand"><BrandLogo light /></div>
       <div>
         <p class="eyebrow">Acceso seguro</p>
         <h1>Recupera el control de tu cartera.</h1>

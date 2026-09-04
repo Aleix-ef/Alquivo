@@ -2,6 +2,7 @@
 import { computed, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useSession } from "../session";
+import BrandLogo from "../components/BrandLogo.vue";
 const route = useRoute(),
   router = useRouter(),
   s = useSession(),
@@ -33,13 +34,13 @@ async function submit() {
 <template>
   <main class="auth">
     <section class="story">
-      <div class="brand"><b class="mark">I</b><span>InmoGest</span></div>
+      <div class="brand"><BrandLogo light /></div>
       <div>
         <p class="eyebrow">Tu patrimonio, con claridad</p>
-        <h1>Deja atrás las hojas de cálculo.</h1>
+        <h1>El control de hoy, un mayor mañana.</h1>
         <p>
-          Valor, rentabilidad y alquileres. Todo lo importante de tu cartera en
-          un solo lugar.
+          Gestiona tus alquileres, entiende tu rentabilidad y haz crecer tu
+          patrimonio desde un único lugar.
         </p>
       </div>
       <small>Controla hoy. Decide mejor mañana.</small>
@@ -49,7 +50,7 @@ async function submit() {
         <p class="eyebrow">
           {{ isRegister ? "Empieza gratis" : "Bienvenido de nuevo" }}
         </p>
-        <h2>{{ isRegister ? "Crea tu cartera" : "Accede a InmoGest" }}</h2>
+        <h2>{{ isRegister ? "Crea tu cartera" : "Accede a Nareo" }}</h2>
         <p>
           {{
             isRegister

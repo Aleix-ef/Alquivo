@@ -15,6 +15,7 @@ import {
 } from "@lucide/vue";
 import { useRouter } from "vue-router";
 import { useSession } from "../session";
+import BrandLogo from "../components/BrandLogo.vue";
 const s = useSession(),
   router = useRouter(),
   nav = [
@@ -36,9 +37,7 @@ async function logout() {
 <template>
   <div class="shell">
     <aside class="sidebar">
-      <RouterLink class="brand" to="/dashboard"
-        ><b class="mark">I</b><span>InmoGest</span></RouterLink
-      >
+      <RouterLink class="brand" to="/dashboard"><BrandLogo /></RouterLink>
       <div class="portfolio">
         <small>Cartera</small><strong>{{ s.portfolio?.name }}</strong>
       </div>

@@ -38,7 +38,7 @@
   color: var(--green);
 }
 .drawer h3 {
-  font: 600 14px Manrope;
+  font: 600 14px Plus Jakarta Sans;
   margin: 25px 0 5px;
   padding-top: 18px;
   border-top: 1px solid var(--line);
@@ -62,7 +62,7 @@
   color: var(--muted);
 }
 .finance-summary strong {
-  font: 600 21px Manrope;
+  font: 600 21px Plus Jakarta Sans;
 }
 .finance-panel {
   min-height: 300px;

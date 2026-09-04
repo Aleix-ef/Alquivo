@@ -240,8 +240,8 @@ onMounted(async () => {
         </article>
       </section>
       <p class="plans-note">
-        El pago se realiza en Stripe Checkout. InmoGest no recibe ni almacena
-        los datos de tu tarjeta.
+        El pago se realiza en Stripe Checkout. Nareo no recibe ni almacena los
+        datos de tu tarjeta.
       </p>
       <Teleport to="body">
         <div
