@@ -1,7 +1,8 @@
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount } from "vue";
+import { ref, computed, watch, onBeforeUnmount } from "vue";
 import {
   ArrowLeft,
+  ArrowUpRight,
   Camera,
   Home,
   KeyRound,
@@ -9,271 +10,690 @@ import {
   Wrench,
   FileText,
   Pencil,
+  X,
+  MapPin,
+  ImagePlus,
+  RefreshCw,
+  Check,
 } from "@lucide/vue";
 import { useRoute } from "vue-router";
 import api from "../api";
-const route = useRoute(),
-  property = ref(null),
-  cover = ref(null),
-  uploading = ref(false),
-  editing = ref(false),
-  editForm = ref({}),
-  money = (v) =>
-    new Intl.NumberFormat("es-ES", {
-      style: "currency",
-      currency: "EUR",
-      maximumFractionDigits: 0,
-    }).format(v || 0),
-  activeLease = computed(() =>
-    property.value?.leases?.find((l) => l.status === "active"),
-  ),
-  income = computed(
-    () =>
-      property.value?.transactions
-        ?.filter((t) => t.direction === "income" && t.status === "paid")
-        .reduce((a, t) => a + Number(t.amount), 0) || 0,
-  ),
-  expenses = computed(
-    () =>
-      property.value?.transactions
-        ?.filter((t) => t.direction === "expense" && t.status === "paid")
-        .reduce((a, t) => a + Number(t.amount), 0) || 0,
-  ),
-  yieldRate = computed(() =>
-    property.value?.current_value && activeLease.value
-      ? (
-          ((Number(activeLease.value.monthly_rent) * 12) /
-            Number(property.value.current_value)) *
-          100
-        ).toFixed(2)
-      : null,
-  );
+import PropertyImage from "../components/PropertyImage.vue";
+import { useDialog } from "../composables/useDialog";
+import "../property-experience.css";
+
+const route = useRoute();
+const property = ref(null);
+const loading = ref(true);
+const loadError = ref("");
+const uploading = ref(false);
+const uploadError = ref("");
+const notice = ref("");
+const editing = ref(false);
+const saving = ref(false);
+const saveError = ref("");
+const fieldErrors = ref({});
+const editForm = ref({});
+const drawer = ref(null);
+const photoInput = ref(null);
+const selectedPhotoId = ref(null);
+const types = {
+  housing: "Vivienda",
+  commercial: "Local",
+  office: "Oficina",
+  garage: "Garaje",
+  storage: "Trastero",
+  land: "Terreno",
+  building: "Edificio",
+  other: "Otro",
+};
+const money = (value) =>
+  new Intl.NumberFormat("es-ES", {
+    style: "currency",
+    currency: "EUR",
+    maximumFractionDigits: 0,
+  }).format(value || 0);
+const date = (value) =>
+  value
+    ? new Intl.DateTimeFormat("es-ES", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      }).format(new Date(value.slice(0, 10) + "T12:00:00"))
+    : "Sin fecha de fin";
+const activeLease = computed(() =>
+  property.value?.leases?.find((lease) => lease.status === "active"),
+);
+const selectedPhoto = computed(
+  () =>
+    property.value?.photos?.find(
+      (photo) => photo.id === selectedPhotoId.value,
+    ) || property.value?.photos?.[0],
+);
+const income = computed(
+  () =>
+    property.value?.transactions
+      ?.filter(
+        (transaction) =>
+          transaction.direction === "income" && transaction.status === "paid",
+      )
+      .reduce((total, transaction) => total + Number(transaction.amount), 0) ||
+    0,
+);
+const expenses = computed(
+  () =>
+    property.value?.transactions
+      ?.filter(
+        (transaction) =>
+          transaction.direction === "expense" && transaction.status === "paid",
+      )
+      .reduce((total, transaction) => total + Number(transaction.amount), 0) ||
+    0,
+);
+const yieldRate = computed(() =>
+  Number(property.value?.current_value) > 0 && activeLease.value
+    ? new Intl.NumberFormat("es-ES", { maximumFractionDigits: 2 }).format(
+        ((Number(activeLease.value.monthly_rent) * 12) /
+          Number(property.value.current_value)) *
+          100,
+      )
+    : null,
+);
+const openIssues = computed(
+  () =>
+    property.value?.issues?.filter(
+      (issue) => !["resolved", "cancelled"].includes(issue.status),
+    ).length || 0,
+);
+let loadController;
+
 async function load() {
-  property.value = (await api.get("/properties/" + route.params.id)).data;
+  loadController?.abort();
+  const controller = new AbortController();
+  loadController = controller;
+  loading.value = true;
+  loadError.value = "";
+  property.value = null;
+  try {
+    const { data } = await api.get("/properties/" + route.params.id, {
+      signal: controller.signal,
+    });
+    if (!controller.signal.aborted) property.value = data;
+  } catch (exception) {
+    if (!controller.signal.aborted)
+      loadError.value =
+        exception.response?.status === 404
+          ? "Esta propiedad no existe o no pertenece a tu cartera."
+          : "No hemos podido cargar la propiedad. Comprueba tu conexión e inténtalo de nuevo.";
+  } finally {
+    if (!controller.signal.aborted) loading.value = false;
+  }
+}
+
+function startEditing() {
+  const today = new Date();
+  const localDate = [
+    today.getFullYear(),
+    String(today.getMonth() + 1).padStart(2, "0"),
+    String(today.getDate()).padStart(2, "0"),
+  ].join("-");
   editForm.value = {
     name: property.value.name,
+    type: property.value.type,
     address_line: property.value.address_line,
     city: property.value.city || "",
+    purchase_price: property.value.purchase_price,
     current_value: property.value.current_value,
     outstanding_debt: property.value.outstanding_debt,
     area: property.value.area,
-    valuation_date: new Date().toISOString().slice(0, 10),
+    valuation_date: localDate,
   };
-  if (property.value.photos?.length) {
-    const r = await api.get("/property-photos/" + property.value.photos[0].id, {
-      responseType: "blob",
-    });
-    cover.value = URL.createObjectURL(r.data);
+  saveError.value = "";
+  fieldErrors.value = {};
+  editing.value = true;
+}
+function closeEditing() {
+  if (!saving.value) editing.value = false;
+}
+useDialog(editing, drawer, closeEditing);
+
+async function saveProperty() {
+  if (saving.value) return;
+  saving.value = true;
+  saveError.value = "";
+  fieldErrors.value = {};
+  try {
+    const { data } = await api.put(
+      "/properties/" + property.value.id,
+      editForm.value,
+    );
+    property.value = { ...property.value, ...data };
+    editing.value = false;
+    notice.value = "Los datos de la propiedad se han actualizado.";
+  } catch (exception) {
+    fieldErrors.value = exception.response?.data?.errors || {};
+    saveError.value =
+      exception.response?.data?.message ||
+      "No se han podido guardar los cambios. Tus datos siguen aquí para volver a intentarlo.";
+  } finally {
+    saving.value = false;
   }
 }
-async function saveProperty() {
-  await api.put(`/properties/${property.value.id}`, editForm.value);
-  editing.value = false;
-  await load();
-}
-async function upload(e) {
-  if (!e.target.files[0]) return;
+
+async function upload(event) {
+  const input = event.target;
+  const file = input.files?.[0];
+  if (!file || uploading.value) return;
+  uploadError.value = "";
+  notice.value = "";
+  if (
+    ![
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+      "image/gif",
+      "image/bmp",
+    ].includes(file.type)
+  ) {
+    uploadError.value = "Elige una imagen JPG, PNG, WebP, GIF o BMP.";
+    input.value = "";
+    return;
+  }
+  if (file.size > 6 * 1024 * 1024) {
+    uploadError.value =
+      "La imagen supera los 6 MB. Prueba con una fotografía más pequeña.";
+    input.value = "";
+    return;
+  }
   uploading.value = true;
-  const d = new FormData();
-  d.append("photo", e.target.files[0]);
-  await api.post(`/properties/${route.params.id}/photos`, d);
-  if (cover.value) URL.revokeObjectURL(cover.value);
-  await load();
-  uploading.value = false;
+  const propertyId = property.value.id;
+  const payload = new FormData();
+  payload.append("photo", file);
+  try {
+    const { data } = await api.post(
+      "/properties/" + propertyId + "/photos",
+      payload,
+    );
+    if (property.value?.id === propertyId) {
+      property.value.photos = [...(property.value.photos || []), data];
+      selectedPhotoId.value = data.id;
+      notice.value = "Fotografía añadida a tu propiedad.";
+    }
+  } catch (exception) {
+    if (property.value?.id === propertyId)
+      uploadError.value =
+        exception.response?.data?.errors?.photo?.[0] ||
+        exception.response?.data?.message ||
+        "No hemos podido subir la fotografía. Puedes volver a intentarlo.";
+  } finally {
+    uploading.value = false;
+    input.value = "";
+  }
 }
-onMounted(load);
-onBeforeUnmount(() => cover.value && URL.revokeObjectURL(cover.value));
+
+watch(
+  () => route.params.id,
+  () => {
+    selectedPhotoId.value = null;
+    notice.value = "";
+    uploadError.value = "";
+    editing.value = false;
+    load();
+  },
+  { immediate: true },
+);
+onBeforeUnmount(() => loadController?.abort());
 </script>
+
 <template>
-  <main v-if="property" class="page detail-page">
+  <main class="page detail-page property-detail-page">
     <RouterLink class="back" to="/properties"
-      ><ArrowLeft :size="16" />Propiedades</RouterLink
+      ><ArrowLeft :size="16" />Todas las propiedades</RouterLink
     >
     <section
-      class="property-hero"
-      :style="
-        cover
-          ? {
-              backgroundImage: `linear-gradient(90deg,rgba(17,35,27,.8),rgba(17,35,27,.25)),url(${cover})`,
-            }
-          : {}
-      "
+      v-if="loading"
+      class="property-detail-loading"
+      aria-busy="true"
+      aria-label="Cargando propiedad"
     >
-      <div>
-        <span class="pill">{{ activeLease ? "Alquilada" : "Disponible" }}</span>
-        <h1>{{ property.name }}</h1>
-        <p>{{ property.address_line }} · {{ property.city }}</p>
-      </div>
-      <div class="hero-actions">
-        <button
-          class="button photo-button"
-          type="button"
-          @click="editing = true"
-        >
-          <Pencil :size="16" />Editar
-        </button>
-        <label class="button photo-button"
-          ><Camera :size="16" />{{ uploading ? "Subiendo…" : "Añadir foto"
-          }}<input type="file" accept="image/*" hidden @change="upload"
-        /></label>
+      <div class="property-skeleton">
+        <div></div>
+        <span></span><span></span>
       </div>
     </section>
-    <section class="asset-metrics">
-      <article>
-        <span>Valor actual</span
-        ><strong>{{ money(property.current_value) }}</strong>
-      </article>
-      <article>
-        <span>Renta mensual</span
-        ><strong>{{
-          activeLease ? money(activeLease.monthly_rent) : "—"
-        }}</strong>
-      </article>
-      <article>
-        <span>Rentabilidad bruta</span
-        ><strong>{{ yieldRate ? yieldRate + "%" : "—" }}</strong>
-      </article>
-      <article>
-        <span>Resultado registrado</span
-        ><strong>{{ money(income - expenses) }}</strong>
-      </article>
+    <section v-else-if="loadError" class="empty property-empty" role="alert">
+      <Home :size="35" />
+      <h2>No hemos podido abrir esta propiedad</h2>
+      <p>{{ loadError }}</p>
+      <button type="button" class="button secondary" @click="load">
+        <RefreshCw :size="16" />Volver a intentar
+      </button>
     </section>
-    <section class="detail-grid">
-      <article class="panel detail-panel">
-        <header>
-          <Home />
+    <template v-else-if="property">
+      <p v-if="notice" class="property-notice" role="status">
+        <Check :size="16" />{{ notice }}
+      </p>
+      <p v-if="uploadError" class="error" role="alert">{{ uploadError }}</p>
+      <section class="property-hero property-showcase">
+        <PropertyImage
+          class="property-showcase-image"
+          :property="property"
+          :photo="selectedPhoto"
+          :show-label="false"
+        />
+        <div class="property-showcase-shade"></div>
+        <span class="property-showcase-caption">{{
+          selectedPhoto
+            ? "Tu propiedad"
+            : "Imagen ilustrativa · añade tu fotografía"
+        }}</span>
+        <div class="property-showcase-content">
           <div>
-            <p class="eyebrow">Activo</p>
-            <h2>Información patrimonial</h2>
-          </div>
-        </header>
-        <dl>
-          <div>
-            <dt>Precio de compra</dt>
-            <dd>{{ money(property.purchase_price) }}</dd>
-          </div>
-          <div>
-            <dt>Deuda pendiente</dt>
-            <dd>{{ money(property.outstanding_debt) }}</dd>
-          </div>
-          <div>
-            <dt>Superficie</dt>
-            <dd>{{ property.area ? property.area + " m²" : "—" }}</dd>
-          </div>
-          <div>
-            <dt>Tipo</dt>
-            <dd>{{ property.type }}</dd>
-          </div>
-        </dl>
-      </article>
-      <article class="panel detail-panel">
-        <header>
-          <KeyRound />
-          <div>
-            <p class="eyebrow">Alquiler</p>
-            <h2>{{ activeLease ? "Contrato activo" : "Sin arrendamiento" }}</h2>
-          </div>
-        </header>
-        <template v-if="activeLease"
-          ><strong>{{
-            activeLease.participants?.map((p) => p.name).join(", ")
-          }}</strong>
-          <p>
-            Desde {{ activeLease.start_date }}
-            {{ activeLease.end_date ? "hasta " + activeLease.end_date : "" }}
-          </p>
-          <RouterLink to="/leases">Ver alquiler</RouterLink></template
-        ><RouterLink v-else class="button secondary" to="/leases?new=1"
-          >Crear alquiler</RouterLink
-        >
-      </article>
-      <article class="panel detail-panel">
-        <header>
-          <WalletCards />
-          <div>
-            <p class="eyebrow">Finanzas</p>
-            <h2>Actividad</h2>
-          </div>
-        </header>
-        <dl>
-          <div>
-            <dt>Ingresos</dt>
-            <dd>{{ money(income) }}</dd>
-          </div>
-          <div>
-            <dt>Gastos</dt>
-            <dd>{{ money(expenses) }}</dd>
-          </div>
-        </dl>
-        <RouterLink to="/finance">Ver movimientos</RouterLink>
-      </article>
-      <article class="panel detail-panel">
-        <header>
-          <Wrench />
-          <div>
-            <p class="eyebrow">Atención</p>
-            <h2>
-              {{
-                property.issues?.filter((i) => i.status !== "resolved")
-                  .length || 0
+            <div class="property-showcase-tags">
+              <span class="pill">{{ types[property.type] || "Propiedad" }}</span
+              ><span class="pill">{{
+                activeLease ? "Alquilada" : "Sin alquiler activo"
+              }}</span>
+            </div>
+            <h1>{{ property.name }}</h1>
+            <p>
+              <MapPin :size="16" />{{
+                [property.address_line, property.city]
+                  .filter(Boolean)
+                  .join(" · ")
               }}
-              incidencias abiertas
-            </h2>
+            </p>
           </div>
-        </header>
-        <RouterLink :to="'/issues?property=' + property.id"
-          >Gestionar incidencias</RouterLink
-        >
-      </article>
-      <article class="panel detail-panel">
-        <header>
-          <FileText />
-          <div>
-            <p class="eyebrow">Archivo</p>
-            <h2>{{ property.documents?.length || 0 }} documentos</h2>
+          <div class="hero-actions">
+            <button
+              class="button photo-button"
+              type="button"
+              @click="startEditing"
+            >
+              <Pencil :size="16" />Editar</button
+            ><button
+              class="button photo-button"
+              type="button"
+              :disabled="uploading"
+              @click="photoInput?.click()"
+            >
+              <Camera :size="16" />{{ uploading ? "Subiendo…" : "Añadir foto" }}
+            </button>
           </div>
-        </header>
-        <RouterLink :to="'/documents?property=' + property.id"
-          >Ver documentos</RouterLink
+        </div>
+      </section>
+      <input
+        ref="photoInput"
+        type="file"
+        accept="image/jpeg,image/png,image/webp,image/gif,image/bmp"
+        hidden
+        :disabled="uploading"
+        @change="upload"
+      />
+      <div
+        v-if="property.photos?.length"
+        class="property-gallery"
+        aria-label="Fotografías de la propiedad"
+      >
+        <button
+          v-for="(photo, index) in property.photos"
+          :key="photo.id"
+          type="button"
+          :class="{ selected: selectedPhoto?.id === photo.id }"
+          :aria-pressed="selectedPhoto?.id === photo.id"
+          :aria-label="'Ver fotografía ' + (index + 1)"
+          @click="selectedPhotoId = photo.id"
         >
-      </article>
-    </section>
-    <div v-if="editing" class="drawer-bg" @click.self="editing = false">
-      <form class="drawer" @submit.prevent="saveProperty">
-        <p class="eyebrow">Editar activo</p>
-        <h2>Actualiza la propiedad</h2>
-        <label>Nombre<input v-model="editForm.name" required /></label>
-        <label
-          >Dirección<input v-model="editForm.address_line" required
-        /></label>
-        <label>Ciudad<input v-model="editForm.city" /></label>
-        <label
-          >Valor actual<input
-            v-model="editForm.current_value"
-            type="number"
-            min="0"
-        /></label>
-        <label
-          >Fecha de valoración<input
-            v-model="editForm.valuation_date"
-            type="date"
-        /></label>
-        <label
-          >Deuda pendiente<input
-            v-model="editForm.outstanding_debt"
-            type="number"
-            min="0"
-        /></label>
-        <label
-          >Superficie<input
-            v-model="editForm.area"
-            type="number"
-            min="0"
-            step="0.01"
-        /></label>
-        <footer><button class="button primary">Guardar cambios</button></footer>
-      </form>
-    </div>
+          <PropertyImage
+            :property="property"
+            :photo="photo"
+            :show-label="false"
+          />
+        </button>
+        <button
+          type="button"
+          class="property-gallery-add"
+          :disabled="uploading"
+          aria-label="Añadir otra fotografía"
+          @click="photoInput?.click()"
+        >
+          <ImagePlus :size="22" />
+        </button>
+      </div>
+      <p class="property-photo-help">
+        {{
+          property.photos?.length
+            ? property.photos.length +
+              (property.photos.length === 1 ? " fotografía" : " fotografías") +
+              " · La primera es la portada de tu cartera."
+            : "Hazla tuya con una fotografía del inmueble."
+        }}
+        JPG, PNG o WebP, entre otros · máximo 6 MB.
+      </p>
+
+      <section class="asset-metrics" aria-label="Resumen de la propiedad">
+        <article>
+          <span>Valor estimado</span
+          ><strong>{{
+            property.current_value !== null
+              ? money(property.current_value)
+              : "Sin valorar"
+          }}</strong
+          ><small>Tu última valoración</small>
+        </article>
+        <article>
+          <span>Renta mensual</span
+          ><strong>{{
+            activeLease ? money(activeLease.monthly_rent) : "—"
+          }}</strong
+          ><small>{{
+            activeLease ? "Según el contrato activo" : "Sin contrato activo"
+          }}</small>
+        </article>
+        <article>
+          <span>Rentabilidad bruta</span
+          ><strong>{{ yieldRate !== null ? yieldRate + " %" : "—" }}</strong
+          ><small>Renta anual / valor estimado</small>
+        </article>
+        <article>
+          <span>Resultado registrado</span
+          ><strong :class="{ 'is-negative': income - expenses < 0 }">{{
+            money(income - expenses)
+          }}</strong
+          ><small>Ingresos cobrados − gastos pagados</small>
+        </article>
+      </section>
+      <section class="detail-grid property-detail-grid">
+        <article class="panel detail-panel">
+          <header>
+            <span class="property-panel-icon"><Home :size="20" /></span>
+            <div>
+              <p class="eyebrow">El inmueble</p>
+              <h2>Información patrimonial</h2>
+            </div>
+          </header>
+          <dl>
+            <div>
+              <dt>Precio de compra</dt>
+              <dd>
+                {{
+                  property.purchase_price !== null
+                    ? money(property.purchase_price)
+                    : "Sin indicar"
+                }}
+              </dd>
+            </div>
+            <div>
+              <dt>Deuda pendiente</dt>
+              <dd>{{ money(property.outstanding_debt) }}</dd>
+            </div>
+            <div>
+              <dt>Superficie</dt>
+              <dd>
+                {{
+                  Number(property.area) > 0
+                    ? property.area + " m²"
+                    : "Sin indicar"
+                }}
+              </dd>
+            </div>
+            <div>
+              <dt>Tipo de propiedad</dt>
+              <dd>{{ types[property.type] || "Otro" }}</dd>
+            </div>
+          </dl>
+          <button
+            type="button"
+            class="property-text-button"
+            @click="startEditing"
+          >
+            Completar información<ArrowUpRight :size="15" />
+          </button>
+        </article>
+        <article class="panel detail-panel">
+          <header>
+            <span class="property-panel-icon"><KeyRound :size="20" /></span>
+            <div>
+              <p class="eyebrow">Alquiler</p>
+              <h2>
+                {{
+                  activeLease
+                    ? "Tu contrato activo"
+                    : "Listo para un nuevo alquiler"
+                }}
+              </h2>
+            </div>
+          </header>
+          <template v-if="activeLease"
+            ><strong class="property-tenant-name">{{
+              activeLease.participants
+                ?.map((participant) => participant.name)
+                .join(", ") || "Contrato activo"
+            }}</strong>
+            <p class="property-panel-description">
+              {{ date(activeLease.start_date) }} ·
+              {{ date(activeLease.end_date) }}
+            </p>
+            <RouterLink
+              class="property-panel-link"
+              :to="'/leases/' + activeLease.id"
+              >Ver contrato<ArrowUpRight :size="15" /></RouterLink></template
+          ><template v-else
+            ><p class="property-panel-description">
+              Asocia un inquilino y un contrato para empezar a controlar la
+              renta.
+            </p>
+            <RouterLink class="button secondary" to="/leases?new=1"
+              >Crear alquiler<ArrowUpRight :size="15" /></RouterLink
+          ></template>
+        </article>
+        <article class="panel detail-panel">
+          <header>
+            <span class="property-panel-icon"><WalletCards :size="20" /></span>
+            <div>
+              <p class="eyebrow">Finanzas</p>
+              <h2>El balance de tu propiedad</h2>
+            </div>
+          </header>
+          <dl>
+            <div>
+              <dt>Ingresos cobrados</dt>
+              <dd>{{ money(income) }}</dd>
+            </div>
+            <div>
+              <dt>Gastos pagados</dt>
+              <dd>{{ money(expenses) }}</dd>
+            </div>
+          </dl>
+          <p class="property-panel-description">
+            Todos los movimientos registrados, sin límite de fecha.
+          </p>
+          <RouterLink class="property-panel-link" to="/finance"
+            >Ver movimientos<ArrowUpRight :size="15"
+          /></RouterLink>
+        </article>
+        <article class="panel detail-panel">
+          <header>
+            <span
+              class="property-panel-icon"
+              :class="{ 'needs-attention': openIssues }"
+              ><Wrench :size="20"
+            /></span>
+            <div>
+              <p class="eyebrow">Al día</p>
+              <h2>
+                {{
+                  openIssues
+                    ? openIssues +
+                      (openIssues === 1
+                        ? " incidencia abierta"
+                        : " incidencias abiertas")
+                    : "Sin incidencias abiertas"
+                }}
+              </h2>
+            </div>
+          </header>
+          <p class="property-panel-description">
+            {{
+              openIssues
+                ? "Consulta los detalles y sigue la evolución de cada incidencia."
+                : "Aquí tendrás a mano cualquier reparación o asunto pendiente."
+            }}
+          </p>
+          <RouterLink
+            class="property-panel-link"
+            :to="'/issues?property=' + property.id"
+            >Gestionar incidencias<ArrowUpRight :size="15"
+          /></RouterLink>
+        </article>
+        <article class="panel detail-panel property-documents-panel">
+          <header>
+            <span class="property-panel-icon"><FileText :size="20" /></span>
+            <div>
+              <p class="eyebrow">Todo en su sitio</p>
+              <h2>
+                {{ property.documents?.length || 0 }}
+                {{
+                  property.documents?.length === 1
+                    ? "documento guardado"
+                    : "documentos guardados"
+                }}
+              </h2>
+            </div>
+          </header>
+          <p class="property-panel-description">
+            Contratos, facturas y documentos del inmueble, juntos y accesibles.
+          </p>
+          <RouterLink
+            class="property-panel-link"
+            :to="'/documents?property=' + property.id"
+            >Abrir documentos<ArrowUpRight :size="15"
+          /></RouterLink>
+        </article>
+      </section>
+    </template>
+
+    <Teleport to="body">
+      <div v-if="editing" class="drawer-bg" @click.self="closeEditing">
+        <form
+          ref="drawer"
+          class="drawer property-drawer"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="edit-property-title"
+          tabindex="-1"
+          :aria-busy="saving"
+          @submit.prevent="saveProperty"
+        >
+          <header class="property-drawer-heading">
+            <div>
+              <p class="eyebrow">Los detalles importan</p>
+              <h2 id="edit-property-title">Editar propiedad</h2>
+            </div>
+            <button
+              type="button"
+              class="property-icon-button"
+              aria-label="Cerrar edición"
+              :disabled="saving"
+              @click="closeEditing"
+            >
+              <X :size="20" />
+            </button>
+          </header>
+          <p v-if="saveError" class="error" role="alert">{{ saveError }}</p>
+          <label
+            >Nombre<input
+              v-model.trim="editForm.name"
+              required
+              maxlength="120"
+              :aria-invalid="Boolean(fieldErrors.name)"
+          /></label>
+          <label
+            >Tipo<select v-model="editForm.type">
+              <option
+                v-for="(label, value) in types"
+                :key="value"
+                :value="value"
+              >
+                {{ label }}
+              </option>
+            </select></label
+          >
+          <label
+            >Dirección<input
+              v-model.trim="editForm.address_line"
+              required
+              maxlength="255"
+              autocomplete="street-address"
+              :aria-invalid="Boolean(fieldErrors.address_line)"
+          /></label>
+          <label
+            >Ciudad<input
+              v-model.trim="editForm.city"
+              maxlength="100"
+              autocomplete="address-level2"
+          /></label>
+          <div class="property-form-row">
+            <label
+              >Precio de compra (€)<input
+                v-model="editForm.purchase_price"
+                type="number"
+                min="0"
+                step="0.01"
+                inputmode="decimal" /></label
+            ><label
+              >Valor estimado (€)<input
+                v-model="editForm.current_value"
+                type="number"
+                min="0"
+                step="0.01"
+                inputmode="decimal"
+            /></label>
+          </div>
+          <label
+            >Fecha de valoración<input
+              v-model="editForm.valuation_date"
+              type="date"
+          /></label>
+          <div class="property-form-row">
+            <label
+              >Deuda pendiente (€)<input
+                v-model="editForm.outstanding_debt"
+                type="number"
+                min="0"
+                step="0.01"
+                inputmode="decimal" /></label
+            ><label
+              >Superficie (m²)<input
+                v-model="editForm.area"
+                type="number"
+                min="0"
+                step="0.01"
+                inputmode="decimal"
+            /></label>
+          </div>
+          <ul
+            v-if="Object.keys(fieldErrors).length"
+            class="property-validation-errors"
+          >
+            <li v-for="(messages, field) in fieldErrors" :key="field">
+              {{ messages[0] }}
+            </li>
+          </ul>
+          <footer>
+            <button
+              class="button secondary"
+              type="button"
+              :disabled="saving"
+              @click="closeEditing"
+            >
+              Cancelar</button
+            ><button class="button primary" :disabled="saving">
+              {{ saving ? "Guardando…" : "Guardar cambios" }}
+            </button>
+          </footer>
+        </form>
+      </div>
+    </Teleport>
   </main>
-  <div v-else class="empty">Cargando propiedad…</div>
 </template>

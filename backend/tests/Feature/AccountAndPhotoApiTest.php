@@ -57,5 +57,16 @@ class AccountAndPhotoApiTest extends TestCase
 
         $photo = $property->photos()->findOrFail($response->json('id'));
         Storage::disk('local')->assertExists($photo->storage_key);
+
+        $this->getJson('/api/v1/dashboard')->assertOk()
+            ->assertJsonPath('properties.0.photos.0.id', $photo->id)
+            ->assertJsonMissingPath('properties.0.photos.0.storage_key');
+        $this->get("/api/v1/property-photos/{$photo->id}")->assertOk();
+
+        $otherUser = User::factory()->create();
+        $otherPortfolio = Portfolio::create(['name' => 'Otra cartera']);
+        $otherPortfolio->members()->attach($otherUser, ['role' => 'owner']);
+        $this->actingAs($otherUser)->getJson('/api/v1/dashboard')->assertOk()->assertJsonCount(0, 'properties');
+        $this->getJson("/api/v1/property-photos/{$photo->id}")->assertNotFound();
     }
 }

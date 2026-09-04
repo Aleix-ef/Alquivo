@@ -3,6 +3,8 @@ import { computed, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useSession } from "../session";
 import BrandLogo from "../components/BrandLogo.vue";
+import ThemeToggle from "../components/ThemeToggle.vue";
+import { safeReturnPath } from "../authNavigation";
 const route = useRoute(),
   router = useRouter(),
   s = useSession(),
@@ -18,11 +20,12 @@ const route = useRoute(),
     terms_accepted: false,
   });
 async function submit() {
+  if (busy.value) return;
   busy.value = true;
   error.value = "";
   try {
     isRegister.value ? await s.register(form.value) : await s.login(form.value);
-    router.push("/dashboard");
+    await router.replace(safeReturnPath(route.query.redirect));
   } catch (e) {
     error.value =
       e.response?.data?.message || "No hemos podido completar el acceso.";
@@ -46,7 +49,9 @@ async function submit() {
       <small>Controla hoy. Decide mejor mañana.</small>
     </section>
     <section class="auth-side">
+      <div class="auth-tools"><ThemeToggle /></div>
       <form class="form" @submit.prevent="submit">
+        <div class="auth-mobile-brand"><BrandLogo /></div>
         <p class="eyebrow">
           {{ isRegister ? "Empieza gratis" : "Bienvenido de nuevo" }}
         </p>
@@ -58,18 +63,29 @@ async function submit() {
               : "Continúa donde lo dejaste."
           }}
         </p>
-        <p v-if="error" class="error">{{ error }}</p>
+        <p v-if="error" class="error" role="alert">{{ error }}</p>
         <label v-if="isRegister"
-          >Nombre<input v-model="form.name" required /></label
+          >Nombre<input
+            v-model="form.name"
+            autocomplete="name"
+            maxlength="100"
+            required /></label
         ><label v-if="isRegister"
           >Nombre de la cartera<input
             v-model="form.portfolio_name"
             required /></label
-        ><label>Email<input v-model="form.email" type="email" required /></label
+        ><label
+          >Email<input
+            v-model="form.email"
+            type="email"
+            autocomplete="email"
+            required /></label
         ><label
           >Contraseña<input
             v-model="form.password"
             type="password"
+            :autocomplete="isRegister ? 'new-password' : 'current-password'"
+            :minlength="isRegister ? 8 : undefined"
             required /></label
         ><RouterLink v-if="!isRegister" class="forgot" to="/forgot-password"
           >He olvidado mi contraseña</RouterLink
@@ -77,6 +93,7 @@ async function submit() {
           >Confirma la contraseña<input
             v-model="form.password_confirmation"
             type="password"
+            autocomplete="new-password"
             required /></label
         ><label v-if="isRegister" class="check-label legal-check"
           ><input
@@ -98,9 +115,15 @@ async function submit() {
         </button>
         <p class="switch">
           {{ isRegister ? "¿Ya tienes cuenta?" : "¿Todavía no tienes cuenta?" }}
-          <RouterLink :to="isRegister ? '/login' : '/register'">{{
-            isRegister ? "Entrar" : "Crear cuenta"
-          }}</RouterLink>
+          <RouterLink
+            :to="{
+              path: isRegister ? '/login' : '/register',
+              query: route.query.redirect
+                ? { redirect: safeReturnPath(route.query.redirect) }
+                : {},
+            }"
+            >{{ isRegister ? "Entrar" : "Crear cuenta" }}</RouterLink
+          >
         </p>
       </form>
     </section>

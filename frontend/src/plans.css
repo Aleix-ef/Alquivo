@@ -6,7 +6,7 @@
 }
 .current-usage > div {
   display: grid;
-  background: #fff;
+  background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 11px;
   padding: 17px;
@@ -23,7 +23,7 @@
   max-width: 900px;
 }
 .plan-grid article {
-  background: #fff;
+  background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 14px;
   padding: 27px;
@@ -33,16 +33,16 @@
   box-shadow: 0 12px 35px #0e8f8220;
 }
 .plan-grid h2 {
-  font: 600 22px Plus Jakarta Sans;
+  font: 600 22px var(--font);
   margin: 0;
 }
 .plan-price {
   display: block;
-  font: 600 34px Plus Jakarta Sans;
+  font: 600 34px var(--font);
   margin: 18px 0 5px;
 }
 .plan-price small {
-  font: 500 12px "Plus Jakarta Sans";
+  font: 500 12px var(--font);
   color: var(--muted);
 }
 .plan-grid article > p:not(.eyebrow) {
@@ -72,7 +72,7 @@
 .billing-period {
   display: flex;
   padding: 4px;
-  background: #e8ece8;
+  background: var(--surface-soft);
   border-radius: 9px;
 }
 .billing-period button {
@@ -84,7 +84,7 @@
   cursor: pointer;
 }
 .billing-period button.active {
-  background: #fff;
+  background: var(--surface);
   color: var(--ink);
   box-shadow: 0 2px 8px #0f274714;
 }
@@ -99,7 +99,7 @@
   max-width: 900px;
   margin-bottom: 16px;
   padding: 18px;
-  background: #eef7f5;
+  background: var(--pale);
   border: 1px solid #b7d6ce;
   border-radius: 12px;
 }
@@ -120,7 +120,7 @@
   display: grid;
   place-items: center;
   padding: 20px;
-  background: #0f274799;
+  background: var(--overlay);
   backdrop-filter: blur(5px);
 }
 .plan-modal {
@@ -129,7 +129,7 @@
   pointer-events: auto;
   width: min(440px, 100%);
   padding: 28px;
-  background: #fff;
+  background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 16px;
   box-shadow: 0 24px 70px #0f274738;
@@ -140,7 +140,7 @@
 }
 .plan-modal h2 {
   margin: 5px 0 10px;
-  font: 600 22px Plus Jakarta Sans;
+  font: 600 22px var(--font);
 }
 .plan-modal > p:not(.eyebrow) {
   color: var(--muted);

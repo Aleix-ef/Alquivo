@@ -6,8 +6,8 @@
   margin-top: -8px;
 }
 .success {
-  background: #e8f3ec;
-  color: #0b756b;
+  background: var(--success-bg);
+  color: var(--success);
   padding: 11px;
   border-radius: 8px;
 }
@@ -35,7 +35,7 @@
   justify-content: space-between;
 }
 .property-hero h1 {
-  font: 600 38px Plus Jakarta Sans;
+  font: 600 38px var(--font);
   margin: 12px 0 3px;
 }
 .property-hero p {
@@ -57,7 +57,7 @@
   margin: 14px 0;
 }
 .asset-metrics article {
-  background: #fff;
+  background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 11px;
   padding: 18px;
@@ -68,7 +68,7 @@
   color: var(--muted);
 }
 .asset-metrics strong {
-  font: 600 20px Plus Jakarta Sans;
+  font: 600 20px var(--font);
   margin-top: 5px;
 }
 .detail-grid {
@@ -116,7 +116,7 @@
   margin-bottom: 24px;
 }
 .lease-heading h1 {
-  font: 600 32px Plus Jakarta Sans;
+  font: 600 32px var(--font);
   margin: 0;
 }
 .lease-heading p:not(.eyebrow),

@@ -11,6 +11,7 @@ RUN apk add --no-cache icu-dev libpq-dev libzip-dev \
     && docker-php-ext-install bcmath intl opcache pcntl pdo_pgsql zip
 WORKDIR /app
 COPY --from=vendor /app /app
+COPY docker/uploads.ini /usr/local/etc/php/conf.d/99-uploads.ini
 RUN chown -R www-data:www-data storage bootstrap/cache
 USER www-data
 EXPOSE 9000

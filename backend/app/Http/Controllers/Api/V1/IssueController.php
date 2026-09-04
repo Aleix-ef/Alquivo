@@ -18,6 +18,7 @@ class IssueController extends Controller
     public function index(Request $r)
     {
         return Issue::where('portfolio_id', $r->user()->portfolio()->id)
+            ->when($r->filled('property_id'), fn ($query) => $query->where('property_id', $r->integer('property_id')))
             ->with(['property', 'assignedContact', 'expenseTransaction'])
             ->orderByRaw("case priority when 'high' then 1 when 'medium' then 2 else 3 end")
             ->latest()->paginate(30);

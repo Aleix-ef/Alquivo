@@ -1,15 +1,26 @@
 <script setup>
-import { onMounted, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { Check } from "@lucide/vue";
 import { useRoute, useRouter } from "vue-router";
 import api from "../api";
+import { useDialog } from "../composables/useDialog";
 const route = useRoute(),
   router = useRouter(),
   data = ref(null),
   period = ref("monthly"),
   busy = ref(""),
+  loading = ref(true),
   error = ref(""),
   pendingChange = ref(null);
+const planDialog = ref(null);
+function closePlanChange() {
+  if (!busy.value) pendingChange.value = null;
+}
+useDialog(
+  computed(() => !!pendingChange.value),
+  planDialog,
+  closePlanChange,
+);
 const notice = ref(
   route.query.checkout === "success"
     ? "Pago completado. Stripe está confirmando tu suscripción."
@@ -27,9 +38,22 @@ const price = (plan) =>
     ? `${plan.price_monthly} €`
     : `${plan.price_yearly} €`;
 async function load() {
-  data.value = (await api.get("/plans")).data;
+  loading.value = true;
+  error.value = "";
+  try {
+    data.value = (await api.get("/plans")).data;
+    return true;
+  } catch (e) {
+    error.value =
+      e.response?.data?.message ||
+      "No se pudieron cargar los planes. Inténtalo de nuevo.";
+    return false;
+  } finally {
+    loading.value = false;
+  }
 }
 async function checkout(code) {
+  if (busy.value) return;
   busy.value = code;
   error.value = "";
   try {
@@ -47,6 +71,7 @@ async function checkout(code) {
   }
 }
 async function portal() {
+  if (busy.value) return;
   busy.value = "portal";
   error.value = "";
   try {
@@ -58,13 +83,13 @@ async function portal() {
   }
 }
 function askPlanChange(code, name) {
-  busy.value = "";
+  if (busy.value) return;
   error.value = "";
   pendingChange.value = { code, name, period: period.value };
 }
 async function changePlan() {
   const change = pendingChange.value;
-  if (!change) return;
+  if (!change || busy.value) return;
   busy.value = change.code;
   error.value = "";
   try {
@@ -82,6 +107,7 @@ async function changePlan() {
   }
 }
 async function cancelPlanChange() {
+  if (busy.value) return;
   busy.value = "cancel-change";
   error.value = "";
   try {
@@ -96,8 +122,9 @@ async function cancelPlanChange() {
   }
 }
 onMounted(async () => {
-  await load();
-  if (route.query.checkout) router.replace("/plans");
+  if (await load()) {
+    if (route.query.checkout) router.replace("/plans");
+  }
 });
 </script>
 <template>
@@ -126,8 +153,13 @@ onMounted(async () => {
       </div>
     </header>
     <p v-if="notice" class="success">{{ notice }}</p>
-    <p v-if="error" class="error">{{ error }}</p>
-    <div v-if="!data" class="empty">Cargando planes…</div>
+    <p v-if="error && !pendingChange" class="error" role="alert">{{ error }}</p>
+    <div v-if="!data" class="empty" role="status">
+      <template v-if="loading">Cargando planes…</template>
+      <button v-else class="button secondary" type="button" @click="load">
+        Volver a intentar
+      </button>
+    </div>
     <template v-else
       ><section class="current-usage">
         <div>
@@ -176,7 +208,7 @@ onMounted(async () => {
         <button
           type="button"
           class="button secondary"
-          :disabled="busy === 'cancel-change'"
+          :disabled="!!busy"
           @click="cancelPlanChange"
         >
           {{ busy === "cancel-change" ? "Cancelando…" : "Cancelar cambio" }}
@@ -217,6 +249,7 @@ onMounted(async () => {
           <button
             v-if="data.current.subscribed && code === data.current.code"
             class="button secondary"
+            :disabled="!!busy"
             @click="portal"
           >
             Gestionar en Stripe</button
@@ -247,16 +280,19 @@ onMounted(async () => {
         <div
           v-if="pendingChange"
           class="modal-backdrop"
-          @click.self="pendingChange = null"
+          @click.self="closePlanChange"
         >
           <section
             class="plan-modal"
+            ref="planDialog"
             role="dialog"
             aria-modal="true"
+            aria-labelledby="plan-change-title"
+            tabindex="-1"
             @click.stop
           >
             <p class="eyebrow">Confirmar cambio</p>
-            <h2>Cambiar a {{ pendingChange.name }}</h2>
+            <h2 id="plan-change-title">Cambiar a {{ pendingChange.name }}</h2>
             <p>
               Has elegido facturación
               {{ pendingChange.period === "monthly" ? "mensual" : "anual" }}. No
@@ -264,12 +300,13 @@ onMounted(async () => {
               nuevo plan comenzará únicamente cuando Stripe complete tu próxima
               renovación.
             </p>
-            <p v-if="error" class="error">{{ error }}</p>
+            <p v-if="error" class="error" role="alert">{{ error }}</p>
             <div class="plan-modal-actions">
               <button
                 class="button secondary"
                 type="button"
-                @click="pendingChange = null"
+                :disabled="!!busy"
+                @click="closePlanChange"
               >
                 Cancelar
               </button>

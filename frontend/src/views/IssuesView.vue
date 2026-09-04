@@ -9,6 +9,9 @@ const router = useRouter();
 const issues = ref([]);
 const properties = ref([]);
 const contacts = ref([]);
+const propertyFilter = ref(route.query.property || "");
+const loading = ref(true);
+const loadError = ref("");
 const saving = ref(false);
 const error = ref("");
 const editing = computed(() =>
@@ -17,7 +20,7 @@ const editing = computed(() =>
 const show = computed(() => route.query.new === "1" || Boolean(editing.value));
 const today = new Date().toISOString().slice(0, 10);
 const blank = () => ({
-  property_id: "",
+  property_id: propertyFilter.value,
   assigned_contact_id: "",
   title: "",
   description: "",
@@ -45,14 +48,25 @@ const money = (value) =>
   );
 
 async function load() {
-  const [i, p, c] = await Promise.all([
-    api.get("/issues"),
-    api.get("/properties"),
-    api.get("/contacts"),
-  ]);
-  issues.value = i.data.data;
-  properties.value = p.data.data;
-  contacts.value = c.data.data;
+  loading.value = true;
+  loadError.value = "";
+  try {
+    const [i, p, c] = await Promise.all([
+      api.get("/issues", {
+        params: { property_id: propertyFilter.value || undefined },
+      }),
+      api.get("/properties"),
+      api.get("/contacts"),
+    ]);
+    issues.value = i.data.data;
+    properties.value = p.data.data;
+    contacts.value = c.data.data;
+  } catch {
+    loadError.value =
+      "No hemos podido cargar las incidencias. Vuelve a intentarlo.";
+  } finally {
+    loading.value = false;
+  }
 }
 function openNew() {
   form.value = blank();
@@ -122,7 +136,30 @@ onMounted(load);
         <Plus :size="16" />Nueva incidencia
       </button>
     </header>
-    <section v-if="issues.length" class="record-list">
+    <section class="filters">
+      <select
+        v-model="propertyFilter"
+        aria-label="Filtrar incidencias por propiedad"
+        @change="load"
+      >
+        <option value="">Todas las propiedades</option>
+        <option
+          v-for="property in properties"
+          :key="property.id"
+          :value="property.id"
+        >
+          {{ property.name }}
+        </option>
+      </select>
+    </section>
+    <section v-if="loading" class="empty" role="status">
+      Cargando incidencias…
+    </section>
+    <section v-else-if="loadError" class="empty" role="alert">
+      <p>{{ loadError }}</p>
+      <button class="button secondary" @click="load">Volver a intentar</button>
+    </section>
+    <section v-else-if="issues.length" class="record-list">
       <article v-for="issue in issues" :key="issue.id" class="record">
         <span class="record-icon"><Wrench :size="19" /></span>
         <div>

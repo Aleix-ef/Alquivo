@@ -13,16 +13,16 @@
   border-radius: 15px;
 }
 .priority.high {
-  background: #f8e8e6;
-  color: #9b4039;
+  background: var(--danger-bg);
+  color: var(--danger);
 }
 .priority.medium {
-  background: #f8f0df;
-  color: #916829;
+  background: var(--warning-bg);
+  color: var(--warning);
 }
 .priority.low {
-  background: #e5f3f0;
-  color: #0e8f82;
+  background: var(--pale);
+  color: var(--green);
 }
 .document-grid {
   display: grid;
@@ -37,18 +37,18 @@
 .filters select {
   padding: 9px 11px;
   border: 1px solid var(--line);
-  background: #fff;
+  background: var(--surface);
   border-radius: 8px;
 }
 .expiry-alert {
-  color: #a53c36 !important;
+  color: var(--danger) !important;
 }
 .document-card {
   display: grid;
   grid-template-columns: auto 1fr auto;
   gap: 13px;
   align-items: center;
-  background: #fff;
+  background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 11px;
   padding: 16px;
@@ -80,7 +80,7 @@
   border-radius: 7px;
 }
 .document-actions button:hover {
-  background: #eef7f5;
+  background: var(--pale);
 }
 .timeline {
   display: grid;
@@ -93,14 +93,14 @@
   padding: 20px 0;
 }
 .timeline-day time {
-  font: 600 13px Plus Jakarta Sans;
+  font: 600 13px var(--font);
 }
 .timeline-day > div {
   display: grid;
   gap: 8px;
 }
 .timeline article {
-  background: #fff;
+  background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 9px;
   padding: 13px;

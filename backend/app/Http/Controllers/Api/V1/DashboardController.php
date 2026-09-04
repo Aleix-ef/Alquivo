@@ -16,7 +16,7 @@ class DashboardController extends Controller
     public function __invoke(Request $request)
     {
         $portfolio = $request->user()->portfolio();
-        $properties = $portfolio->properties()->with(['leases' => fn ($q) => $q->where('status', 'active')])->get();
+        $properties = $portfolio->properties()->with(['photos', 'leases' => fn ($q) => $q->where('status', 'active')])->get();
         $from = now()->startOfMonth();
         $to = now()->endOfMonth();
         $transactions = Transaction::where('portfolio_id', $portfolio->id)->whereBetween('transaction_date', [$from, $to])->get();

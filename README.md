@@ -2,6 +2,12 @@
 
 Producto SaaS Nareo. Este directorio es independiente del proyecto académico anterior.
 
+## Interfaz Nareo
+
+Modo claro, oscuro y automático con preferencia persistente; navegación móvil; dashboard con datos reales; propiedades con búsqueda, filtros, fotografías privadas y galería. Sin foto se utiliza una ilustración identificada como tal. Las fuentes y la imagen editorial del acceso se sirven desde la aplicación.
+
+El [sistema visual](docs/design-system.md) documenta los estilos, componentes, accesibilidad, recursos gráficos y comprobaciones. Para revisar la app en Docker: `docker compose up -d --build` y abrir `http://localhost:8080`. El selector de apariencia está en la barra superior y en las pantallas de acceso.
+
 ## Estado actual
 
 - Laravel 13 con API versionada en `/api/v1`.
@@ -26,7 +32,8 @@ Producto SaaS Nareo. Este directorio es independiente del proyecto académico an
 - Ficha completa de contratos con condiciones, mensualidades, documentos e inquilinos.
 - Renovaciones enlazadas sin alterar el contrato ni los cobros históricos.
 - Incidencias con responsable, seguimiento, costes y gasto financiero idempotente.
-- Documentos filtrables por categoría y vencimiento, integrados en calendario y avisos.
+- Documentos filtrables por propiedad, categoría y vencimiento, integrados en calendario y avisos.
+- Acceso desde la ficha a incidencias y documentos del inmueble seleccionado.
 - Recordatorios completables junto a cobros, contratos y vencimientos documentales.
 - Informes de flujo mensual y rendimiento por inmueble basados en movimientos confirmados.
 - Exportaciones CSV seguras de propiedades, contratos y finanzas.

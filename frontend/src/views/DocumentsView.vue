@@ -7,7 +7,13 @@ const route = useRoute(),
   router = useRouter(),
   docs = ref([]),
   properties = ref([]),
-  filters = ref({ category: "", status: route.query.status || "" }),
+  filters = ref({
+    category: "",
+    status: route.query.status || "",
+    property_id: route.query.property || "",
+  }),
+  loading = ref(true),
+  loadError = ref(""),
   saving = ref(false),
   error = ref(""),
   editing = computed(() =>
@@ -17,23 +23,32 @@ const route = useRoute(),
   form = ref({
     name: "",
     category: "contract",
-    property_id: "",
+    property_id: route.query.property || "",
     lease_id: route.query.lease || "",
     issued_at: "",
     expires_at: "",
     file: null,
   });
 async function load() {
-  const [d, p] = await Promise.all([
-    api.get("/documents", {
-      params: Object.fromEntries(
-        Object.entries(filters.value).filter(([, value]) => value),
-      ),
-    }),
-    api.get("/properties"),
-  ]);
-  docs.value = d.data.data;
-  properties.value = p.data.data;
+  loading.value = true;
+  loadError.value = "";
+  try {
+    const [d, p] = await Promise.all([
+      api.get("/documents", {
+        params: Object.fromEntries(
+          Object.entries(filters.value).filter(([, value]) => value),
+        ),
+      }),
+      api.get("/properties"),
+    ]);
+    docs.value = d.data.data;
+    properties.value = p.data.data;
+  } catch {
+    loadError.value =
+      "No hemos podido cargar los documentos. Vuelve a intentarlo.";
+  } finally {
+    loading.value = false;
+  }
 }
 async function save() {
   saving.value = true;
@@ -113,7 +128,25 @@ onMounted(load);
       >
     </header>
     <section class="filters">
-      <select v-model="filters.category" @change="load">
+      <select
+        v-model="filters.property_id"
+        aria-label="Filtrar documentos por propiedad"
+        @change="load"
+      >
+        <option value="">Todas las propiedades</option>
+        <option
+          v-for="property in properties"
+          :key="property.id"
+          :value="property.id"
+        >
+          {{ property.name }}
+        </option>
+      </select>
+      <select
+        v-model="filters.category"
+        aria-label="Categoría de documentos"
+        @change="load"
+      >
         <option value="">Todas las categorías</option>
         <option value="contract">Contratos</option>
         <option value="invoice">Facturas</option>
@@ -121,13 +154,24 @@ onMounted(load);
         <option value="tax">Impuestos</option>
         <option value="certificate">Certificados</option>
         <option value="other">Otros</option></select
-      ><select v-model="filters.status" @change="load">
+      ><select
+        v-model="filters.status"
+        aria-label="Vencimiento de documentos"
+        @change="load"
+      >
         <option value="">Cualquier vencimiento</option>
         <option value="upcoming">Próximos 60 días</option>
         <option value="expired">Vencidos</option>
       </select>
     </section>
-    <section v-if="docs.length" class="document-grid">
+    <section v-if="loading" class="empty" role="status">
+      Cargando documentos…
+    </section>
+    <section v-else-if="loadError" class="empty" role="alert">
+      <p>{{ loadError }}</p>
+      <button class="button secondary" @click="load">Volver a intentar</button>
+    </section>
+    <section v-else-if="docs.length" class="document-grid">
       <article v-for="d in docs" :key="d.id" class="document-card">
         <FileText :size="24" />
         <div>
@@ -157,7 +201,13 @@ onMounted(load);
     </section>
     <section v-else class="empty">
       <FileText :size="35" />
-      <h2>Tu archivo está vacío</h2>
+      <h2>
+        {{
+          Object.values(filters).some(Boolean)
+            ? "No hay documentos con estos filtros"
+            : "Tu archivo está vacío"
+        }}
+      </h2>
       <p>
         Guarda aquí contratos y facturas para encontrarlos junto al inmueble
         correcto.

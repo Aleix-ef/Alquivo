@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from "vue-router";
 import { useSession } from "./session";
+import { safeReturnPath } from "./authNavigation";
 const publicPage = (n) => ({
   name: n,
   component: () => import("./views/RecoveryView.vue"),
@@ -7,18 +8,23 @@ const publicPage = (n) => ({
 });
 const router = createRouter({
   history: createWebHistory(),
+  scrollBehavior(to, from, savedPosition) {
+    if (savedPosition) return savedPosition;
+    if (to.path === from.path) return false;
+    return { top: 0 };
+  },
   routes: [
     {
       path: "/login",
       name: "login",
       component: () => import("./views/AuthView.vue"),
-      meta: { public: true },
+      meta: { public: true, guestOnly: true },
     },
     {
       path: "/register",
       name: "register",
       component: () => import("./views/AuthView.vue"),
-      meta: { public: true },
+      meta: { public: true, guestOnly: true },
     },
     { path: "/forgot-password", ...publicPage("forgot") },
     { path: "/reset-password", ...publicPage("reset") },
@@ -81,9 +87,13 @@ const router = createRouter({
     },
   ],
 });
-router.beforeEach((to) => {
+router.beforeEach(async (to) => {
   const s = useSession();
-  if (!to.meta.public && !s.ready) return "/login";
-  if (to.meta.public && s.ready) return "/dashboard";
+  if (!s.initialized && (!to.meta.public || to.meta.guestOnly))
+    await s.restore();
+  if (!to.meta.public && !s.ready) {
+    return { name: "login", query: { redirect: to.fullPath } };
+  }
+  if (to.meta.guestOnly && s.ready) return safeReturnPath(to.query.redirect);
 });
 export default router;

@@ -58,6 +58,21 @@ class AttentionApiTest extends TestCase
         ])->assertNotFound();
     }
 
+    public function test_issues_can_be_filtered_by_property_without_exposing_another_portfolio(): void
+    {
+        [$user, $portfolio, $property] = $this->context();
+        $secondProperty = $portfolio->properties()->create(['name' => 'Local', 'type' => 'commercial', 'address_line' => 'Calle 2']);
+        foreach ([$property, $secondProperty] as $item) {
+            Issue::create(['portfolio_id' => $portfolio->id, 'property_id' => $item->id, 'title' => 'Revisar', 'priority' => 'low', 'status' => 'open', 'reported_at' => today()]);
+        }
+        $this->actingAs($user)->getJson("/api/v1/issues?property_id={$property->id}")
+            ->assertOk()->assertJsonCount(1, 'data')->assertJsonPath('data.0.property_id', $property->id);
+
+        [$otherUser] = $this->context();
+        $this->actingAs($otherUser)->getJson("/api/v1/issues?property_id={$property->id}")
+            ->assertOk()->assertJsonCount(0, 'data');
+    }
+
     public function test_issue_can_be_assigned_and_resolved_with_one_financial_expense(): void
     {
         [$user, $portfolio, $property] = $this->context();

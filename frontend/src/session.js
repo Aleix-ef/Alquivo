@@ -1,23 +1,29 @@
 import { defineStore } from "pinia";
 import api, { csrf } from "./api";
-const keys = ["ig_user", "ig_portfolio"];
+import {
+  clearSessionStorage,
+  persistSession,
+  readSessionValue,
+} from "./sessionStorage";
 export const useSession = defineStore("session", {
   state: () => ({
-    user: JSON.parse(localStorage.getItem("ig_user") || "null"),
-    portfolio: JSON.parse(localStorage.getItem("ig_portfolio") || "null"),
+    user: readSessionValue("ig_user"),
+    portfolio: readSessionValue("ig_portfolio"),
+    initialized: false,
   }),
   getters: { ready: (s) => !!s.user },
   actions: {
     save(d) {
       this.user = d.user;
       this.portfolio = d.portfolio;
-      localStorage.setItem("ig_user", JSON.stringify(d.user));
-      localStorage.setItem("ig_portfolio", JSON.stringify(d.portfolio));
+      this.initialized = true;
+      persistSession(d);
     },
     clear() {
       this.user = null;
       this.portfolio = null;
-      keys.forEach((k) => localStorage.removeItem(k));
+      this.initialized = true;
+      clearSessionStorage();
     },
     async login(p) {
       await csrf();
@@ -29,19 +35,21 @@ export const useSession = defineStore("session", {
     },
     async restore() {
       try {
-        this.save((await api.get("/auth/me")).data);
+        this.save((await api.get("/auth/me", { timeout: 10000 })).data);
         return true;
-      } catch {
-        this.clear();
+      } catch (error) {
+        if ([401, 419].includes(error.response?.status)) this.clear();
+        this.initialized = true;
         return false;
       }
     },
     async logout() {
       try {
         await api.post("/auth/logout");
-      } finally {
-        this.clear();
+      } catch (error) {
+        if (![401, 419].includes(error.response?.status)) throw error;
       }
+      this.clear();
     },
   },
 });
