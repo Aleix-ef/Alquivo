@@ -21,8 +21,8 @@
   color: #916829;
 }
 .priority.low {
-  background: #e8f1eb;
-  color: #22664a;
+  background: #e5f3f0;
+  color: #0e8f82;
 }
 .document-grid {
   display: grid;
@@ -80,7 +80,7 @@
   border-radius: 7px;
 }
 .document-actions button:hover {
-  background: #edf2ee;
+  background: #eef7f5;
 }
 .timeline {
   display: grid;
@@ -113,7 +113,7 @@
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #708a78;
+  background: #6b8790;
 }
 .timeline article > div {
   display: grid;

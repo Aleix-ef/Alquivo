@@ -19,6 +19,8 @@
 body {
   margin: 0;
   background: #f6f8fa;
+  min-width: 320px;
+  -webkit-font-smoothing: antialiased;
 }
 a {
   text-decoration: none;
@@ -44,6 +46,7 @@ select {
   padding: 25px 18px;
   display: flex;
   flex-direction: column;
+  box-shadow: 12px 0 40px #0f27470a;
 }
 .brand {
   display: flex;
@@ -107,11 +110,18 @@ select {
   border-radius: 8px;
   color: #9bacc0;
   font-size: 13px;
+  transition:
+    color 0.18s ease,
+    background 0.18s ease,
+    transform 0.18s ease;
 }
 .sidebar nav a.router-link-active,
 .sidebar nav a:hover {
   background: #173857;
   color: #fff;
+}
+.sidebar nav a.router-link-active {
+  box-shadow: inset 3px 0 #0e9f8f;
 }
 .user {
   margin-top: auto;
@@ -169,6 +179,7 @@ select {
   border: 1px solid var(--line);
   border-radius: 12px;
   padding: 24px;
+  box-shadow: 0 10px 35px #0f274708;
 }
 .settings-card h2 {
   font: 600 19px Plus Jakarta Sans;
@@ -282,6 +293,7 @@ select {
   background: #f6f8faf0;
   backdrop-filter: blur(10px);
   z-index: 5;
+  box-shadow: 0 1px 0 #ffffffaa;
 }
 .button {
   border: 0;
@@ -293,10 +305,26 @@ select {
   gap: 7px;
   align-items: center;
   cursor: pointer;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    background 0.18s ease;
+}
+.button:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+.button:disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
 }
 .primary {
   background: var(--green);
   color: #fff;
+  box-shadow: 0 8px 22px #0e8f8224;
+}
+.primary:hover:not(:disabled) {
+  background: #0b8075;
+  box-shadow: 0 10px 28px #0e8f8235;
 }
 .secondary {
   background: var(--pale);
@@ -336,6 +364,19 @@ select {
   padding: 30px 34px;
   display: flex;
   justify-content: space-between;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 20px 50px #0f27471f;
+}
+.hero::after {
+  content: "";
+  position: absolute;
+  width: 230px;
+  height: 230px;
+  right: -55px;
+  bottom: -140px;
+  border: 30px solid #b7d6ce18;
+  border-radius: 50%;
 }
 .setup-panel {
   background: #fff;
@@ -434,12 +475,20 @@ select {
 .card {
   background: white;
   border: 1px solid var(--line);
-  border-radius: 12px;
+  border-radius: 14px;
+  box-shadow: 0 10px 35px #0f274708;
 }
 .metrics article {
   padding: 19px;
   display: grid;
   gap: 5px;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease;
+}
+.metrics article:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 38px #0f27470f;
 }
 .metrics span,
 .metrics small {
@@ -553,10 +602,17 @@ select {
   border-radius: 8px;
   padding: 11px 12px;
   outline: none;
+  background: #fbfcfd;
+  color: var(--ink);
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    background 0.18s ease;
 }
 .form input:focus {
-  border-color: #54806b;
+  border-color: var(--green);
   box-shadow: 0 0 0 3px var(--pale);
+  background: #fff;
 }
 .full {
   width: 100%;
@@ -589,6 +645,7 @@ select {
   background: white;
   padding: 32px;
   overflow: auto;
+  box-shadow: -20px 0 60px #0f27471f;
 }
 .drawer header {
   display: flex;
@@ -606,10 +663,20 @@ select {
   margin: 15px 0;
 }
 .drawer input,
-.drawer select {
+.drawer select,
+.drawer textarea {
   padding: 11px;
   border: 1px solid var(--line);
   border-radius: 8px;
+  background: #fbfcfd;
+  color: var(--ink);
+  outline: none;
+}
+.drawer input:focus,
+.drawer select:focus,
+.drawer textarea:focus {
+  border-color: var(--green);
+  box-shadow: 0 0 0 3px var(--pale);
 }
 .drawer footer {
   display: flex;

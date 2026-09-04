@@ -7,7 +7,7 @@
 }
 .success {
   background: #e8f3ec;
-  color: #256746;
+  color: #0b756b;
   padding: 11px;
   border-radius: 8px;
 }
@@ -26,7 +26,7 @@
   min-height: 300px;
   border-radius: 15px;
   padding: 32px;
-  background: linear-gradient(120deg, #1a3529, #44705b);
+  background: linear-gradient(120deg, #0f2747, #176477);
   background-size: cover;
   background-position: center;
   color: #fff;
@@ -40,7 +40,7 @@
 }
 .property-hero p {
   margin: 0;
-  color: #d9e3dd;
+  color: #d8e8e6;
 }
 .photo-button {
   background: #ffffffde;
