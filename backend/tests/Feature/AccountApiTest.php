@@ -28,6 +28,7 @@ class AccountApiTest extends TestCase
 
         $this->actingAs($user)->putJson('/api/v1/account', [
             'name' => 'Ana García', 'email' => 'ANA.NUEVA@example.com',
+            'current_password' => 'oldpass123',
             'portfolio_name' => 'Patrimonio García', 'currency' => 'EUR', 'country_code' => 'pt',
         ])->assertOk()
             ->assertJsonPath('user.email', 'ana.nueva@example.com')
@@ -73,7 +74,7 @@ class AccountApiTest extends TestCase
         Storage::disk('local')->put("portfolios/{$portfolio->id}/documents/file.pdf", 'private');
 
         $this->actingAs($user)->getJson('/api/v1/account/usage')->assertOk()
-            ->assertJsonPath('code', 'starter')->assertJsonPath('storage.limit', 262144000);
+            ->assertJsonPath('code', 'free')->assertJsonPath('storage.limit', 52428800);
         $this->actingAs($user)->deleteJson('/api/v1/account', [
             'current_password' => 'oldpass123', 'confirmation' => 'NO',
         ])->assertUnprocessable();

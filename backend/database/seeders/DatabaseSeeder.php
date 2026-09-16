@@ -22,7 +22,7 @@ class DatabaseSeeder extends Seeder
         }
 
         DB::transaction(function () {
-            $user = User::updateOrCreate(['email' => 'demo@inmogest.test'], [
+            $user = User::updateOrCreate(['email' => 'demo@alquivo.test'], [
                 'name' => 'Álex García', 'password' => 'demo12345', 'email_verified_at' => now(),
                 'terms_accepted_at' => now(), 'terms_version' => '2026-07',
             ]);

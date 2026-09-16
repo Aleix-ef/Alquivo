@@ -3,12 +3,17 @@ import { onMounted, reactive, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useSession } from "../session";
 import api from "../api";
+import ConfirmDialog from "../components/ConfirmDialog.vue";
+import TwoFactorSettings from "../components/TwoFactorSettings.vue";
+import { useConfirmDialog } from "../composables/useConfirmDialog";
 
 const session = useSession();
 const router = useRouter();
 const route = useRoute();
 const usage = ref(null);
+const usageError = ref("");
 const account = reactive({
+  current_password: "",
   name: session.user?.name || "",
   email: session.user?.email || "",
   portfolio_name: session.portfolio?.name || "",
@@ -25,12 +30,14 @@ const passwordState = ref({ saving: false, error: "", success: "" });
 const verificationState = ref("");
 const deletion = reactive({ current_password: "", confirmation: "" });
 const deletionError = ref("");
+const confirmation = useConfirmDialog();
 
 async function saveAccount() {
   accountState.value = { saving: true, error: "", success: "" };
   try {
     const { data } = await api.put("/account", account);
     session.save(data);
+    account.current_password = "";
     accountState.value.success = "Cambios guardados.";
   } catch (e) {
     accountState.value.error =
@@ -56,14 +63,27 @@ async function savePassword() {
   }
 }
 async function resendVerification() {
-  verificationState.value = (await api.post("/auth/email/resend")).data.message;
+  try {
+    verificationState.value = (
+      await api.post("/auth/email/resend")
+    ).data.message;
+  } catch (error) {
+    verificationState.value =
+      error.response?.status === 429
+        ? "Espera unos minutos antes de solicitar otro enlace."
+        : "No hemos podido enviar el enlace. Inténtalo más tarde.";
+  }
 }
 async function deleteAccount() {
   deletionError.value = "";
   if (
-    !window.confirm(
-      "Esta acción elimina definitivamente tu cartera, documentos y cuenta. ¿Continuar?",
-    )
+    !(await confirmation.ask({
+      title: "¿Eliminar definitivamente tu cuenta?",
+      description:
+        "Se borrarán tu cartera, inmuebles, documentos y movimientos. Esta acción no se puede deshacer.",
+      confirmLabel: "Eliminar cuenta",
+      danger: true,
+    }))
   )
     return;
   try {
@@ -78,8 +98,12 @@ async function deleteAccount() {
 const megabytes = (bytes) =>
   `${(Number(bytes || 0) / 1024 / 1024).toFixed(1)} MB`;
 onMounted(async () => {
-  if (route.query.verified === "1") await session.restore();
-  usage.value = (await api.get("/account/usage")).data;
+  try {
+    if (route.query.verified === "1") await session.restore();
+    usage.value = (await api.get("/account/usage")).data;
+  } catch {
+    usageError.value = "No se pudo cargar el uso del plan.";
+  }
 });
 </script>
 
@@ -93,6 +117,8 @@ onMounted(async () => {
       </div>
     </header>
     <div class="settings-grid">
+      <TwoFactorSettings />
+      <p v-if="usageError" class="error" role="alert">{{ usageError }}</p>
       <form class="settings-card" @submit.prevent="saveAccount">
         <div>
           <p class="eyebrow">Perfil</p>
@@ -107,15 +133,25 @@ onMounted(async () => {
           >Email<input v-model="account.email" type="email" required
         /></label>
         <label
+          v-if="account.email.trim().toLowerCase() !== session.user?.email"
+        >
+          Confirma tu contraseña para cambiar el correo
+          <input
+            v-model="account.current_password"
+            type="password"
+            required
+            autocomplete="current-password"
+          />
+        </label>
+        <label
           >Nombre de la cartera<input v-model="account.portfolio_name" required
         /></label>
         <div class="field-row">
           <label
-            >Moneda<select v-model="account.currency">
-              <option>EUR</option>
-              <option>USD</option>
-              <option>GBP</option>
-            </select></label
+            >Moneda<input :value="account.currency" readonly /><small
+              >La beta utiliza euros. No cambiamos la moneda de importes ya
+              registrados.</small
+            ></label
           ><label
             >País<input v-model="account.country_code" maxlength="2" required
           /></label>
@@ -191,7 +227,10 @@ onMounted(async () => {
           >
         </div>
         <template v-if="!session.user?.email_verified_at"
-          ><p class="muted">Tu correo todavía no está verificado.</p>
+          ><p class="muted">
+            Verifica tu correo para acceder a tus inmuebles, documentos y al
+            asistente. Revisa tu bandeja de entrada y la carpeta de spam.
+          </p>
           <button
             class="button secondary"
             type="button"
@@ -233,5 +272,10 @@ onMounted(async () => {
         </footer>
       </form>
     </div>
+    <ConfirmDialog
+      :dialog="confirmation.dialog.value"
+      @confirm="confirmation.confirm"
+      @cancel="confirmation.cancel"
+    />
   </main>
 </template>

@@ -3,12 +3,18 @@ import { computed, onMounted, ref } from "vue";
 import { Archive, Pencil, Plus, UsersRound } from "@lucide/vue";
 import { useRoute, useRouter } from "vue-router";
 import api from "../api";
+import { fetchAllPages } from "../pagination";
+import ConfirmDialog from "../components/ConfirmDialog.vue";
+import { useConfirmDialog } from "../composables/useConfirmDialog";
 
 const route = useRoute();
 const router = useRouter();
 const contacts = ref([]);
 const saving = ref(false);
+const loading = ref(true);
+const loadError = ref("");
 const error = ref("");
+const confirmation = useConfirmDialog();
 const editing = computed(() =>
   contacts.value.find((contact) => contact.id === Number(route.query.edit)),
 );
@@ -27,7 +33,15 @@ const mainLease = (contact) =>
   contact.leases?.[0];
 
 async function load() {
-  contacts.value = (await api.get("/contacts")).data.data;
+  loading.value = true;
+  loadError.value = "";
+  try {
+    contacts.value = await fetchAllPages(api, "/contacts");
+  } catch {
+    loadError.value = "No hemos podido cargar tus contactos.";
+  } finally {
+    loading.value = false;
+  }
 }
 
 function openNew() {
@@ -68,9 +82,21 @@ async function save() {
 
 async function archive(contact) {
   if (contact.leases?.length) return;
-  if (!window.confirm(`¿Archivar a ${contact.name}?`)) return;
-  await api.delete(`/contacts/${contact.id}`);
-  await load();
+  if (
+    !(await confirmation.ask({
+      title: `¿Archivar a ${contact.name}?`,
+      description: "El contacto dejará de aparecer en tu agenda.",
+      confirmLabel: "Archivar contacto",
+    }))
+  )
+    return;
+  try {
+    await api.delete(`/contacts/${contact.id}`);
+    await load();
+  } catch (exception) {
+    loadError.value =
+      exception.response?.data?.message || "No se pudo archivar el contacto.";
+  }
 }
 
 onMounted(load);
@@ -91,7 +117,14 @@ onMounted(load);
       </button>
     </header>
 
-    <section v-if="contacts.length" class="record-list">
+    <section v-if="loading" class="empty" role="status">
+      Cargando contactos…
+    </section>
+    <section v-else-if="loadError" class="empty" role="alert">
+      <p>{{ loadError }}</p>
+      <button class="button secondary" @click="load">Volver a intentar</button>
+    </section>
+    <section v-else-if="contacts.length" class="record-list">
       <article
         v-for="contact in contacts"
         :key="contact.id"
@@ -178,5 +211,10 @@ onMounted(load);
         </footer>
       </form>
     </div>
+    <ConfirmDialog
+      :dialog="confirmation.dialog.value"
+      @confirm="confirmation.confirm"
+      @cancel="confirmation.cancel"
+    />
   </main>
 </template>

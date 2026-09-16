@@ -37,7 +37,9 @@ class AuthAndPropertyApiTest extends TestCase
             'terms_accepted' => true,
         ]);
 
-        $this->actingAs(User::where('email', 'ana@example.com')->firstOrFail())->postJson('/api/v1/properties', [
+        $user = User::where('email', 'ana@example.com')->firstOrFail();
+        $user->markEmailAsVerified();
+        $this->actingAs($user)->postJson('/api/v1/properties', [
             'name' => 'Piso Gran Vía',
             'type' => 'housing',
             'address_line' => 'Gran Vía 10',

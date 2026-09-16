@@ -4,7 +4,8 @@ WORKDIR /app
 COPY composer.json composer.lock ./
 RUN composer install --no-dev --prefer-dist --no-interaction --no-progress --no-scripts
 COPY . .
-RUN composer dump-autoload --optimize --no-dev
+RUN mkdir -p bootstrap/cache storage/framework/cache/data storage/framework/sessions storage/framework/views storage/logs storage/app/private storage/app/keys \
+    && composer dump-autoload --optimize --no-dev
 
 FROM php:8.3-fpm-alpine
 RUN apk add --no-cache icu-dev libpq-dev libzip-dev \

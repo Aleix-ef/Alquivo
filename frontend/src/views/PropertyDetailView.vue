@@ -1,4 +1,8 @@
 <script setup>
+import { useProduct } from "../stores/product";
+import { usePlanAccess } from "../stores/planAccess";
+const product = useProduct(),
+  planAccess = usePlanAccess();
 import { ref, computed, watch, onBeforeUnmount } from "vue";
 import {
   ArrowLeft,
@@ -15,14 +19,20 @@ import {
   ImagePlus,
   RefreshCw,
   Check,
+  Trash2,
+  Star,
+  Archive,
 } from "@lucide/vue";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import api from "../api";
 import PropertyImage from "../components/PropertyImage.vue";
 import { useDialog } from "../composables/useDialog";
+import ConfirmDialog from "../components/ConfirmDialog.vue";
+import { useConfirmDialog } from "../composables/useConfirmDialog";
 import "../property-experience.css";
 
 const route = useRoute();
+const router = useRouter();
 const property = ref(null);
 const loading = ref(true);
 const loadError = ref("");
@@ -37,6 +47,8 @@ const editForm = ref({});
 const drawer = ref(null);
 const photoInput = ref(null);
 const selectedPhotoId = ref(null);
+const propertyActionBusy = ref(false);
+const confirmation = useConfirmDialog();
 const types = {
   housing: "Vivienda",
   commercial: "Local",
@@ -142,15 +154,97 @@ function startEditing() {
     type: property.value.type,
     address_line: property.value.address_line,
     city: property.value.city || "",
+    province: property.value.province || "",
+    postal_code: property.value.postal_code || "",
+    purchase_date: property.value.purchase_date?.slice(0, 10) || "",
     purchase_price: property.value.purchase_price,
+    acquisition_costs: property.value.acquisition_costs,
     current_value: property.value.current_value,
     outstanding_debt: property.value.outstanding_debt,
     area: property.value.area,
+    bedrooms: property.value.bedrooms,
+    bathrooms: property.value.bathrooms,
+    notes: property.value.notes || "",
     valuation_date: localDate,
   };
   saveError.value = "";
   fieldErrors.value = {};
   editing.value = true;
+}
+
+async function makeCover() {
+  if (
+    !selectedPhoto.value ||
+    selectedPhoto.value.is_cover ||
+    propertyActionBusy.value
+  )
+    return;
+  propertyActionBusy.value = true;
+  uploadError.value = "";
+  try {
+    await api.put(`/property-photos/${selectedPhoto.value.id}/cover`);
+    await load();
+    notice.value = "La portada de la propiedad se ha actualizado.";
+  } catch (exception) {
+    uploadError.value =
+      exception.response?.data?.message || "No se pudo cambiar la portada.";
+  } finally {
+    propertyActionBusy.value = false;
+  }
+}
+
+async function removePhoto() {
+  const photo = selectedPhoto.value;
+  if (!photo || propertyActionBusy.value) return;
+  if (
+    !(await confirmation.ask({
+      title: "¿Eliminar esta fotografía?",
+      description:
+        "La imagen dejará de estar disponible y no se podrá recuperar.",
+      confirmLabel: "Eliminar fotografía",
+      danger: true,
+    }))
+  )
+    return;
+  propertyActionBusy.value = true;
+  try {
+    await api.delete(`/property-photos/${photo.id}`);
+    property.value.photos = property.value.photos.filter(
+      (item) => item.id !== photo.id,
+    );
+    selectedPhotoId.value = null;
+    notice.value = "Fotografía eliminada.";
+  } catch (exception) {
+    uploadError.value =
+      exception.response?.data?.message || "No se pudo eliminar la fotografía.";
+  } finally {
+    propertyActionBusy.value = false;
+  }
+}
+
+async function archiveProperty() {
+  if (propertyActionBusy.value) return;
+  if (
+    !(await confirmation.ask({
+      title: `¿Archivar “${property.value.name}”?`,
+      description:
+        "Solo se puede archivar una propiedad sin contratos, movimientos, documentos, incidencias ni recordatorios vinculados.",
+      confirmLabel: "Archivar propiedad",
+      danger: true,
+    }))
+  )
+    return;
+  propertyActionBusy.value = true;
+  uploadError.value = "";
+  try {
+    await api.delete(`/properties/${property.value.id}`);
+    await router.push("/properties");
+  } catch (exception) {
+    uploadError.value =
+      exception.response?.data?.message || "No se pudo archivar la propiedad.";
+  } finally {
+    propertyActionBusy.value = false;
+  }
 }
 function closeEditing() {
   if (!saving.value) editing.value = false;
@@ -270,6 +364,15 @@ onBeforeUnmount(() => loadController?.abort());
       </button>
     </section>
     <template v-else-if="property">
+      <p
+        v-if="planAccess.readOnly(property.id)"
+        class="property-notice"
+        role="status"
+      >
+        Este inmueble está en modo consulta por el límite de tu plan. Sus datos
+        y documentos se conservan.
+        <RouterLink to="/plans">Ver opciones</RouterLink>
+      </p>
       <p v-if="notice" class="property-notice" role="status">
         <Check :size="16" />{{ notice }}
       </p>
@@ -305,19 +408,34 @@ onBeforeUnmount(() => loadController?.abort());
             </p>
           </div>
           <div class="hero-actions">
+            <RouterLink
+              class="button photo-button"
+              :to="`/fiscality?property=${property.id}`"
+              v-if="product.features.fiscality"
+              ><FileText :size="16" />Fiscalidad</RouterLink
+            >
             <button
               class="button photo-button"
               type="button"
               @click="startEditing"
+              :disabled="planAccess.readOnly(property.id)"
             >
               <Pencil :size="16" />Editar</button
             ><button
               class="button photo-button"
               type="button"
-              :disabled="uploading"
+              :disabled="uploading || planAccess.readOnly(property.id)"
               @click="photoInput?.click()"
             >
               <Camera :size="16" />{{ uploading ? "Subiendo…" : "Añadir foto" }}
+            </button>
+            <button
+              class="button photo-button"
+              type="button"
+              :disabled="propertyActionBusy || planAccess.readOnly(property.id)"
+              @click="archiveProperty"
+            >
+              <Archive :size="16" />Archivar
             </button>
           </div>
         </div>
@@ -370,6 +488,26 @@ onBeforeUnmount(() => loadController?.abort());
         }}
         JPG, PNG o WebP, entre otros · máximo 6 MB.
       </p>
+      <div v-if="selectedPhoto" class="property-photo-actions">
+        <button
+          v-if="!selectedPhoto.is_cover"
+          class="button secondary"
+          type="button"
+          :disabled="propertyActionBusy"
+          @click="makeCover"
+        >
+          <Star :size="15" />Usar como portada
+        </button>
+        <span v-else class="pill"><Star :size="14" />Foto de portada</span>
+        <button
+          class="button secondary"
+          type="button"
+          :disabled="propertyActionBusy"
+          @click="removePhoto"
+        >
+          <Trash2 :size="15" />Eliminar foto
+        </button>
+      </div>
 
       <section class="asset-metrics" aria-label="Resumen de la propiedad">
         <article>
@@ -424,6 +562,20 @@ onBeforeUnmount(() => loadController?.abort());
               </dd>
             </div>
             <div>
+              <dt>Fecha de compra</dt>
+              <dd>
+                {{
+                  property.purchase_date
+                    ? date(property.purchase_date)
+                    : "Sin indicar"
+                }}
+              </dd>
+            </div>
+            <div>
+              <dt>Gastos de adquisición</dt>
+              <dd>{{ money(property.acquisition_costs) }}</dd>
+            </div>
+            <div>
               <dt>Deuda pendiente</dt>
               <dd>{{ money(property.outstanding_debt) }}</dd>
             </div>
@@ -441,7 +593,18 @@ onBeforeUnmount(() => loadController?.abort());
               <dt>Tipo de propiedad</dt>
               <dd>{{ types[property.type] || "Otro" }}</dd>
             </div>
+            <div v-if="property.bedrooms !== null">
+              <dt>Dormitorios</dt>
+              <dd>{{ property.bedrooms }}</dd>
+            </div>
+            <div v-if="property.bathrooms !== null">
+              <dt>Baños</dt>
+              <dd>{{ property.bathrooms }}</dd>
+            </div>
           </dl>
+          <p v-if="property.notes" class="property-panel-description">
+            {{ property.notes }}
+          </p>
           <button
             type="button"
             class="property-text-button"
@@ -483,7 +646,9 @@ onBeforeUnmount(() => loadController?.abort());
               Asocia un inquilino y un contrato para empezar a controlar la
               renta.
             </p>
-            <RouterLink class="button secondary" to="/leases?new=1"
+            <RouterLink
+              class="button secondary"
+              :to="`/leases?new=1&property=${property.id}`"
               >Crear alquiler<ArrowUpRight :size="15" /></RouterLink
           ></template>
         </article>
@@ -635,6 +800,20 @@ onBeforeUnmount(() => loadController?.abort());
           /></label>
           <div class="property-form-row">
             <label
+              >Provincia<input
+                v-model.trim="editForm.province"
+                maxlength="100" /></label
+            ><label
+              >Código postal<input
+                v-model.trim="editForm.postal_code"
+                maxlength="12"
+            /></label>
+          </div>
+          <label
+            >Fecha de compra<input v-model="editForm.purchase_date" type="date"
+          /></label>
+          <div class="property-form-row">
+            <label
               >Precio de compra (€)<input
                 v-model="editForm.purchase_price"
                 type="number"
@@ -650,6 +829,14 @@ onBeforeUnmount(() => loadController?.abort());
                 inputmode="decimal"
             /></label>
           </div>
+          <label
+            >Gastos de adquisición (€)<input
+              v-model="editForm.acquisition_costs"
+              type="number"
+              min="0"
+              step="0.01"
+              inputmode="decimal"
+          /></label>
           <label
             >Fecha de valoración<input
               v-model="editForm.valuation_date"
@@ -672,6 +859,19 @@ onBeforeUnmount(() => loadController?.abort());
                 inputmode="decimal"
             /></label>
           </div>
+          <div class="property-form-row">
+            <label
+              >Dormitorios<input
+                v-model="editForm.bedrooms"
+                type="number"
+                min="0" /></label
+            ><label
+              >Baños<input v-model="editForm.bathrooms" type="number" min="0"
+            /></label>
+          </div>
+          <label
+            >Notas<textarea v-model="editForm.notes" rows="4"></textarea>
+          </label>
           <ul
             v-if="Object.keys(fieldErrors).length"
             class="property-validation-errors"
@@ -695,5 +895,10 @@ onBeforeUnmount(() => loadController?.abort());
         </form>
       </div>
     </Teleport>
+    <ConfirmDialog
+      :dialog="confirmation.dialog.value"
+      @confirm="confirmation.confirm"
+      @cancel="confirmation.cancel"
+    />
   </main>
 </template>

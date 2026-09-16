@@ -3,6 +3,7 @@ import { computed, onMounted, ref } from "vue";
 import { Plus, Wrench } from "@lucide/vue";
 import { useRoute, useRouter } from "vue-router";
 import api from "../api";
+import { fetchAllPages } from "../pagination";
 
 const route = useRoute();
 const router = useRouter();
@@ -52,15 +53,15 @@ async function load() {
   loadError.value = "";
   try {
     const [i, p, c] = await Promise.all([
-      api.get("/issues", {
+      fetchAllPages(api, "/issues", {
         params: { property_id: propertyFilter.value || undefined },
       }),
-      api.get("/properties"),
-      api.get("/contacts"),
+      fetchAllPages(api, "/properties"),
+      fetchAllPages(api, "/contacts"),
     ]);
-    issues.value = i.data.data;
-    properties.value = p.data.data;
-    contacts.value = c.data.data;
+    issues.value = i;
+    properties.value = p;
+    contacts.value = c;
   } catch {
     loadError.value =
       "No hemos podido cargar las incidencias. Vuelve a intentarlo.";

@@ -41,6 +41,7 @@ class TransactionController extends Controller
     public function update(Request $request, Transaction $transaction)
     {
         abort_unless($transaction->portfolio_id === $request->user()->portfolio()->id, 404);
+        abort_if($transaction->rent_charge_id, 422, 'Corrige este cobro desde la operación de alquiler para mantener la mensualidad cuadrada.');
         $data = $request->validate([
             'property_id' => ['sometimes', 'nullable', 'integer'],
             'direction' => ['sometimes', Rule::in(['income', 'expense'])],

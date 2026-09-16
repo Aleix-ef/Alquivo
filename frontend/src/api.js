@@ -18,6 +18,13 @@ export const csrf = () =>
 api.interceptors.response.use(
   (r) => r,
   (e) => {
+    if (
+      e.response?.status === 403 &&
+      e.response?.data?.message === "Your email address is not verified." &&
+      location.pathname !== "/settings"
+    ) {
+      location.assign("/settings");
+    }
     // Auth screens and the initial cookie check handle their own errors.
     if (e.response?.status === 401 && !e.config?.url?.startsWith("/auth/")) {
       clearSessionStorage();

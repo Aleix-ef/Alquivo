@@ -1,0 +1,41 @@
+# Isolated recovery drill: no public ports, workers, mail delivery or provider calls.
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: alquivo
+      POSTGRES_DB: alquivo
+      POSTGRES_PASSWORD: restore-drill-local-only
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U alquivo -d alquivo"]
+      interval: 2s
+      timeout: 2s
+      retries: 30
+  backend:
+    image: ${RECOVERY_BACKEND_IMAGE:-inmogest-next-backend}
+    build: ./backend
+    env_file: ${RECOVERY_ENV_FILE:-backend/.env}
+    environment:
+      APP_ENV: local
+      APP_DEBUG: "false"
+      DB_CONNECTION: pgsql
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_DATABASE: alquivo
+      DB_USERNAME: alquivo
+      DB_PASSWORD: restore-drill-local-only
+      DB_SSLMODE: disable
+      MAIL_MAILER: array
+      BILLING_ENABLED: "false"
+      ASSISTANT_ENABLED: "false"
+      DOCUMENT_KEY_FILE: /recovery/documents.json
+    volumes:
+      - recovered_files:/app/storage/app/private
+      - ${RECOVERY_DIRECTORY:?Set the isolated recovery directory}:/recovery:ro
+volumes:
+  recovered_files:
+networks:
+  default:
+    internal: true

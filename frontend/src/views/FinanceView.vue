@@ -1,14 +1,20 @@
 <script setup>
 import { ref, computed, onMounted } from "vue";
-import { ArrowDownLeft, ArrowUpRight, Plus } from "@lucide/vue";
+import { ArrowDownLeft, ArrowUpRight, Pencil, Plus, Trash2 } from "@lucide/vue";
 import { useRoute, useRouter } from "vue-router";
 import api from "../api";
+import { fetchAllPages } from "../pagination";
+import ConfirmDialog from "../components/ConfirmDialog.vue";
+import { useConfirmDialog } from "../composables/useConfirmDialog";
 const route = useRoute(),
   router = useRouter(),
   tx = ref([]),
   leases = ref([]),
   properties = ref([]),
   recurringRules = ref([]),
+  loading = ref(true),
+  loadError = ref(""),
+  actionError = ref(""),
   saving = ref(false),
   error = ref(""),
   show = computed(() => route.query.new === "1"),
@@ -23,6 +29,16 @@ const route = useRoute(),
     recurring: false,
     frequency: "monthly",
   });
+const editingTransaction = ref(null);
+const paymentTarget = ref(null);
+const editForm = ref({});
+const paymentForm = ref({
+  amount: "",
+  transaction_date: "",
+  payment_method: "transfer",
+  notes: "",
+});
+const confirmation = useConfirmDialog();
 const money = (v) =>
     new Intl.NumberFormat("es-ES", {
       style: "currency",
@@ -54,16 +70,24 @@ const money = (v) =>
     tx.value.filter((transaction) => transaction.status === "pending"),
   );
 async function load() {
-  const [t, l, p, r] = await Promise.all([
-    api.get("/transactions"),
-    api.get("/leases"),
-    api.get("/properties"),
-    api.get("/recurring-rules"),
-  ]);
-  tx.value = t.data.data;
-  leases.value = l.data.data;
-  properties.value = p.data.data;
-  recurringRules.value = r.data.data;
+  loading.value = true;
+  loadError.value = "";
+  try {
+    const [t, l, p, r] = await Promise.all([
+      fetchAllPages(api, "/transactions"),
+      fetchAllPages(api, "/leases"),
+      fetchAllPages(api, "/properties"),
+      fetchAllPages(api, "/recurring-rules"),
+    ]);
+    tx.value = t;
+    leases.value = l;
+    properties.value = p;
+    recurringRules.value = r;
+  } catch {
+    loadError.value = "No hemos podido cargar tus movimientos.";
+  } finally {
+    loading.value = false;
+  }
 }
 async function save() {
   saving.value = true;
@@ -100,30 +124,164 @@ async function save() {
     saving.value = false;
   }
 }
-async function collect(charge) {
+function openPayment(charge) {
   const remaining = Number(charge.amount) - Number(charge.paid_amount);
-  await api.post(`/rent-charges/${charge.id}/payments`, {
+  paymentTarget.value = { charge, transaction: null, maximum: remaining };
+  paymentForm.value = {
     amount: remaining,
     transaction_date: new Date().toISOString().slice(0, 10),
     payment_method: "transfer",
-  });
-  await load();
+    notes: "",
+  };
+  actionError.value = "";
+}
+function editPayment(transaction) {
+  const charge = leases.value
+    .flatMap((lease) => lease.charges || [])
+    .find((item) => item.id === transaction.rent_charge_id);
+  const remaining = charge
+    ? Number(charge.amount) - Number(charge.paid_amount)
+    : 0;
+  paymentTarget.value = {
+    charge,
+    transaction,
+    maximum: Number(transaction.amount) + remaining,
+  };
+  paymentForm.value = {
+    amount: Number(transaction.amount),
+    transaction_date: transaction.transaction_date?.slice(0, 10),
+    payment_method: transaction.payment_method || "transfer",
+    notes: transaction.notes || "",
+  };
+  actionError.value = "";
+}
+async function savePayment() {
+  if (!paymentTarget.value || saving.value) return;
+  saving.value = true;
+  actionError.value = "";
+  try {
+    const payload = {
+      ...paymentForm.value,
+      amount: Number(paymentForm.value.amount),
+    };
+    if (paymentTarget.value.transaction) {
+      await api.put(
+        `/rent-payments/${paymentTarget.value.transaction.id}`,
+        payload,
+      );
+    } else {
+      await api.post(
+        `/rent-charges/${paymentTarget.value.charge.id}/payments`,
+        payload,
+      );
+    }
+    paymentTarget.value = null;
+    await load();
+  } catch (exception) {
+    actionError.value =
+      exception.response?.data?.message || "No se pudo guardar el cobro.";
+  } finally {
+    saving.value = false;
+  }
+}
+function editTransaction(transaction) {
+  editingTransaction.value = transaction;
+  editForm.value = {
+    property_id: transaction.property_id || "",
+    direction: transaction.direction,
+    category: transaction.category,
+    description: transaction.description,
+    amount: Number(transaction.amount),
+    transaction_date: transaction.transaction_date?.slice(0, 10),
+    due_date: transaction.due_date?.slice(0, 10) || "",
+    status: transaction.status,
+    payment_method: transaction.payment_method || "",
+    notes: transaction.notes || "",
+  };
+  actionError.value = "";
+}
+async function saveTransactionEdit() {
+  if (!editingTransaction.value || saving.value) return;
+  saving.value = true;
+  actionError.value = "";
+  try {
+    await api.put(`/transactions/${editingTransaction.value.id}`, {
+      ...editForm.value,
+      property_id: editForm.value.property_id
+        ? Number(editForm.value.property_id)
+        : null,
+      amount: Number(editForm.value.amount),
+      due_date: editForm.value.due_date || null,
+      payment_method: editForm.value.payment_method || null,
+      notes: editForm.value.notes || null,
+    });
+    editingTransaction.value = null;
+    await load();
+  } catch (exception) {
+    actionError.value =
+      exception.response?.data?.message || "No se pudo corregir el movimiento.";
+  } finally {
+    saving.value = false;
+  }
+}
+async function removePayment(transaction) {
+  if (
+    !(await confirmation.ask({
+      title: "¿Eliminar este cobro registrado?",
+      description:
+        "La mensualidad volverá a calcularse y podrá quedar pendiente de nuevo.",
+      confirmLabel: "Eliminar cobro",
+      danger: true,
+    }))
+  )
+    return;
+  try {
+    await api.delete(`/rent-payments/${transaction.id}`);
+    await load();
+  } catch (exception) {
+    actionError.value =
+      exception.response?.data?.message || "No se pudo eliminar el cobro.";
+  }
 }
 async function markPaid(transaction) {
-  await api.put(`/transactions/${transaction.id}`, {
-    status: "paid",
-    transaction_date: new Date().toISOString().slice(0, 10),
-  });
-  await load();
+  try {
+    await api.put(`/transactions/${transaction.id}`, {
+      status: "paid",
+      transaction_date: new Date().toISOString().slice(0, 10),
+    });
+    await load();
+  } catch (exception) {
+    actionError.value =
+      exception.response?.data?.message ||
+      "No se pudo confirmar el movimiento.";
+  }
 }
 async function cancelTransaction(transaction) {
-  if (!window.confirm(`¿Cancelar “${transaction.description}”?`)) return;
-  await api.put(`/transactions/${transaction.id}`, { status: "cancelled" });
-  await load();
+  if (
+    !(await confirmation.ask({
+      title: `¿Cancelar “${transaction.description}”?`,
+      description:
+        "Dejará de contar en tus ingresos o gastos confirmados, pero conservarás el historial.",
+      confirmLabel: "Cancelar movimiento",
+    }))
+  )
+    return;
+  try {
+    await api.put(`/transactions/${transaction.id}`, { status: "cancelled" });
+    await load();
+  } catch (exception) {
+    actionError.value =
+      exception.response?.data?.message || "No se pudo cancelar el movimiento.";
+  }
 }
 async function pauseRule(rule) {
-  await api.put(`/recurring-rules/${rule.id}`, { active: !rule.active });
-  await load();
+  try {
+    await api.put(`/recurring-rules/${rule.id}`, { active: !rule.active });
+    await load();
+  } catch (exception) {
+    actionError.value =
+      exception.response?.data?.message || "No se pudo actualizar la regla.";
+  }
 }
 onMounted(load);
 </script>
@@ -139,6 +297,14 @@ onMounted(load);
         ><Plus :size="16" />Añadir movimiento</RouterLink
       >
     </header>
+    <section v-if="loading" class="empty" role="status">
+      Cargando tus finanzas…
+    </section>
+    <section v-else-if="loadError" class="empty" role="alert">
+      <p>{{ loadError }}</p>
+      <button class="button secondary" @click="load">Volver a intentar</button>
+    </section>
+    <p v-if="actionError" class="error" role="alert">{{ actionError }}</p>
     <section class="finance-summary">
       <article>
         <span>Ingresos cobrados</span><strong>{{ money(income) }}</strong>
@@ -171,7 +337,7 @@ onMounted(load);
           <button
             class="button secondary"
             type="button"
-            @click="collect(charge)"
+            @click="openPayment(charge)"
           >
             Cobrar
             {{ money(Number(charge.amount) - Number(charge.paid_amount)) }}
@@ -264,10 +430,36 @@ onMounted(load);
               {{ t.transaction_date }}</small
             >
           </div>
-          <strong :class="t.direction"
-            >{{ t.direction === "expense" ? "-" : "+"
-            }}{{ money(t.amount) }}</strong
-          >
+          <span class="movement-actions">
+            <strong :class="t.direction"
+              >{{ t.direction === "expense" ? "-" : "+"
+              }}{{ money(t.amount) }}</strong
+            >
+            <button
+              v-if="t.rent_charge_id"
+              type="button"
+              title="Corregir cobro"
+              @click="editPayment(t)"
+            >
+              <Pencil :size="16" />
+            </button>
+            <button
+              v-else-if="!t.recurring_rule_id"
+              type="button"
+              title="Editar movimiento"
+              @click="editTransaction(t)"
+            >
+              <Pencil :size="16" />
+            </button>
+            <button
+              v-if="t.rent_charge_id"
+              type="button"
+              title="Eliminar cobro"
+              @click="removePayment(t)"
+            >
+              <Trash2 :size="16" />
+            </button>
+          </span>
         </div>
       </div>
       <div v-else class="empty"><p>Aún no hay movimientos.</p></div>
@@ -330,5 +522,148 @@ onMounted(load);
         </footer>
       </form>
     </div>
+    <div
+      v-if="paymentTarget"
+      class="drawer-bg"
+      @click.self="!saving && (paymentTarget = null)"
+    >
+      <form class="drawer" @submit.prevent="savePayment">
+        <p class="eyebrow">Alquiler</p>
+        <h2>
+          {{
+            paymentTarget.transaction ? "Corrige el cobro" : "Registra el cobro"
+          }}
+        </h2>
+        <p v-if="actionError" class="error" role="alert">{{ actionError }}</p>
+        <label
+          >Importe<input
+            v-model="paymentForm.amount"
+            type="number"
+            min="0.01"
+            :max="paymentTarget.maximum"
+            step="0.01"
+            required
+        /></label>
+        <small>Máximo disponible: {{ money(paymentTarget.maximum) }}</small>
+        <label
+          >Fecha<input
+            v-model="paymentForm.transaction_date"
+            type="date"
+            required
+        /></label>
+        <label
+          >Método<select v-model="paymentForm.payment_method">
+            <option value="transfer">Transferencia</option>
+            <option value="cash">Efectivo</option>
+            <option value="card">Tarjeta</option>
+            <option value="direct_debit">Domiciliación</option>
+            <option value="other">Otro</option>
+          </select></label
+        >
+        <label
+          >Notas<textarea v-model="paymentForm.notes" rows="3"></textarea>
+        </label>
+        <footer>
+          <button
+            class="button secondary"
+            type="button"
+            :disabled="saving"
+            @click="paymentTarget = null"
+          >
+            Cancelar
+          </button>
+          <button class="button primary" :disabled="saving">
+            {{ saving ? "Guardando…" : "Guardar cobro" }}
+          </button>
+        </footer>
+      </form>
+    </div>
+    <div
+      v-if="editingTransaction"
+      class="drawer-bg"
+      @click.self="!saving && (editingTransaction = null)"
+    >
+      <form class="drawer" @submit.prevent="saveTransactionEdit">
+        <p class="eyebrow">Corrección</p>
+        <h2>Edita el movimiento</h2>
+        <p v-if="actionError" class="error" role="alert">{{ actionError }}</p>
+        <label
+          >Tipo<select v-model="editForm.direction">
+            <option value="expense">Gasto</option>
+            <option value="income">Ingreso</option>
+          </select></label
+        >
+        <label
+          >Concepto<input
+            v-model="editForm.description"
+            required
+            maxlength="180"
+        /></label>
+        <label
+          >Categoría<select v-model="editForm.category">
+            <option value="rent">Alquiler</option>
+            <option value="maintenance">Mantenimiento</option>
+            <option value="tax">Impuestos</option>
+            <option value="insurance">Seguro</option>
+            <option value="other">Otro</option>
+          </select></label
+        >
+        <label
+          >Propiedad<select v-model="editForm.property_id">
+            <option value="">General</option>
+            <option v-for="p in properties" :key="p.id" :value="p.id">
+              {{ p.name }}
+            </option>
+          </select></label
+        >
+        <label
+          >Importe<input
+            v-model="editForm.amount"
+            type="number"
+            min="0.01"
+            step="0.01"
+            required
+        /></label>
+        <label
+          >Fecha<input v-model="editForm.transaction_date" type="date" required
+        /></label>
+        <label
+          >Estado<select v-model="editForm.status">
+            <option value="paid">Confirmado</option>
+            <option value="pending">Pendiente</option>
+            <option value="cancelled">Cancelado</option>
+          </select></label
+        >
+        <label
+          >Vencimiento<input v-model="editForm.due_date" type="date"
+        /></label>
+        <label
+          >Método de pago<input
+            v-model="editForm.payment_method"
+            maxlength="40"
+        /></label>
+        <label
+          >Notas<textarea v-model="editForm.notes" rows="3"></textarea>
+        </label>
+        <footer>
+          <button
+            class="button secondary"
+            type="button"
+            :disabled="saving"
+            @click="editingTransaction = null"
+          >
+            Cancelar
+          </button>
+          <button class="button primary" :disabled="saving">
+            {{ saving ? "Guardando…" : "Guardar cambios" }}
+          </button>
+        </footer>
+      </form>
+    </div>
+    <ConfirmDialog
+      :dialog="confirmation.dialog.value"
+      @confirm="confirmation.confirm"
+      @cancel="confirmation.cancel"
+    />
   </main>
 </template>

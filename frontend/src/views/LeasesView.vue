@@ -3,16 +3,22 @@ import { ref, computed, onMounted } from "vue";
 import { KeyRound, Plus } from "@lucide/vue";
 import { useRoute, useRouter } from "vue-router";
 import api from "../api";
+import { fetchAllPages } from "../pagination";
+import ConfirmDialog from "../components/ConfirmDialog.vue";
+import { useConfirmDialog } from "../composables/useConfirmDialog";
 const route = useRoute(),
   router = useRouter(),
   leases = ref([]),
   properties = ref([]),
   contacts = ref([]),
+  loading = ref(true),
+  loadError = ref(""),
   saving = ref(false),
   error = ref(""),
   show = computed(() => route.query.new === "1");
+const confirmation = useConfirmDialog();
 const form = ref({
-  property_id: "",
+  property_id: route.query.property || "",
   contact_id: "",
   tenant_name: "",
   tenant_email: "",
@@ -28,14 +34,22 @@ const money = (v) =>
     v || 0,
   );
 async function load() {
-  const [l, p, c] = await Promise.all([
-    api.get("/leases"),
-    api.get("/properties"),
-    api.get("/contacts"),
-  ]);
-  leases.value = l.data.data;
-  properties.value = p.data.data;
-  contacts.value = c.data.data;
+  loading.value = true;
+  loadError.value = "";
+  try {
+    const [l, p, c] = await Promise.all([
+      fetchAllPages(api, "/leases"),
+      fetchAllPages(api, "/properties"),
+      fetchAllPages(api, "/contacts"),
+    ]);
+    leases.value = l;
+    properties.value = p;
+    contacts.value = c;
+  } catch {
+    loadError.value = "No hemos podido cargar los alquileres.";
+  } finally {
+    loading.value = false;
+  }
 }
 async function save() {
   saving.value = true;
@@ -72,10 +86,22 @@ async function save() {
   }
 }
 async function endLease(lease) {
-  if (!window.confirm(`¿Finalizar el alquiler de ${lease.property?.name}?`))
+  if (
+    !(await confirmation.ask({
+      title: `¿Finalizar el alquiler de ${lease.property?.name}?`,
+      description:
+        "El contrato conservará su historial y dejará de generar nuevas mensualidades.",
+      confirmLabel: "Finalizar alquiler",
+    }))
+  )
     return;
-  await api.put(`/leases/${lease.id}`, { status: "ended" });
-  await load();
+  try {
+    await api.put(`/leases/${lease.id}`, { status: "ended" });
+    await load();
+  } catch (exception) {
+    loadError.value =
+      exception.response?.data?.message || "No se pudo finalizar el alquiler.";
+  }
 }
 onMounted(load);
 </script>
@@ -91,7 +117,14 @@ onMounted(load);
         ><Plus :size="16" />Nuevo alquiler</RouterLink
       >
     </header>
-    <section v-if="leases.length" class="record-list">
+    <section v-if="loading" class="empty" role="status">
+      Cargando alquileres…
+    </section>
+    <section v-else-if="loadError" class="empty" role="alert">
+      <p>{{ loadError }}</p>
+      <button class="button secondary" @click="load">Volver a intentar</button>
+    </section>
+    <section v-else-if="leases.length" class="record-list">
       <article v-for="l in leases" :key="l.id" class="record">
         <span class="record-icon"><KeyRound :size="20" /></span>
         <div>
@@ -194,5 +227,10 @@ onMounted(load);
         </footer>
       </form>
     </div>
+    <ConfirmDialog
+      :dialog="confirmation.dialog.value"
+      @confirm="confirmation.confirm"
+      @cancel="confirmation.cancel"
+    />
   </main>
 </template>

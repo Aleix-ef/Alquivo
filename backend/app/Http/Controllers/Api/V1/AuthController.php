@@ -2,14 +2,16 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Domain\Identity\Services\RevokeSessions;
+use App\Domain\Identity\Services\TwoFactor;
 use App\Domain\Portfolio\Models\Portfolio;
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Support\SecurityAudit;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password as PasswordBroker;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
@@ -19,6 +21,7 @@ class AuthController extends Controller
 {
     public function register(Request $request)
     {
+        $request->merge(['email' => mb_strtolower(trim((string) $request->input('email')))]);
         $data = $request->validate([
             'name' => ['required', 'string', 'max:100'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
@@ -51,13 +54,29 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
+        $request->merge(['email' => mb_strtolower(trim((string) $request->input('email')))]);
         $data = $request->validate(['email' => ['required', 'email'], 'password' => ['required', 'string']]);
-        $user = User::where('email', $data['email'])->first();
-        if (! $user || ! Hash::check($data['password'], $user->password)) {
+        if ($request->hasSession()) {
+            $request->session()->forget('two_factor_login');
+        }
+        $guard = Auth::guard('web');
+        if (! $guard->validate($data)) {
+            SecurityAudit::record('auth.failed', null);
             throw ValidationException::withMessages(['email' => ['Las credenciales no son correctas.']]);
         }
 
-        Auth::login($user);
+        $user = $guard->getProvider()->retrieveByCredentials($data);
+        $guard->getProvider()->rehashPasswordIfRequired($user, $data);
+        if ($user->two_factor_confirmed_at) {
+            abort_unless($request->hasSession(), 422, 'Este acceso necesita una sesión de navegador.');
+            $guard->logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+            $request->session()->put('two_factor_login', ['user_id' => $user->id, 'binding' => app(TwoFactor::class)->binding($user), 'expires' => now()->addMinutes(5)->timestamp]);
+
+            return ['two_factor_required' => true];
+        }
+        $guard->login($user);
         if ($request->hasSession()) {
             $request->session()->regenerate();
         }
@@ -83,6 +102,7 @@ class AuthController extends Controller
 
     public function forgotPassword(Request $request)
     {
+        $request->merge(['email' => mb_strtolower(trim((string) $request->input('email')))]);
         $data = $request->validate(['email' => ['required', 'email']]);
         PasswordBroker::sendResetLink($data);
 
@@ -91,13 +111,15 @@ class AuthController extends Controller
 
     public function resetPassword(Request $request)
     {
+        $request->merge(['email' => mb_strtolower(trim((string) $request->input('email')))]);
         $data = $request->validate([
             'token' => ['required', 'string'], 'email' => ['required', 'email'],
             'password' => ['required', 'confirmed', Password::min(8)->letters()->numbers()],
         ]);
         $status = PasswordBroker::reset($data, function (User $user, string $password) {
             $user->forceFill(['password' => $password, 'remember_token' => Str::random(60)])->save();
-            $user->tokens()->delete();
+            app(RevokeSessions::class)->execute($user);
+            SecurityAudit::record('account.password_reset', $user->id);
         });
         if ($status !== PasswordBroker::PASSWORD_RESET) {
             throw ValidationException::withMessages(['email' => ['El enlace no es válido o ha caducado.']]);
@@ -119,6 +141,6 @@ class AuthController extends Controller
     {
         $request->fulfill();
 
-        return redirect(env('FRONTEND_URL', 'http://127.0.0.1:5173').'/settings?verified=1');
+        return ['verified' => true];
     }
 }

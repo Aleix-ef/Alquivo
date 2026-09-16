@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'frontend_url' => env('FRONTEND_URL', 'http://127.0.0.1:5173'),
 
     /*
     |--------------------------------------------------------------------------
@@ -20,6 +21,10 @@ return [
 
     'resend' => [
         'key' => env('RESEND_API_KEY'),
+    ],
+
+    'openai' => [
+        'key' => env('OPENAI_API_KEY'),
     ],
 
     'ses' => [

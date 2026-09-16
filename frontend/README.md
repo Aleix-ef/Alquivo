@@ -1,6 +1,6 @@
-# Nareo Frontend
+# Alquivo Frontend
 
-Cliente Vue 3 de la nueva aplicación Nareo.
+Cliente Vue 3 de la nueva aplicación Alquivo.
 
 ```bash
 npm install

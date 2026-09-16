@@ -3,7 +3,6 @@ import { computed, ref } from "vue";
 import { useRoute } from "vue-router";
 import api, { csrf } from "../api";
 import BrandLogo from "../components/BrandLogo.vue";
-import ThemeToggle from "../components/ThemeToggle.vue";
 const route = useRoute(),
   reset = computed(() => route.name === "reset"),
   done = ref(false),
@@ -37,16 +36,25 @@ async function submit() {
 <template>
   <main class="auth">
     <section class="story">
-      <div class="brand"><BrandLogo light /></div>
+      <RouterLink
+        class="brand"
+        to="/"
+        aria-label="Volver a la landing de Alquivo"
+        ><BrandLogo light
+      /></RouterLink>
       <div>
         <p class="eyebrow">Acceso seguro</p>
         <h1>Recupera el control de tu cartera.</h1>
       </div>
     </section>
     <section class="auth-side">
-      <div class="auth-tools"><ThemeToggle /></div>
       <form class="form" @submit.prevent="submit">
-        <div class="auth-mobile-brand"><BrandLogo /></div>
+        <RouterLink
+          class="auth-mobile-brand"
+          to="/"
+          aria-label="Volver a la landing de Alquivo"
+          ><BrandLogo
+        /></RouterLink>
         <p class="eyebrow">Cuenta</p>
         <h2>{{ reset ? "Nueva contraseña" : "Recuperar contraseña" }}</h2>
         <p v-if="done" class="success">

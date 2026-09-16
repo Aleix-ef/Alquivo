@@ -3,11 +3,15 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Domain\Documents\Models\Document;
+use App\Domain\Documents\Services\PrivateFileDeletion;
+use App\Domain\Documents\Services\PrivateFileVault;
 use App\Domain\Leasing\Models\Lease;
 use App\Domain\Portfolio\Services\StorageUsageService;
 use App\Domain\Properties\Models\Property;
 use App\Http\Controllers\Controller;
+use App\Support\SecurityAudit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 
@@ -43,10 +47,8 @@ class DocumentController extends Controller
         }if (! empty($data['lease_id'])) {
             Lease::where('portfolio_id', $portfolio->id)->findOrFail($data['lease_id']);
         }$file = $request->file('file');
-        $this->storageUsage->assertCanStore($portfolio, $file->getSize());
         unset($data['file']);
-        $key = $file->store("portfolios/{$portfolio->id}/documents", 'local');
-        $document = Document::create([...$data, 'portfolio_id' => $portfolio->id, 'name' => $data['name'] ?: pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME), 'storage_key' => $key, 'original_filename' => $file->getClientOriginalName(), 'mime_type' => $file->getMimeType(), 'size' => $file->getSize(), 'uploaded_by' => $request->user()->id]);
+        $document = $this->storageUsage->store($portfolio, $file, "portfolios/{$portfolio->id}/documents", fn ($key) => Document::create([...$data, 'portfolio_id' => $portfolio->id, 'name' => ($data['name'] ?? null) ?: mb_substr(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME), 0, 150), 'storage_key' => $key, 'original_filename' => mb_substr($file->getClientOriginalName(), 0, 255), 'mime_type' => $file->getMimeType(), 'size' => $file->getSize(), 'uploaded_by' => $request->user()->id]));
 
         return response()->json($document, 201);
     }
@@ -54,8 +56,11 @@ class DocumentController extends Controller
     public function download(Request $request, Document $document)
     {
         abort_unless($document->portfolio_id === $request->user()->portfolio()->id, 404);
+        SecurityAudit::record('document.downloaded', $request->user()->id);
 
-        return Storage::disk('local')->download($document->storage_key, $document->original_filename);
+        $bytes = app(PrivateFileVault::class)->read($document->storage_key);
+
+        return response()->streamDownload(fn () => print($bytes), $document->original_filename, ['Content-Type' => $document->mime_type, 'Cache-Control' => 'private, no-store']);
     }
 
     public function update(Request $request, Document $document)
@@ -80,8 +85,13 @@ class DocumentController extends Controller
     public function destroy(Request $request, Document $document)
     {
         $this->ensureOwned($request, $document);
-        Storage::disk('local')->delete($document->storage_key);
-        $document->delete();
+        $id = DB::transaction(function () use ($document) {
+            $id = app(PrivateFileDeletion::class)->schedule($document->storage_key);
+            $document->delete();
+
+            return $id;
+        });
+        app(PrivateFileDeletion::class)->process($id);
 
         return response()->noContent();
     }

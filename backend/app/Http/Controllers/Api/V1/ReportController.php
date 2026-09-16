@@ -70,7 +70,7 @@ class ReportController extends Controller
             fputcsv($output, $headers);
             $rows->each(fn (array $row) => fputcsv($output, array_map($this->sanitizeCsvCell(...), $row)));
             fclose($output);
-        }, 'inmogest-'.$resource.'-'.today()->format('Y-m-d').'.csv', ['Content-Type' => 'text/csv; charset=UTF-8']);
+        }, 'alquivo-'.$resource.'-'.today()->format('Y-m-d').'.csv', ['Content-Type' => 'text/csv; charset=UTF-8']);
     }
 
     private function sanitizeCsvCell(mixed $value): mixed

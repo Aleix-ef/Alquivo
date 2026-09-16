@@ -1,2 +1,11 @@
 .env.docker
+/.env
+.env.production
+/.env.*
+!/.env*.example
+/backups/
+/secrets/
+*.dump
+*.sql.gz
+*.age
 /tools/stripe/stripe

@@ -13,8 +13,8 @@ return new class extends Migration
             $table->string('terms_version', 20)->nullable()->after('terms_accepted_at');
         });
         Schema::table('portfolios', function (Blueprint $table) {
-            $table->string('plan', 30)->default('starter')->after('country_code');
-            $table->unsignedBigInteger('storage_limit_bytes')->default(262144000)->after('plan');
+            $table->string('plan', 30)->default('free')->after('country_code');
+            $table->unsignedBigInteger('storage_limit_bytes')->default(52428800)->after('plan');
         });
     }
 

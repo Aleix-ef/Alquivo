@@ -13,6 +13,7 @@ export function useDialog(isOpen, dialogRef, close) {
     ).filter((element) => element.getClientRects().length);
 
   function onKeydown(event) {
+    if (dialogRef.value?.inert) return;
     if (event.key === "Escape") {
       event.preventDefault();
       close();

@@ -4,6 +4,8 @@ namespace App\Domain\Finance\Services;
 
 use App\Domain\Finance\Models\RentCharge;
 use App\Domain\Leasing\Models\Lease;
+use App\Domain\Portfolio\Models\Portfolio;
+use App\Domain\Portfolio\Services\PropertyAccess;
 use Carbon\Carbon;
 
 class RentChargeService
@@ -17,6 +19,11 @@ class RentChargeService
     {
         if ($lease->status !== 'active') {
             return null;
+        }
+
+        $portfolio = Portfolio::findOrFail($lease->portfolio_id);
+        if (! app(PropertyAccess::class)->canWrite($portfolio, $lease->property_id)) {
+            return RentCharge::where('lease_id', $lease->id)->where('period', $month->format('Y-m'))->first();
         }
 
         $month = $month->copy()->startOfMonth();

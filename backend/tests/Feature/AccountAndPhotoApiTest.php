@@ -69,4 +69,43 @@ class AccountAndPhotoApiTest extends TestCase
         $this->actingAs($otherUser)->getJson('/api/v1/dashboard')->assertOk()->assertJsonCount(0, 'properties');
         $this->getJson("/api/v1/property-photos/{$photo->id}")->assertNotFound();
     }
+
+    public function test_owner_can_choose_a_cover_and_delete_a_photo_file(): void
+    {
+        Storage::fake('local');
+        $user = User::factory()->create();
+        $portfolio = Portfolio::create(['name' => 'Cartera']);
+        $portfolio->members()->attach($user, ['role' => 'owner']);
+        $property = $portfolio->properties()->create(['name' => 'Piso', 'type' => 'housing', 'address_line' => 'Calle 1']);
+        $image = fn (string $name) => UploadedFile::fake()->createWithContent($name, base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII='));
+
+        $this->actingAs($user);
+        $firstId = $this->postJson("/api/v1/properties/{$property->id}/photos", ['photo' => $image('one.png')])->assertCreated()->json('id');
+        $secondId = $this->postJson("/api/v1/properties/{$property->id}/photos", ['photo' => $image('two.png')])->assertCreated()->json('id');
+        $second = $property->photos()->findOrFail($secondId);
+
+        $this->putJson("/api/v1/property-photos/{$secondId}/cover")->assertOk()->assertJsonPath('is_cover', true);
+        $this->assertDatabaseHas('property_photos', ['id' => $firstId, 'is_cover' => false]);
+        $this->deleteJson("/api/v1/property-photos/{$secondId}")->assertNoContent();
+        Storage::disk('local')->assertMissing($second->storage_key);
+        $this->assertDatabaseHas('property_photos', ['id' => $firstId, 'is_cover' => true]);
+    }
+
+    public function test_empty_property_can_be_archived_but_history_is_preserved(): void
+    {
+        $user = User::factory()->create();
+        $portfolio = Portfolio::create(['name' => 'Cartera']);
+        $portfolio->members()->attach($user, ['role' => 'owner']);
+        $empty = $portfolio->properties()->create(['name' => 'Error', 'type' => 'housing', 'address_line' => 'Calle 1']);
+        $withHistory = $portfolio->properties()->create(['name' => 'Con datos', 'type' => 'housing', 'address_line' => 'Calle 2']);
+        $withHistory->transactions()->create([
+            'portfolio_id' => $portfolio->id, 'direction' => 'expense', 'category' => 'other',
+            'description' => 'Gasto', 'amount' => 10, 'transaction_date' => today(), 'status' => 'paid',
+        ]);
+
+        $this->actingAs($user)->deleteJson("/api/v1/properties/{$withHistory->id}")->assertUnprocessable();
+        $this->deleteJson("/api/v1/properties/{$empty->id}")->assertNoContent();
+        $this->assertSoftDeleted('properties', ['id' => $empty->id]);
+        $this->assertDatabaseHas('properties', ['id' => $withHistory->id, 'deleted_at' => null]);
+    }
 }

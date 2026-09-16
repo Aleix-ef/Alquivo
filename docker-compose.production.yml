@@ -1,0 +1,126 @@
+# Despliegue independiente para un VPS. Usar --env-file .env.production.
+# No combinar con docker-compose.yml (exclusivo del entorno local).
+name: alquivo-production
+
+x-runtime: &runtime
+  build: ./backend
+  env_file: ${APP_ENV_FILE:-.env.production}
+  environment:
+    APP_ENV: production
+    APP_DEBUG: "false"
+  volumes:
+    - private_storage:/app/storage/app
+    - document_keys:/app/storage/app/keys
+    - app_logs:/app/storage/logs
+  restart: unless-stopped
+  security_opt:
+    - no-new-privileges:true
+  logging:
+    driver: json-file
+    options:
+      max-size: "10m"
+      max-file: "3"
+
+services:
+  backend:
+    <<: *runtime
+    command: ["sh", "-c", "php artisan security:check && php-fpm"]
+    healthcheck:
+      test: ["CMD", "php", "-r", "exit(@fsockopen('127.0.0.1', 9000) ? 0 : 1);"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    depends_on:
+      postgres:
+        condition: service_healthy
+      clamav:
+        condition: service_healthy
+
+  worker:
+    <<: *runtime
+    command: ["php", "artisan", "queue:work", "--sleep=2", "--tries=3", "--timeout=90"]
+    depends_on:
+      backend:
+        condition: service_healthy
+
+  scheduler:
+    <<: *runtime
+    command: ["php", "artisan", "schedule:work"]
+    depends_on:
+      backend:
+        condition: service_healthy
+
+  web:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_URL: /api/v1
+    networks:
+      default:
+        ipv4_address: 172.30.20.10
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  clamav:
+    image: clamav/clamav:1.4
+    volumes:
+      - clamav_data:/var/lib/clamav
+    restart: unless-stopped
+    # La imagen oficial incluye comprobación de salud. Sin puerto público.
+
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_PASSWORD: ${DATABASE_ADMIN_PASSWORD:?Set a unique administrator password}
+      POSTGRES_DB: postgres
+      DB_PASSWORD: ${DB_PASSWORD:?Set a different application password}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./ops/init-database.sql:/docker-entrypoint-initdb.d/10-alquivo.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d alquivo"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+
+  proxy:
+    image: caddy:2-alpine
+    networks:
+      default:
+        ipv4_address: 172.30.20.11
+    environment:
+      PUBLIC_DOMAIN: ${PUBLIC_DOMAIN:?Set your real domain}
+      ACME_EMAIL: ${ACME_EMAIL:?Set the certificate contact email}
+    volumes:
+      - ./ops/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - web
+    restart: unless-stopped
+
+networks:
+  default:
+    ipam:
+      config:
+        - subnet: 172.30.20.0/24
+
+volumes:
+  private_storage:
+  app_logs:
+  clamav_data:
+  postgres_data:
+  document_keys:
+  caddy_data:
+  caddy_config:

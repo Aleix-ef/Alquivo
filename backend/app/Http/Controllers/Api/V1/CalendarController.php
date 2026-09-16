@@ -18,7 +18,12 @@ class CalendarController extends Controller
         $id = $r->user()->portfolio()->id;
         $from = $r->filled('from') ? Carbon::parse($r->input('from')) : today()->startOfMonth();
         $to = $r->filled('to') ? Carbon::parse($r->input('to')) : today()->addMonths(2)->endOfMonth();
-        $events = Reminder::where('portfolio_id', $id)->whereNull('completed_at')->whereBetween('starts_at', [$from, $to])->with('property')->get()->map(fn ($x) => ['id' => 'reminder-'.$x->id, 'reminder_id' => $x->id, 'type' => 'reminder', 'title' => $x->title, 'date' => $x->starts_at->toDateString(), 'property' => $x->property]);
+        $events = Reminder::where('portfolio_id', $id)->whereNull('completed_at')->whereBetween('starts_at', [$from, $to])->with('property')->get()->map(fn ($x) => [
+            'id' => 'reminder-'.$x->id, 'reminder_id' => $x->id, 'type' => 'reminder',
+            'title' => $x->title, 'description' => $x->description,
+            'date' => $x->starts_at->toDateString(), 'starts_at' => $x->starts_at->toIso8601String(),
+            'property_id' => $x->property_id, 'property' => $x->property,
+        ]);
         $charges = RentCharge::where('portfolio_id', $id)->whereBetween('due_date', [$from, $to])->with('lease.property')->get()->map(fn ($x) => ['id' => 'charge-'.$x->id, 'type' => 'rent', 'title' => 'Alquiler '.$x->status, 'date' => $x->due_date->toDateString(), 'amount' => (float) $x->amount - (float) $x->paid_amount, 'property' => $x->lease->property]);
         $leases = Lease::where('portfolio_id', $id)->whereBetween('end_date', [$from, $to])->with('property')->get()->map(fn ($x) => ['id' => 'lease-'.$x->id, 'type' => 'lease_end', 'title' => 'Fin de contrato', 'date' => $x->end_date->toDateString(), 'property' => $x->property]);
         $documents = Document::where('portfolio_id', $id)->whereBetween('expires_at', [$from, $to])->with('property')->get()->map(fn ($x) => ['id' => 'document-'.$x->id, 'type' => 'document_expiry', 'title' => 'Vence '.$x->name, 'date' => $x->expires_at->toDateString(), 'property' => $x->property]);

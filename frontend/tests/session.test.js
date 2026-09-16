@@ -5,10 +5,30 @@ import {
   clearSessionStorage,
   persistSession,
   readSessionValue,
+  sessionKeys,
 } from "../src/sessionStorage.js";
 
 afterEach(() => {
   delete globalThis.localStorage;
+});
+
+test("legacy display caches migrate to Alquivo without losing the current session", () => {
+  const values = new Map([
+    ["ig_user", '{"id":7}'],
+    ["ig_portfolio", '{"id":8}'],
+  ]);
+  globalThis.localStorage = {
+    getItem: (key) => values.get(key) ?? null,
+    setItem: (key, value) => values.set(key, value),
+    removeItem: (key) => values.delete(key),
+  };
+  assert.deepEqual(readSessionValue(sessionKeys.user), { id: 7 });
+  assert.deepEqual(readSessionValue(sessionKeys.portfolio), { id: 8 });
+  assert.equal(values.has("ig_user"), false);
+  assert.equal(values.has("ig_portfolio"), false);
+  assert.equal(values.has(sessionKeys.user), true);
+  clearSessionStorage();
+  assert.equal(values.size, 0);
 });
 
 test("expired access returns to the requested app page including its query", () => {
@@ -47,7 +67,7 @@ test("corrupt or unexpected cached session values cannot crash startup", () => {
     "null",
   ]) {
     globalThis.localStorage = { getItem: () => value };
-    assert.equal(readSessionValue("ig_user"), null);
+    assert.equal(readSessionValue(sessionKeys.user), null);
   }
 });
 
@@ -60,15 +80,15 @@ test("storage restrictions do not prevent login, restore or logout", () => {
     setItem: denied,
     removeItem: denied,
   };
-  assert.equal(readSessionValue("ig_user"), null);
+  assert.equal(readSessionValue(sessionKeys.user), null);
   assert.doesNotThrow(() =>
     persistSession({ user: { id: 1 }, portfolio: { id: 2 } }),
   );
   assert.doesNotThrow(clearSessionStorage);
 });
 
-test("session cache persists both display values and leaves preferences when cleared", () => {
-  const values = new Map([["nareo-appearance", "dark"]]);
+test("session cache persists both display values and leaves unrelated settings when cleared", () => {
+  const values = new Map([["unrelated-setting", "kept"]]);
   globalThis.localStorage = {
     getItem: (key) => values.get(key) ?? null,
     setItem: (key, value) => values.set(key, value),
@@ -79,9 +99,9 @@ test("session cache persists both display values and leaves preferences when cle
     portfolio: { id: 2, name: "Cartera" },
   };
   persistSession(session);
-  assert.deepEqual(readSessionValue("ig_user"), session.user);
-  assert.deepEqual(readSessionValue("ig_portfolio"), session.portfolio);
+  assert.deepEqual(readSessionValue(sessionKeys.user), session.user);
+  assert.deepEqual(readSessionValue(sessionKeys.portfolio), session.portfolio);
   clearSessionStorage();
   assert.equal(values.size, 1);
-  assert.equal(values.get("nareo-appearance"), "dark");
+  assert.equal(values.get("unrelated-setting"), "kept");
 });

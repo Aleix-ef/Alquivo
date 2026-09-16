@@ -4,11 +4,12 @@ import {
   clearSessionStorage,
   persistSession,
   readSessionValue,
+  sessionKeys,
 } from "./sessionStorage";
 export const useSession = defineStore("session", {
   state: () => ({
-    user: readSessionValue("ig_user"),
-    portfolio: readSessionValue("ig_portfolio"),
+    user: readSessionValue(sessionKeys.user),
+    portfolio: readSessionValue(sessionKeys.portfolio),
     initialized: false,
   }),
   getters: { ready: (s) => !!s.user },
@@ -27,7 +28,17 @@ export const useSession = defineStore("session", {
     },
     async login(p) {
       await csrf();
-      this.save((await api.post("/auth/login", p)).data);
+      const { data } = await api.post("/auth/login", p);
+      if (data.two_factor_required) {
+        this.clear();
+        return false;
+      }
+      this.save(data);
+      return true;
+    },
+    async verifyTwoFactor(code) {
+      await csrf();
+      this.save((await api.post("/auth/two-factor", { code })).data);
     },
     async register(p) {
       await csrf();

@@ -1,6 +1,16 @@
 .env
+.env.*
+.env*
 .git
 node_modules
 storage/logs/*
+storage/app/*
+storage/framework/*
+bootstrap/cache/*
+database/*.sqlite
+database/*.sqlite-*
+*.pem
+*.key
+auth.json
 tests
 vendor

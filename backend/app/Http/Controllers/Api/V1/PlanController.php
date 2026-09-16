@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Domain\Portfolio\Services\BillingState;
 use App\Domain\Portfolio\Services\PlanService;
 use App\Domain\Portfolio\Services\StorageUsageService;
 use App\Http\Controllers\Controller;
@@ -16,24 +17,25 @@ class PlanController extends Controller
         $portfolio = $request->user()->portfolio();
 
         $subscription = $request->user()->subscription('default');
+        $blocked = app(BillingState::class)->blocksCheckout($request->user());
 
         return [
+            'billing_enabled' => (bool) config('beta.billing_enabled'),
             'current' => [
                 ...$this->plans->summary($portfolio, $this->storage->used($portfolio)),
-                'subscribed' => (bool) $subscription,
+                'subscribed' => (bool) ($subscription?->valid()),
+                'can_manage_billing' => config('beta.billing_enabled') && filled($request->user()->stripe_id),
+                'has_billing_history' => filled($request->user()->stripe_id),
+                'payment_pending' => in_array($subscription?->stripe_status, ['past_due', 'unpaid', 'incomplete', 'paused'], true),
+                'billing_status' => $subscription?->stripe_status,
                 'on_trial' => $portfolio->trial_ends_at?->isFuture() ?? false,
                 'trial_ends_at' => $portfolio->trial_ends_at?->toIso8601String(),
                 'ends_at' => $subscription?->ends_at?->toIso8601String(),
-                'pending_change' => $portfolio->pending_plan ? [
-                    'plan' => $portfolio->pending_plan,
-                    'name' => config("plans.{$portfolio->pending_plan}.name"),
-                    'period' => $portfolio->pending_billing_period,
-                    'effective_at' => $portfolio->pending_plan_effective_at?->toIso8601String(),
-                ] : null,
             ],
             'plans' => collect($this->plans->catalog())->filter(fn (array $plan) => $plan['commercial'])->map(fn (array $plan) => [
                 ...collect($plan)->except('prices')->all(),
-                'checkout_available' => collect($plan['prices'])->every(fn ($price) => is_string($price) && str_starts_with($price, 'price_')),
+                'checkout_available' => config('beta.billing_enabled') && is_string($plan['prices']['monthly'] ?? null)
+                    && str_starts_with($plan['prices']['monthly'], 'price_') && filled(config('cashier.secret')) && ! $blocked,
             ]),
         ];
     }

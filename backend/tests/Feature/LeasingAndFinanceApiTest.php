@@ -50,12 +50,22 @@ class LeasingAndFinanceApiTest extends TestCase
             'due_date' => now(), 'amount' => 900, 'paid_amount' => 0, 'status' => 'pending',
         ]);
 
-        $this->actingAs($user)->postJson("/api/v1/rent-charges/{$charge->id}/payments", [
+        $paymentId = $this->actingAs($user)->postJson("/api/v1/rent-charges/{$charge->id}/payments", [
             'amount' => 400, 'transaction_date' => now()->toDateString(),
-        ])->assertCreated()->assertJsonPath('category', 'rent');
+        ])->assertCreated()->assertJsonPath('category', 'rent')->json('id');
 
         $this->assertDatabaseHas('rent_charges', ['id' => $charge->id, 'paid_amount' => 400, 'status' => 'partial']);
         $this->assertDatabaseHas('transactions', ['rent_charge_id' => $charge->id, 'amount' => 400]);
+
+        $this->putJson("/api/v1/transactions/{$paymentId}", ['amount' => 300])->assertUnprocessable();
+        $this->putJson("/api/v1/rent-payments/{$paymentId}", [
+            'amount' => 250, 'transaction_date' => now()->toDateString(), 'payment_method' => 'transfer',
+        ])->assertOk()->assertJsonPath('amount', '250.00');
+        $this->assertDatabaseHas('rent_charges', ['id' => $charge->id, 'paid_amount' => 250, 'status' => 'partial']);
+
+        $this->deleteJson("/api/v1/rent-payments/{$paymentId}")->assertNoContent();
+        $this->assertDatabaseMissing('transactions', ['id' => $paymentId]);
+        $this->assertDatabaseHas('rent_charges', ['id' => $charge->id, 'paid_amount' => 0]);
     }
 
     public function test_cannot_use_a_contact_from_another_portfolio_in_a_lease(): void

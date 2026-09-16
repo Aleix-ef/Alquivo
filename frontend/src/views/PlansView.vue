@@ -1,31 +1,19 @@
 <script setup>
-import { computed, onMounted, ref } from "vue";
+import { onMounted, ref } from "vue";
 import { Check } from "@lucide/vue";
 import { useRoute, useRouter } from "vue-router";
 import api from "../api";
-import { useDialog } from "../composables/useDialog";
 const route = useRoute(),
   router = useRouter(),
   data = ref(null),
-  period = ref("monthly"),
   busy = ref(""),
   loading = ref(true),
-  error = ref(""),
-  pendingChange = ref(null);
-const planDialog = ref(null);
-function closePlanChange() {
-  if (!busy.value) pendingChange.value = null;
-}
-useDialog(
-  computed(() => !!pendingChange.value),
-  planDialog,
-  closePlanChange,
-);
+  error = ref("");
 const notice = ref(
   route.query.checkout === "success"
-    ? "Pago completado. Stripe está confirmando tu suscripción."
+    ? "Has vuelto de Stripe. Comprueba aquí el estado de tu suscripción; la confirmación puede tardar unos instantes."
     : route.query.checkout === "cancelled"
-      ? "No se realizó ningún cargo."
+      ? "Has vuelto sin completar la contratación. Puedes revisar tu estado aquí."
       : "",
 );
 const mb = (bytes) => Number(bytes) / 1024 / 1024;
@@ -34,9 +22,9 @@ const formatDate = (value) =>
     new Date(value),
   );
 const price = (plan) =>
-  period.value === "monthly"
-    ? `${plan.price_monthly} €`
-    : `${plan.price_yearly} €`;
+  new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(
+    plan.price_monthly,
+  );
 async function load() {
   loading.value = true;
   error.value = "";
@@ -53,7 +41,7 @@ async function load() {
   }
 }
 async function checkout(code) {
-  if (busy.value) return;
+  if (busy.value || !data.value?.billing_enabled) return;
   busy.value = code;
   error.value = "";
   try {
@@ -61,7 +49,7 @@ async function checkout(code) {
       (
         await api.post("/billing/checkout", {
           plan: code,
-          period: period.value,
+          period: "monthly",
         })
       ).data.url,
     );
@@ -71,7 +59,7 @@ async function checkout(code) {
   }
 }
 async function portal() {
-  if (busy.value) return;
+  if (busy.value || !data.value?.billing_enabled) return;
   busy.value = "portal";
   error.value = "";
   try {
@@ -79,45 +67,6 @@ async function portal() {
   } catch (e) {
     error.value =
       e.response?.data?.message || "No se pudo abrir el portal de facturación.";
-    busy.value = "";
-  }
-}
-function askPlanChange(code, name) {
-  if (busy.value) return;
-  error.value = "";
-  pendingChange.value = { code, name, period: period.value };
-}
-async function changePlan() {
-  const change = pendingChange.value;
-  if (!change || busy.value) return;
-  busy.value = change.code;
-  error.value = "";
-  try {
-    const response = await api.post("/billing/change-plan", {
-      plan: change.code,
-      period: change.period,
-    });
-    notice.value = response.data.message;
-    pendingChange.value = null;
-    await load();
-  } catch (e) {
-    error.value = e.response?.data?.message || "No se pudo cambiar el plan.";
-  } finally {
-    busy.value = "";
-  }
-}
-async function cancelPlanChange() {
-  if (busy.value) return;
-  busy.value = "cancel-change";
-  error.value = "";
-  try {
-    const response = await api.delete("/billing/change-plan");
-    notice.value = response.data.message;
-    await load();
-  } catch (e) {
-    error.value =
-      e.response?.data?.message || "No se pudo cancelar el cambio programado.";
-  } finally {
     busy.value = "";
   }
 }
@@ -134,34 +83,44 @@ onMounted(async () => {
         <p class="eyebrow">Planes</p>
         <h1>Crece a tu ritmo</h1>
         <p>
-          Prueba todas las funciones de Inversor durante 14 días. Después puedes
-          continuar gratis o elegir un plan.
+          Prueba todas las funciones del Plan Fundador durante 14 días. Después
+          puedes continuar gratis. Los precios de los planes están disponibles
+          para que conozcas las opciones de Alquivo.
         </p>
-      </div>
-      <div class="billing-period">
-        <button
-          :class="{ active: period === 'monthly' }"
-          @click="period = 'monthly'"
-        >
-          Mensual</button
-        ><button
-          :class="{ active: period === 'yearly' }"
-          @click="period = 'yearly'"
-        >
-          Anual · ahorra
-        </button>
       </div>
     </header>
     <p v-if="notice" class="success">{{ notice }}</p>
-    <p v-if="error && !pendingChange" class="error" role="alert">{{ error }}</p>
+    <button
+      v-if="notice"
+      class="button secondary"
+      :disabled="loading"
+      @click="load"
+    >
+      Actualizar estado
+    </button>
+    <p v-if="error" class="error" role="alert">{{ error }}</p>
     <div v-if="!data" class="empty" role="status">
       <template v-if="loading">Cargando planes…</template>
       <button v-else class="button secondary" type="button" @click="load">
         Volver a intentar
       </button>
     </div>
-    <template v-else
-      ><section class="current-usage">
+    <template v-else>
+      <section v-if="!data.billing_enabled" class="pending-plan" role="status">
+        <div>
+          <p class="eyebrow">Beta de validación · Sin pagos</p>
+          <strong>Puedes probar Alquivo sin tarjeta.</strong>
+          <p>
+            Los precios son informativos. La contratación todavía no está
+            abierta y la prueba no se convierte en una suscripción de pago.
+          </p>
+          <p v-if="data.current.has_billing_history">
+            Si ya tenías una suscripción anterior, este cierre no la cancela.
+            Contacta con soporte para revisarla o cancelarla.
+          </p>
+        </div>
+      </section>
+      <section class="current-usage">
         <div>
           <strong
             >{{ data.current.properties.used }} de
@@ -178,7 +137,7 @@ onMounted(async () => {
       </section>
       <section v-if="data.current.on_trial" class="pending-plan">
         <div>
-          <p class="eyebrow">Prueba Inversor activa</p>
+          <p class="eyebrow">Prueba del Plan Fundador activa</p>
           <strong
             >Tienes disponibles todos los límites del plan superior</strong
           >
@@ -188,34 +147,30 @@ onMounted(async () => {
           >
         </div>
       </section>
-      <section v-if="data.current.pending_change" class="pending-plan">
-        <div>
-          <p class="eyebrow">Próximo cambio</p>
-          <strong
-            >{{ data.current.pending_change.name }} ·
-            {{
-              data.current.pending_change.period === "yearly"
-                ? "facturación anual"
-                : "facturación mensual"
-            }}</strong
-          >
-          <small
-            >Se aplicará el
-            {{ formatDate(data.current.pending_change.effective_at) }}. Hasta
-            entonces conservas tu plan y límites actuales.</small
-          >
-        </div>
-        <button
-          type="button"
-          class="button secondary"
-          :disabled="!!busy"
-          @click="cancelPlanChange"
-        >
-          {{ busy === "cancel-change" ? "Cancelando…" : "Cancelar cambio" }}
-        </button>
-      </section>
+      <p
+        v-if="data.billing_enabled && data.current.payment_pending"
+        class="error"
+        role="alert"
+      >
+        Hay un pago pendiente o una suscripción que necesita revisión. Abre la
+        gestión de pago para resolverlo, sin contratar otra suscripción.
+      </p>
+      <p v-if="data.current.ends_at" class="plans-note">
+        Tu suscripción finaliza el {{ formatDate(data.current.ends_at) }}.
+        Después se aplicarán los límites del plan gratuito.
+      </p>
+      <p
+        v-if="data.current.properties.read_only_count"
+        class="plans-note"
+        role="status"
+      >
+        {{ data.current.properties.read_only_count }} inmuebles están en modo
+        consulta. Puedes consultar y exportar todos tus datos; sigues
+        gestionando los primeros {{ data.current.properties.limit }} inmuebles
+        que añadiste.
+      </p>
       <button
-        v-if="data.current.subscribed"
+        v-if="data.current.can_manage_billing"
         class="button secondary billing-portal"
         :disabled="busy"
         @click="portal"
@@ -230,15 +185,14 @@ onMounted(async () => {
         <article
           v-for="(plan, code) in data.plans"
           :key="code"
-          :class="{ featured: code === 'investor' }"
+          :class="{ featured: code === 'founder' }"
         >
           <p class="eyebrow">
             {{ code === data.current.code ? "Tu nivel actual" : "Para crecer" }}
           </p>
           <h2>{{ plan.name }}</h2>
           <strong class="plan-price"
-            >{{ price(plan)
-            }}<small>/{{ period === "monthly" ? "mes" : "año" }}</small></strong
+            >{{ price(plan) }}<small>/mes</small></strong
           >
           <p>Hasta {{ plan.property_limit }} inmuebles</p>
           <ul>
@@ -247,81 +201,38 @@ onMounted(async () => {
             </li>
           </ul>
           <button
-            v-if="data.current.subscribed && code === data.current.code"
+            v-if="data.current.can_manage_billing && !plan.checkout_available"
             class="button secondary"
             :disabled="!!busy"
             @click="portal"
           >
             Gestionar en Stripe</button
           ><button
-            v-else-if="data.current.subscribed"
-            class="button primary"
-            :disabled="busy || !plan.checkout_available"
-            @click="askPlanChange(code, plan.name)"
-          >
-            {{
-              busy === code ? "Cambiando…" : `Cambiar a ${plan.name}`
-            }}</button
-          ><button
             v-else
             class="button primary"
             :disabled="busy || !plan.checkout_available"
             @click="checkout(code)"
           >
-            {{ busy === code ? "Conectando…" : `Elegir ${plan.name}` }}
+            {{
+              busy === code
+                ? "Conectando…"
+                : !plan.checkout_available
+                  ? "Próximamente · Contratación cerrada"
+                  : `Elegir ${plan.name}`
+            }}
           </button>
         </article>
       </section>
       <p class="plans-note">
-        El pago se realiza en Stripe Checkout. Nareo no recibe ni almacena los
+        Si finaliza la prueba o vuelves al plan gratuito, podrás seguir
+        gestionando el primer inmueble que añadiste. Los demás seguirán
+        disponibles para consulta y exportación; sus nuevos cargos y movimientos
+        recurrentes quedarán en pausa.
+      </p>
+      <p v-if="data.billing_enabled" class="plans-note">
+        El pago se realiza en Stripe Checkout. Alquivo no recibe ni almacena los
         datos de tu tarjeta.
       </p>
-      <Teleport to="body">
-        <div
-          v-if="pendingChange"
-          class="modal-backdrop"
-          @click.self="closePlanChange"
-        >
-          <section
-            class="plan-modal"
-            ref="planDialog"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="plan-change-title"
-            tabindex="-1"
-            @click.stop
-          >
-            <p class="eyebrow">Confirmar cambio</p>
-            <h2 id="plan-change-title">Cambiar a {{ pendingChange.name }}</h2>
-            <p>
-              Has elegido facturación
-              {{ pendingChange.period === "monthly" ? "mensual" : "anual" }}. No
-              se realizará ningún cobro ni se modificarán tus límites ahora. El
-              nuevo plan comenzará únicamente cuando Stripe complete tu próxima
-              renovación.
-            </p>
-            <p v-if="error" class="error" role="alert">{{ error }}</p>
-            <div class="plan-modal-actions">
-              <button
-                class="button secondary"
-                type="button"
-                :disabled="!!busy"
-                @click="closePlanChange"
-              >
-                Cancelar
-              </button>
-              <button
-                class="button primary"
-                type="button"
-                :disabled="busy === pendingChange.code"
-                @click="changePlan"
-              >
-                {{ busy ? "Aplicando…" : "Confirmar cambio" }}
-              </button>
-            </div>
-          </section>
-        </div>
-      </Teleport></template
-    >
+    </template>
   </main>
 </template>

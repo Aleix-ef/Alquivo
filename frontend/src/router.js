@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from "vue-router";
 import { useSession } from "./session";
+import { useProduct } from "./stores/product";
 import { safeReturnPath } from "./authNavigation";
 const publicPage = (n) => ({
   name: n,
@@ -15,6 +16,12 @@ const router = createRouter({
   },
   routes: [
     {
+      path: "/",
+      name: "home",
+      component: () => import("./views/MarketingView.vue"),
+      meta: { public: true },
+    },
+    {
       path: "/login",
       name: "login",
       component: () => import("./views/AuthView.vue"),
@@ -28,6 +35,10 @@ const router = createRouter({
     },
     { path: "/forgot-password", ...publicPage("forgot") },
     { path: "/reset-password", ...publicPage("reset") },
+    {
+      path: "/verify-email",
+      component: () => import("./views/VerifyEmailView.vue"),
+    },
     {
       path: "/terms",
       name: "terms",
@@ -44,7 +55,7 @@ const router = createRouter({
       path: "/",
       component: () => import("./views/ShellView.vue"),
       children: [
-        { path: "", redirect: "/dashboard" },
+        { path: "support", component: () => import("./views/SupportView.vue") },
         {
           path: "dashboard",
           component: () => import("./views/DashboardView.vue"),
@@ -68,6 +79,10 @@ const router = createRouter({
         },
         { path: "finance", component: () => import("./views/FinanceView.vue") },
         { path: "reports", component: () => import("./views/ReportsView.vue") },
+        {
+          path: "fiscality",
+          component: () => import("./views/FiscalityView.vue"),
+        },
         { path: "issues", component: () => import("./views/IssuesView.vue") },
         {
           path: "calendar",
@@ -82,18 +97,33 @@ const router = createRouter({
           component: () => import("./views/SettingsView.vue"),
         },
         { path: "plans", component: () => import("./views/PlansView.vue") },
-        { path: ":section", component: () => import("./views/SoonView.vue") },
+        {
+          path: ":pathMatch(.*)*",
+          component: () => import("./views/NotFoundView.vue"),
+        },
       ],
     },
   ],
 });
 router.beforeEach(async (to) => {
+  const product = useProduct();
+  if (!product.loaded && !product.error) await product.load();
   const s = useSession();
   if (!s.initialized && (!to.meta.public || to.meta.guestOnly))
     await s.restore();
   if (!to.meta.public && !s.ready) {
     return { name: "login", query: { redirect: to.fullPath } };
   }
+  if (
+    !to.meta.public &&
+    s.ready &&
+    !s.user.email_verified_at &&
+    !["/settings", "/plans", "/support", "/verify-email"].includes(to.path)
+  ) {
+    return "/settings";
+  }
   if (to.meta.guestOnly && s.ready) return safeReturnPath(to.query.redirect);
+  if (to.path === "/fiscality" && !product.features.fiscality)
+    return "/reports";
 });
 export default router;

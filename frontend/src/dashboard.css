@@ -10,7 +10,7 @@
   padding: 10px 13px;
   background: var(--surface);
   color: var(--muted);
-  font-size: 10px;
+  font-size: 13px;
   text-transform: capitalize;
 }
 .dashboard-page .setup-panel {
@@ -21,7 +21,7 @@
   background: var(--pale);
   padding: 4px 9px;
   border-radius: 5px;
-  font-size: 10px;
+  font-size: 13px;
   font-weight: 600;
 }
 .wealth-card {
@@ -46,7 +46,7 @@
   align-items: center;
   gap: 8px;
   color: #c5d9df;
-  font-size: 10px;
+  font-size: 13px;
   letter-spacing: 0.02em;
 }
 .wealth-label > span {
@@ -64,7 +64,7 @@
 }
 .wealth-content > p {
   color: #b6cdd5;
-  font-size: 10px;
+  font-size: 13px;
   margin: 0 0 20px;
 }
 .wealth-foot {
@@ -75,7 +75,7 @@
 }
 .wealth-foot > span {
   color: #aecbd3;
-  font-size: 10px;
+  font-size: 13px;
 }
 .wealth-foot b {
   color: #fff;
@@ -87,7 +87,7 @@
   align-items: center;
   gap: 5px;
   color: #b0e9da;
-  font-size: 10px;
+  font-size: 13px;
   border-left: 1px solid #ffffff24;
   padding-left: 18px;
 }
@@ -112,7 +112,7 @@
 }
 .wealth-yield > span:not(.wealth-icon) {
   color: #c5d9df;
-  font-size: 10px;
+  font-size: 13px;
 }
 .wealth-yield strong {
   font-size: 31px;
@@ -150,7 +150,7 @@
   margin-bottom: 4px;
 }
 .metric-top > span:first-child {
-  font-size: 10px;
+  font-size: 13px;
 }
 .metric-icon {
   width: 30px;
@@ -205,7 +205,7 @@
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  font-size: 9px;
+  font-size: 13px;
   color: var(--green);
   white-space: nowrap;
 }
@@ -221,7 +221,7 @@
 }
 .cashflow-net > span {
   color: var(--muted);
-  font-size: 9px;
+  font-size: 13px;
 }
 .cashflow-bars {
   display: grid;
@@ -231,7 +231,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 10px;
+  font-size: 13px;
   margin-bottom: 8px;
 }
 .cashflow-row > div > span {
@@ -270,7 +270,7 @@
   border-top: 1px solid var(--line);
   margin-top: 24px;
   padding-top: 15px;
-  font-size: 10px;
+  font-size: 13px;
 }
 .cashflow-foot > span {
   display: flex;
@@ -315,14 +315,14 @@
   flex: 1;
 }
 .dashboard-property-name > strong {
-  font-size: 11px;
+  font-size: 13px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 .dashboard-property-name > small {
   color: var(--muted);
-  font-size: 9px;
+  font-size: 13px;
 }
 .dashboard-property-value {
   text-align: right;
@@ -330,7 +330,7 @@
   gap: 5px;
 }
 .dashboard-property-value > strong {
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
   white-space: nowrap;
 }
@@ -351,7 +351,7 @@
   gap: 8px;
 }
 .attention-count {
-  font: 600 9px var(--font);
+  font: 600 13px var(--font);
   color: var(--warning);
   background: var(--warning-bg);
   padding: 3px 6px;
@@ -388,16 +388,16 @@
   flex: 1;
 }
 .dashboard-attention-list strong {
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
 }
 .dashboard-attention-list small {
   color: var(--muted);
-  font-size: 9px;
+  font-size: 13px;
 }
 .dashboard-attention-list time {
   color: var(--muted);
-  font-size: 10px;
+  font-size: 13px;
   white-space: nowrap;
 }
 .attention-amount {
@@ -426,12 +426,12 @@
   flex-shrink: 0;
 }
 .dashboard-calm strong {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
 }
 .dashboard-calm p {
   color: var(--muted);
-  font-size: 10px;
+  font-size: 13px;
   margin: 4px 0;
 }
 .dashboard-loading {
@@ -536,7 +536,7 @@
     font-size: 23px;
   }
   .metric-top > span:first-child {
-    font-size: 9px;
+    font-size: 13px;
   }
   .metric-icon {
     width: 25px;
@@ -546,6 +546,6 @@
     font-size: 8px;
   }
   .dashboard-period {
-    font-size: 10px;
+    font-size: 13px;
   }
 }

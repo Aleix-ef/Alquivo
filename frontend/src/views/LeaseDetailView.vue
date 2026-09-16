@@ -10,6 +10,7 @@ import {
 } from "@lucide/vue";
 import { useRoute, useRouter } from "vue-router";
 import api from "../api";
+import { fetchAllPages } from "../pagination";
 
 const route = useRoute();
 const router = useRouter();
@@ -17,6 +18,8 @@ const lease = ref(null);
 const contacts = ref([]);
 const saving = ref(false);
 const error = ref("");
+const loading = ref(true);
+const loadError = ref("");
 const action = computed(() => route.query.action);
 const money = (value) =>
   new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(
@@ -32,12 +35,23 @@ const editForm = ref({});
 const renewalForm = ref({});
 
 async function load() {
-  const [leaseResponse, contactsResponse] = await Promise.all([
-    api.get(`/leases/${route.params.id}`),
-    api.get("/contacts"),
-  ]);
-  lease.value = leaseResponse.data;
-  contacts.value = contactsResponse.data.data;
+  loading.value = true;
+  loadError.value = "";
+  try {
+    const [leaseResponse, contactsResponse] = await Promise.all([
+      api.get(`/leases/${route.params.id}`),
+      fetchAllPages(api, "/contacts"),
+    ]);
+    lease.value = leaseResponse.data;
+    contacts.value = contactsResponse;
+  } catch (exception) {
+    loadError.value =
+      exception.response?.status === 404
+        ? "Este contrato no existe o no pertenece a tu cartera."
+        : "No hemos podido cargar el contrato.";
+  } finally {
+    loading.value = false;
+  }
 }
 
 function tomorrowAfter(date) {
@@ -349,5 +363,11 @@ onMounted(load);
       </form>
     </div>
   </main>
-  <main v-else class="page"><div class="empty">Cargando contrato…</div></main>
+  <main v-else class="page">
+    <div v-if="loading" class="empty" role="status">Cargando contrato…</div>
+    <div v-else class="empty" role="alert">
+      <p>{{ loadError }}</p>
+      <button class="button secondary" @click="load">Volver a intentar</button>
+    </div>
+  </main>
 </template>

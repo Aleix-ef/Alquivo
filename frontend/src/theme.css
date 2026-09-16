@@ -1,4 +1,4 @@
-:root {
+:root[data-theme="light"] {
   color-scheme: light;
   --canvas: #f5f7fa;
   --surface: #ffffff;
@@ -29,7 +29,11 @@
   --font: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
 }
 
-:root[data-theme="dark"] {
+:root {
+  --font: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
+  --display: "DM Serif Display", Georgia, serif;
+  --gold: #d4af7c;
+  --sage: #b7d6ce;
   color-scheme: dark;
   --canvas: #0b1420;
   --surface: #121f2e;

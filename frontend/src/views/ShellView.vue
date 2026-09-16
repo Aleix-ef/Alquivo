@@ -18,13 +18,21 @@ import {
   ChevronRight,
   ArrowUpRight,
   Layers,
+  Sparkles,
+  LifeBuoy,
 } from "@lucide/vue";
 import { useRoute, useRouter } from "vue-router";
 import { useSession } from "../session";
+import { useProduct } from "../stores/product";
+import { usePlanAccess } from "../stores/planAccess";
+const planAccess = usePlanAccess();
+const product = useProduct();
 import BrandLogo from "../components/BrandLogo.vue";
-import ThemeToggle from "../components/ThemeToggle.vue";
+import AssistantWidget from "../components/AssistantWidget.vue";
 import { useDialog } from "../composables/useDialog";
 const route = useRoute();
+const assistant = ref(null);
+const assistantOpen = ref(false);
 const mobileOpen = ref(false);
 const mobileQuery = window.matchMedia("(max-width: 850px)");
 const isMobile = ref(mobileQuery.matches);
@@ -51,17 +59,30 @@ const s = useSession(),
     ["Personas", "/contacts", UsersRound],
     ["Finanzas", "/finance", WalletCards],
     ["Informes", "/reports", BarChart3],
+    ["Fiscalidad", "/fiscality", Files],
     ["Incidencias", "/issues", Wrench],
     ["Calendario", "/calendar", CalendarDays],
     ["Documentos", "/documents", Files],
   ];
-const navGroups = [
+const navGroups = computed(() => [
   { label: "Tu patrimonio", items: nav.slice(0, 4) },
-  { label: "Gestión", items: nav.slice(4) },
-];
+  {
+    label: "Gestión",
+    items: nav
+      .slice(4)
+      .filter(
+        ([, path]) => path !== "/fiscality" || product.features.fiscality,
+      ),
+  },
+]);
 const currentSection = computed(
   () =>
-    [...nav, ["Configuración", "/settings"], ["Planes", "/plans"]].find(
+    [
+      ...nav,
+      ["Configuración", "/settings"],
+      ["Planes", "/plans"],
+      ["Ayuda y soporte", "/support"],
+    ].find(
       ([, path]) => route.path === path || route.path.startsWith(`${path}/`),
     )?.[0] || "Tu cartera",
 );
@@ -73,6 +94,11 @@ const initials = computed(() =>
     .map((part) => part[0])
     .join("")
     .toUpperCase(),
+);
+watch(
+  () => [route.fullPath, s.user?.id],
+  () => planAccess.load(s.user?.id),
+  { immediate: true },
 );
 watch(
   () => route.fullPath,
@@ -106,7 +132,7 @@ async function logout() {
     <aside
       ref="sidebarElement"
       id="main-navigation"
-      :inert="isMobile && !mobileOpen"
+      :inert="assistantOpen || (isMobile && !mobileOpen)"
       class="sidebar"
       :class="{ 'is-open': mobileOpen }"
       :role="mobileOpen ? 'dialog' : undefined"
@@ -119,7 +145,7 @@ async function logout() {
         <RouterLink
           class="brand"
           to="/dashboard"
-          aria-label="Nareo, ir al resumen"
+          aria-label="Alquivo, ir al resumen"
           ><BrandLogo
         /></RouterLink>
         <button
@@ -156,6 +182,9 @@ async function logout() {
         </div>
       </nav>
       <div class="sidebar-bottom">
+        <RouterLink to="/support" class="sidebar-settings support-entry"
+          ><LifeBuoy :size="20" /><span>Ayuda y soporte</span></RouterLink
+        >
         <RouterLink to="/plans" class="sidebar-plan"
           ><span><span class="plan-spark">✦</span> Un espacio para crecer</span
           ><ArrowUpRight :size="16"
@@ -188,7 +217,7 @@ async function logout() {
         <p v-if="logoutError" class="error" role="alert">{{ logoutError }}</p>
       </div>
     </aside>
-    <section class="workspace" :inert="mobileOpen">
+    <section class="workspace" :inert="mobileOpen || assistantOpen">
       <header class="topbar">
         <div class="topbar-location">
           <button
@@ -206,8 +235,16 @@ async function logout() {
           }}</strong>
         </div>
         <div class="topbar-actions">
-          <ThemeToggle />
-          <span class="topbar-divider"></span>
+          <button
+            v-if="s.user?.email_verified_at && product.features.assistant"
+            class="button secondary assistant-entry"
+            aria-haspopup="dialog"
+            aria-controls="alquivo-assistant-panel"
+            :aria-expanded="assistantOpen"
+            @click="assistant?.toggle()"
+          >
+            <Sparkles :size="18" /><span>Asistente IA</span>
+          </button>
           <RouterLink
             class="button primary quick-add"
             to="/properties?new=1"
@@ -216,10 +253,28 @@ async function logout() {
           >
         </div>
       </header>
-      <div id="main-content" tabindex="-1"><RouterView /></div>
+      <div id="main-content" tabindex="-1">
+        <p
+          v-if="planAccess.usage?.properties.read_only_count"
+          class="plan-access-notice"
+          role="status"
+        >
+          Tu plan permite gestionar
+          {{ planAccess.usage.properties.limit }} inmueble(s). Los
+          {{ planAccess.usage.properties.read_only_count }} restantes están en
+          modo consulta, sin borrar ningún dato.
+          <RouterLink to="/plans">Ver mi plan</RouterLink>
+        </p>
+        <RouterView />
+      </div>
       <footer class="workspace-footer">
-        <span>Nareo</span><span>Tu patrimonio, con claridad.</span>
+        <span>Alquivo</span><span>Tu patrimonio, con claridad.</span>
       </footer>
     </section>
+    <AssistantWidget
+      v-if="s.user?.email_verified_at && product.features.assistant"
+      ref="assistant"
+      @open-change="assistantOpen = $event"
+    />
   </div>
 </template>

@@ -4,12 +4,18 @@ namespace App\Domain\Finance\Services;
 
 use App\Domain\Finance\Models\RecurringRule;
 use App\Domain\Finance\Models\Transaction;
+use App\Domain\Portfolio\Models\Portfolio;
+use App\Domain\Portfolio\Services\PropertyAccess;
 use Carbon\Carbon;
 
 class RecurringTransactionService
 {
     public function generateDue(RecurringRule $rule, ?Carbon $until = null): int
     {
+        $portfolio = Portfolio::findOrFail($rule->portfolio_id);
+        if ($rule->property_id && ! app(PropertyAccess::class)->canWrite($portfolio, $rule->property_id)) {
+            return 0;
+        }
         $until ??= today();
         $created = 0;
 

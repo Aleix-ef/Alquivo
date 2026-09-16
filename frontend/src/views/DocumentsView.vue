@@ -3,6 +3,10 @@ import { ref, computed, onMounted } from "vue";
 import { FileText, Plus, Download, Pencil, Trash2 } from "@lucide/vue";
 import { useRoute, useRouter } from "vue-router";
 import api from "../api";
+import { fetchAllPages } from "../pagination";
+import ConfirmDialog from "../components/ConfirmDialog.vue";
+import { useConfirmDialog } from "../composables/useConfirmDialog";
+const confirmation = useConfirmDialog();
 const route = useRoute(),
   router = useRouter(),
   docs = ref([]),
@@ -34,15 +38,15 @@ async function load() {
   loadError.value = "";
   try {
     const [d, p] = await Promise.all([
-      api.get("/documents", {
+      fetchAllPages(api, "/documents", {
         params: Object.fromEntries(
           Object.entries(filters.value).filter(([, value]) => value),
         ),
       }),
-      api.get("/properties"),
+      fetchAllPages(api, "/properties"),
     ]);
-    docs.value = d.data.data;
-    properties.value = p.data.data;
+    docs.value = d;
+    properties.value = p;
   } catch {
     loadError.value =
       "No hemos podido cargar los documentos. Vuelve a intentarlo.";
@@ -94,24 +98,37 @@ function edit(d) {
 }
 async function remove(d) {
   if (
-    !window.confirm(
-      `¿Eliminar “${d.name}”? El archivo dejará de estar disponible.`,
-    )
+    !(await confirmation.ask({
+      title: `¿Eliminar “${d.name}”?`,
+      description:
+        "El archivo dejará de estar disponible y esta acción no se puede deshacer.",
+      confirmLabel: "Eliminar documento",
+      danger: true,
+    }))
   )
     return;
-  await api.delete(`/documents/${d.id}`);
-  await load();
+  try {
+    await api.delete(`/documents/${d.id}`);
+    await load();
+  } catch (exception) {
+    loadError.value =
+      exception.response?.data?.message || "No se pudo eliminar el documento.";
+  }
 }
 async function download(d) {
-  const r = await api.get(`/documents/${d.id}/download`, {
-    responseType: "blob",
-  });
-  const url = URL.createObjectURL(r.data),
-    a = document.createElement("a");
-  a.href = url;
-  a.download = d.original_filename;
-  a.click();
-  URL.revokeObjectURL(url);
+  try {
+    const r = await api.get(`/documents/${d.id}/download`, {
+      responseType: "blob",
+    });
+    const url = URL.createObjectURL(r.data),
+      a = document.createElement("a");
+    a.href = url;
+    a.download = d.original_filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  } catch {
+    loadError.value = "No se pudo descargar el documento.";
+  }
 }
 onMounted(load);
 </script>
@@ -261,5 +278,10 @@ onMounted(load);
         </footer>
       </form>
     </div>
+    <ConfirmDialog
+      :dialog="confirmation.dialog.value"
+      @confirm="confirmation.confirm"
+      @cancel="confirmation.cancel"
+    />
   </main>
 </template>

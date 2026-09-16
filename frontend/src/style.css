@@ -17,6 +17,9 @@
 }
 body {
   margin: 0;
+  font-family: var(--font);
+  font-size: 16px;
+  line-height: 1.6;
   background: var(--canvas);
   min-width: 320px;
   -webkit-font-smoothing: antialiased;
@@ -30,43 +33,45 @@ input,
 select {
   font: inherit;
 }
+a:focus-visible,
+button:focus-visible,
+summary:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 4px;
+}
 .brand {
   display: flex;
   align-items: center;
 }
-.nareo-brand {
+.alquivo-brand {
   display: inline-flex;
   align-items: center;
-  gap: 11px;
+  gap: 10px;
   color: var(--ink);
 }
-.nareo-symbol {
-  width: 34px;
+.alquivo-symbol {
+  width: 39px;
   height: 34px;
   overflow: visible;
 }
-.symbol-back {
-  fill: #0f2747;
+.alquivo-mark-main {
+  fill: currentColor;
 }
-.symbol-main {
-  fill: #0e9f8f;
+.alquivo-mark-sage {
+  fill: #abc9c1;
 }
-.symbol-front {
-  fill: #b7d6ce;
+.alquivo-mark-gold {
+  fill: #d0a66e;
 }
-.nareo-wordmark {
+.alquivo-wordmark {
   color: currentColor;
   font-size: 17px;
   font-weight: 700;
-  letter-spacing: 0.2em;
+  letter-spacing: 0.16em;
 }
-.sidebar .nareo-brand,
-.nareo-brand.light {
+.sidebar .alquivo-brand,
+.alquivo-brand.light {
   color: #fff;
-}
-.sidebar .symbol-back,
-.nareo-brand.light .symbol-back {
-  fill: #fff;
 }
 .record-actions button {
   width: 31px;
@@ -113,7 +118,7 @@ select {
 .settings-card label {
   display: grid;
   gap: 7px;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   margin: 14px 0;
 }
@@ -141,12 +146,12 @@ select {
   background: var(--success-bg);
   padding: 10px;
   border-radius: 7px;
-  font-size: 12px;
+  font-size: 13px;
 }
 .usage span {
   display: flex;
   justify-content: space-between;
-  font-size: 12px;
+  font-size: 13px;
 }
 .usage small {
   color: var(--muted);
@@ -252,7 +257,7 @@ select {
 .eyebrow {
   text-transform: uppercase;
   letter-spacing: 0.13em;
-  font-size: 10px;
+  font-size: 13px;
   font-weight: 700;
   color: var(--muted);
   margin: 0 0 8px;
@@ -307,7 +312,7 @@ select {
 }
 .setup-panel header p:not(.eyebrow) {
   color: var(--muted);
-  font-size: 12px;
+  font-size: 13px;
   margin-top: 4px;
 }
 .setup-panel header > strong {
@@ -355,7 +360,7 @@ select {
 }
 .setup-steps small {
   color: var(--muted);
-  font-size: 10px;
+  font-size: 13px;
 }
 .setup-steps a.done {
   opacity: 0.62;
@@ -367,7 +372,7 @@ select {
 .hero span,
 .hero small {
   color: #b8c8c0;
-  font-size: 12px;
+  font-size: 13px;
 }
 .hero strong {
   font: 600 37px var(--font);
@@ -401,7 +406,7 @@ select {
 .metrics span,
 .metrics small {
   color: var(--muted);
-  font-size: 11px;
+  font-size: 13px;
 }
 .metrics strong {
   font: 600 22px var(--font);
@@ -452,7 +457,7 @@ select {
   margin: 5px 0;
 }
 .card p {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--muted);
 }
 .auth {
@@ -500,7 +505,7 @@ select {
 .form label {
   display: grid;
   gap: 7px;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   margin: 14px 0;
 }
@@ -566,7 +571,7 @@ select {
 .drawer label {
   display: grid;
   gap: 7px;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   margin: 15px 0;
 }

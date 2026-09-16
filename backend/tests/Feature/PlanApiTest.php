@@ -20,27 +20,26 @@ class PlanApiTest extends TestCase
         $portfolio->members()->attach($user, ['role' => 'owner']);
 
         $this->actingAs($user)->getJson('/api/v1/plans')->assertOk()
-            ->assertJsonPath('current.code', 'starter')->assertJsonPath('current.properties.limit', 5)
-            ->assertJsonPath('plans.investor.property_limit', 20)
-            ->assertJsonPath('plans.investor.price_monthly', 19.99);
+            ->assertJsonPath('current.code', 'free')->assertJsonPath('current.properties.limit', 1)
+            ->assertJsonPath('plans.founder.property_limit', 20)
+            ->assertJsonPath('plans.founder.price_monthly', 6.99)
+            ->assertJsonMissingPath('plans.investor');
     }
 
-    public function test_starter_plan_cannot_create_more_than_five_properties(): void
+    public function test_free_plan_cannot_create_more_than_one_property(): void
     {
         $user = User::factory()->create();
         $portfolio = Portfolio::create(['name' => 'Cartera']);
         $portfolio->members()->attach($user, ['role' => 'owner']);
-        foreach (range(1, 5) as $number) {
-            $portfolio->properties()->create(['name' => "Piso {$number}", 'type' => 'housing', 'address_line' => "Calle {$number}"]);
-        }
+        $portfolio->properties()->create(['name' => 'Piso 1', 'type' => 'housing', 'address_line' => 'Calle 1']);
 
         $this->actingAs($user)->postJson('/api/v1/properties', [
-            'name' => 'Sexto piso', 'type' => 'housing', 'address_line' => 'Calle 6',
+            'name' => 'Segundo piso', 'type' => 'housing', 'address_line' => 'Calle 2',
         ])->assertUnprocessable()->assertJsonValidationErrors('plan');
-        $this->assertDatabaseCount('properties', 5);
+        $this->assertDatabaseCount('properties', 1);
     }
 
-    public function test_active_product_trial_always_uses_investor_limits(): void
+    public function test_active_product_trial_always_uses_founder_limits(): void
     {
         $user = User::factory()->create();
         $portfolio = Portfolio::create([
@@ -50,7 +49,7 @@ class PlanApiTest extends TestCase
         $portfolio->members()->attach($user, ['role' => 'owner']);
 
         $this->actingAs($user)->getJson('/api/v1/plans')->assertOk()
-            ->assertJsonPath('current.code', 'investor')
+            ->assertJsonPath('current.code', 'founder')
             ->assertJsonPath('current.on_trial', true)
             ->assertJsonPath('current.properties.limit', 20)
             ->assertJsonPath('current.storage.limit', 2147483648)
@@ -76,19 +75,19 @@ class PlanApiTest extends TestCase
 
     public function test_stripe_price_synchronizes_the_internal_plan_and_limits(): void
     {
-        config(['plans.investor.prices.monthly' => 'price_investor_test']);
+        config(['plans.founder.prices.monthly' => 'price_founder_test']);
         $user = User::factory()->create(['stripe_id' => 'cus_test']);
         $portfolio = Portfolio::create(['name' => 'Cartera']);
         $portfolio->members()->attach($user, ['role' => 'owner']);
         Subscription::create([
             'user_id' => $user->id, 'type' => 'default', 'stripe_id' => 'sub_test',
-            'stripe_status' => 'active', 'stripe_price' => 'price_investor_test', 'quantity' => 1,
+            'stripe_status' => 'active', 'stripe_price' => 'price_founder_test', 'quantity' => 1,
         ]);
 
         app(StripePlanSynchronizer::class)->sync($user);
 
         $this->assertDatabaseHas('portfolios', [
-            'id' => $portfolio->id, 'plan' => 'investor', 'subscription_status' => 'active',
+            'id' => $portfolio->id, 'plan' => 'founder', 'subscription_status' => 'active',
             'storage_limit_bytes' => 2147483648, 'billing_customer_id' => 'cus_test',
             'billing_subscription_id' => 'sub_test',
         ]);
@@ -97,7 +96,7 @@ class PlanApiTest extends TestCase
     public function test_missing_subscription_synchronizes_to_free_plan(): void
     {
         $user = User::factory()->create(['stripe_id' => 'cus_test']);
-        $portfolio = Portfolio::create(['name' => 'Cartera', 'plan' => 'investor']);
+        $portfolio = Portfolio::create(['name' => 'Cartera', 'plan' => 'founder']);
         $portfolio->members()->attach($user, ['role' => 'owner']);
 
         app(StripePlanSynchronizer::class)->sync($user);
@@ -106,5 +105,25 @@ class PlanApiTest extends TestCase
             'id' => $portfolio->id, 'plan' => 'free', 'subscription_status' => 'cancelled',
             'storage_limit_bytes' => 52428800, 'billing_subscription_id' => null,
         ]);
+    }
+
+    public function test_beta_checkout_only_accepts_the_monthly_founder_plan(): void
+    {
+        config(['beta.billing_enabled' => true]);
+        $user = User::factory()->create();
+        $portfolio = Portfolio::create(['name' => 'Cartera']);
+        $portfolio->members()->attach($user, ['role' => 'owner']);
+
+        $this->actingAs($user)->postJson('/api/v1/billing/checkout', [
+            'plan' => 'free', 'period' => 'monthly',
+        ])->assertUnprocessable()->assertJsonValidationErrors('plan');
+
+        $this->actingAs($user)->postJson('/api/v1/billing/checkout', [
+            'plan' => 'founder', 'period' => 'yearly',
+        ])->assertUnprocessable()->assertJsonValidationErrors('period');
+
+        $this->actingAs($user)->postJson('/api/v1/billing/change-plan', [
+            'plan' => 'founder', 'period' => 'monthly',
+        ])->assertNotFound();
     }
 }

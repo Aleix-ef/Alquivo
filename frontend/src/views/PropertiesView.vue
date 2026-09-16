@@ -12,6 +12,9 @@ import {
 } from "@lucide/vue";
 import { useRoute, useRouter } from "vue-router";
 import api from "../api";
+import { usePlanAccess } from "../stores/planAccess";
+const planAccess = usePlanAccess();
+import { fetchAllPages } from "../pagination";
 import PropertyImage from "../components/PropertyImage.vue";
 import { useDialog } from "../composables/useDialog";
 import "../property-experience.css";
@@ -98,18 +101,9 @@ async function load() {
   loading.value = true;
   loadError.value = "";
   try {
-    const result = [];
-    let page = 1;
-    let lastPage = 1;
-    do {
-      const { data } = await api.get("/properties", {
-        params: { page },
-        signal: controller.signal,
-      });
-      result.push(...data.data);
-      lastPage = data.last_page || 1;
-      page += 1;
-    } while (page <= lastPage);
+    const result = await fetchAllPages(api, "/properties", {
+      signal: controller.signal,
+    });
     if (!controller.signal.aborted) items.value = result;
   } catch {
     if (!controller.signal.aborted)
@@ -261,6 +255,9 @@ onBeforeUnmount(() => loadController?.abort());
               }}</span
             >
             <h2>{{ property.name }}</h2>
+            <p v-if="planAccess.readOnly(property.id)">
+              Modo consulta · datos conservados
+            </p>
             <p class="property-card-address">
               <MapPin :size="14" /><span>{{
                 [property.address_line, property.city]

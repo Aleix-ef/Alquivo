@@ -6,6 +6,8 @@ import api from "../api";
 const report = ref(null);
 const months = ref(12);
 const downloading = ref("");
+const loading = ref(true);
+const error = ref("");
 const maxMovement = computed(() =>
   Math.max(
     1,
@@ -22,9 +24,17 @@ const money = (value) =>
     maximumFractionDigits: 0,
   }).format(value || 0);
 async function load() {
-  report.value = (
-    await api.get("/reports/overview", { params: { months: months.value } })
-  ).data;
+  loading.value = true;
+  error.value = "";
+  try {
+    report.value = (
+      await api.get("/reports/overview", { params: { months: months.value } })
+    ).data;
+  } catch {
+    error.value = "No hemos podido preparar el informe.";
+  } finally {
+    loading.value = false;
+  }
 }
 async function download(resource) {
   downloading.value = resource;
@@ -35,9 +45,11 @@ async function download(resource) {
     const url = URL.createObjectURL(response.data);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `nareo-${resource}.csv`;
+    link.download = `alquivo-${resource}.csv`;
     link.click();
     URL.revokeObjectURL(url);
+  } catch {
+    error.value = "No se pudo descargar la exportación.";
   } finally {
     downloading.value = "";
   }
@@ -62,7 +74,11 @@ onMounted(load);
         </select></label
       >
     </header>
-    <div v-if="!report" class="empty">Preparando el informe…</div>
+    <div v-if="loading" class="empty" role="status">Preparando el informe…</div>
+    <div v-else-if="error" class="empty" role="alert">
+      <p>{{ error }}</p>
+      <button class="button secondary" @click="load">Volver a intentar</button>
+    </div>
     <template v-else>
       <section class="finance-summary">
         <article>

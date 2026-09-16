@@ -1,0 +1,223 @@
+.support-form fieldset {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 1rem;
+  min-width: 0;
+}
+.support-form label {
+  display: grid;
+  gap: 0.5rem;
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--ink);
+}
+.support-form input:not([type="checkbox"]),
+.support-form textarea {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 0.8rem;
+  background: var(--canvas);
+  color: var(--ink);
+  font: inherit;
+  font-size: 1rem;
+}
+.support-form textarea {
+  resize: vertical;
+  min-height: 135px;
+}
+.support-form input[readonly] {
+  color: var(--muted);
+}
+.support-form [aria-invalid="true"] {
+  border-color: var(--danger);
+}
+.support-form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+.support-field-error {
+  color: var(--danger);
+  font-size: 0.95rem;
+}
+.support-honeypot {
+  display: none;
+}
+.support-attachments {
+  display: grid;
+  gap: 0.6rem;
+}
+.support-attachments > label {
+  display: flex;
+  align-items: center;
+}
+.support-attachments p,
+.support-privacy-note,
+.support-email-alternative {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: var(--muted);
+  margin: 0;
+}
+.support-attachments ul {
+  padding: 0;
+  margin: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.4rem;
+}
+.support-attachments li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  padding-left: 0.75rem;
+  background: var(--surface-soft);
+  border-radius: 8px;
+}
+.support-attachments li span {
+  overflow-wrap: anywhere;
+}
+.support-remove-file,
+.public-support-close {
+  min-width: 44px;
+  min-height: 44px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--surface-soft);
+  color: var(--ink);
+  display: inline-grid;
+  place-items: center;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.support-form .support-consent {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.7rem;
+  font-size: 0.95rem;
+}
+.support-consent input {
+  width: 20px;
+  height: 20px;
+  margin-top: 3px;
+  flex-shrink: 0;
+  accent-color: var(--primary);
+}
+.support-consent a,
+.support-email-alternative a {
+  color: var(--green);
+  text-decoration: underline;
+  overflow-wrap: anywhere;
+}
+.support-submit {
+  min-height: 48px;
+  justify-content: center;
+}
+.support-form-success {
+  display: grid;
+  gap: 1rem;
+  color: var(--ink);
+}
+.support-form-success > svg {
+  color: var(--success);
+}
+.support-reference {
+  overflow-wrap: anywhere;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+.support-email-alternative {
+  margin-top: 1.25rem;
+}
+.support-compose {
+  padding: clamp(1rem, 3vw, 2rem);
+}
+.support-compose > h2 {
+  margin-bottom: 0.75rem;
+}
+.support-compose > p {
+  margin-bottom: 1.5rem;
+  line-height: 1.6;
+  color: var(--muted);
+}
+.public-support-trigger {
+  position: fixed;
+  z-index: 60;
+  right: max(1.25rem, env(safe-area-inset-right));
+  bottom: max(1.25rem, env(safe-area-inset-bottom));
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  min-height: 52px;
+  padding: 0.85rem 1.15rem;
+  border-radius: 999px;
+  border: 1px solid var(--green);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-weight: 700;
+  box-shadow: var(--shadow-raised);
+  cursor: pointer;
+}
+.public-support-trigger:hover {
+  background: var(--surface-hover);
+}
+.public-support-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  background: var(--overlay);
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-end;
+  padding: 1.25rem;
+}
+.public-support-panel {
+  width: min(100%, 590px);
+  max-height: calc(100dvh - 2.5rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  padding: clamp(1rem, 3vw, 1.75rem);
+  box-shadow: var(--shadow-raised);
+}
+.public-support-panel > header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+.public-support-panel h2 {
+  font-size: 1.45rem;
+  line-height: 1.3;
+  margin: 0.35rem 0 0.75rem;
+}
+.public-support-panel header p {
+  line-height: 1.5;
+  color: var(--muted);
+}
+@media (max-width: 600px) {
+  .support-form-row {
+    grid-template-columns: 1fr;
+  }
+  .public-support-backdrop {
+    padding: 0.5rem;
+  }
+  .public-support-panel {
+    max-height: calc(100dvh - 1rem);
+    border-radius: 14px;
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+  .public-support-trigger {
+    right: 0.85rem;
+    bottom: max(0.85rem, env(safe-area-inset-bottom));
+  }
+}

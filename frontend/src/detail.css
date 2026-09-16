@@ -2,7 +2,7 @@
   display: block;
   text-align: right;
   color: var(--green);
-  font-size: 11px;
+  font-size: 13px;
   margin-top: -8px;
 }
 .success {
@@ -19,7 +19,7 @@
   gap: 6px;
   align-items: center;
   color: var(--muted);
-  font-size: 12px;
+  font-size: 13px;
   margin-bottom: 18px;
 }
 .property-hero {
@@ -64,7 +64,7 @@
   display: grid;
 }
 .asset-metrics span {
-  font-size: 11px;
+  font-size: 13px;
   color: var(--muted);
 }
 .asset-metrics strong {
@@ -97,7 +97,7 @@
   display: grid;
 }
 .detail-panel dt {
-  font-size: 10px;
+  font-size: 13px;
   color: var(--muted);
 }
 .detail-panel dd {
@@ -106,7 +106,7 @@
 }
 .detail-panel > a {
   color: var(--green);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
 }
 .lease-heading {
@@ -138,7 +138,7 @@
 .tenant-list small,
 .charge-history small {
   color: var(--muted);
-  font-size: 10px;
+  font-size: 13px;
 }
 .charge-history > div {
   grid-template-columns: 1fr auto;
