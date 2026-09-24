@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Domain\Portfolio\Services\PlanService;
 use App\Http\Controllers\Controller;
 use App\Support\ProductFeatures;
 
@@ -15,7 +16,7 @@ class PublicPlanController extends Controller
     public function __invoke(): array
     {
         return [
-            'plans' => collect(config('plans'))->map(function (array $plan, string $code): array {
+            'plans' => collect(app(PlanService::class)->visibleCatalog())->map(function (array $plan, string $code): array {
                 $plan = app(ProductFeatures::class)->plan($plan);
 
                 return [

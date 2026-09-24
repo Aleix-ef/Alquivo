@@ -2,6 +2,40 @@
 
 Producto SaaS Alquivo. Este directorio es independiente del proyecto académico anterior.
 
+## Demo administradora local — 17 de septiembre de 2026
+
+Por petición del propietario, `demo@alquivo.test` dispone de un rol explícito de administración **solo en local**, con correo verificado y doble factor obligatorio. Puede revisar fiscalidad, asistente, catálogo completo y bandeja del equipo. Su cartera tiene las prestaciones del Plan Fundador (20 inmuebles, 2 GB y hasta 50 consultas de IA al mes); el proveedor debe estar configurado y se mantiene el consentimiento y los límites de tokens. No se activan pagos ni se concede acceso a carteras ajenas.
+
+El permiso no funciona en producción/staging ni añade a la demo al equipo permanente de soporte. La beta pública y las demás cuentas no cambian. Comando de activación: `docker compose exec backend php artisan demo:admin`; añadir `--revoke` para retirarlo. Ver [administración local](docs/local-admin.md). Verificación: 182 pruebas de backend y 970 aserciones, pruebas de frontend y compilación correctas.
+
+## Chat de soporte humano — 17 de septiembre de 2026
+
+Las consultas nuevas se guardan como conversaciones: el usuario escribe y recibe la respuesta del equipo en el mismo chat. Disponible en Ayuda y soporte y en el botón público, con historial, adjuntos privados, mensajes sin leer, cierre/reapertura y actualización cada 15 segundos mientras esté abierto. No depende del correo para guardar mensajes y no afirma atención inmediata. No hay todavía avisos push/email de nuevas respuestas.
+
+El equipo responde desde `/support/inbox`, con autorización explícita, correo verificado y doble factor. La cuenta elegida es **soporte@alquivo.com**, pero no existía al comprobarla: debe registrarse, verificarse y activar MFA antes de concederle acceso mediante `support:agent`. La demo puede revisar la bandeja únicamente con el rol local descrito arriba; no se han creado credenciales ni permisos permanentes de soporte para ella. Los visitantes conservan acceso solo mientras siga activa su sesión del navegador; su correo declarado no es prueba de identidad.
+
+La IA de soporte queda **pendiente y sin implementar**. Funcionamiento, activación, límites, privacidad, borrado y operación en [soporte por chat](docs/support-chat.md).
+
+## SEO y descubrimiento en IA — 17 de septiembre de 2026
+
+La portada y las nuevas guías públicas ya se generan como HTML legible sin JavaScript, manteniendo Vue y la API privada. Se añaden metadatos por página, canonical, datos estructurados, sitemap, robots, respuestas 404 reales, enlaces internos y compresión. Las cuentas, datos privados y pantallas de acceso no se indexan; no se ha relajado la CSP ni activado la IA del producto.
+
+**La indexación está desactivada en local y por defecto.** Para el lanzamiento hay que configurar el dominio HTTPS definitivo en `VITE_PUBLIC_SITE_URL`, activar `VITE_SEO_INDEXABLE=true` y reconstruir web; después verificar el dominio y enviar el sitemap a Google/Bing. No se ha publicado ni enviado ninguna URL. Manual de activación, pruebas, contenido y estrategia: [SEO y descubrimiento](docs/seo-and-discovery.md).
+
+Verificación: 150 pruebas de backend / 764 aserciones, 20 pruebas de frontend y comprobaciones SEO de siete páginas generadas correctas. Compilaciones indexable y protegida verificadas; Nginx, estados HTTP, redirecciones y cabeceras comprobados. Se corrigió la respuesta anónima de API sin cabecera JSON (401 en lugar de 500). La cuenta demo tiene doble factor: se ha comprobado que la contraseña sola no da acceso, sin desactivar ni leer sus claves; el recorrido HTTP completo autenticado queda pendiente de completar ese factor. No se ha realizado revisión visual en navegador ni medición de rendimiento público.
+
+## Plan activo: Beta gratuita — 16 de septiembre de 2026
+
+`BETA_PROGRAM_ENABLED=true` hace que **Beta gratuita sea el único plan visible y accesible** en landing, Planes y API. Incluye 10 inmuebles, 1 GB de documentos/fotos, gestión de inquilinos, contratos, cobros, gastos, incidencias, calendario, informes, exportación, soporte y doble factor. Es gratuito durante toda la beta: **no caduca a los 14 días**. Se aplica a cuentas nuevas y existentes sin modificar su historial de facturación ni borrar datos. Si una cuenta ya supera los límites, los inmuebles excedentes permanecen en consulta; superar el almacenamiento impide nuevas subidas, no descargas.
+
+La cuota preparada de IA es de **hasta 20 consultas mensuales**, con límites adicionales de 200.000 tokens de entrada y 20.000 de salida. No se aumenta a 50 por una prueba antigua. El asistente sigue sujeto a `ASSISTANT_VALIDATED`, `ASSISTANT_ENABLED`, proveedor configurado y consentimiento del usuario; no se ha reactivado ni se anuncia cuando está apagado. Fiscalidad también conserva su control de validación: tener el permiso en Beta no activa un módulo todavía pendiente de revisión.
+
+Gratuito y Fundador siguen implementados, pero no aparecen en los catálogos ni pueden contratarse, ni siquiera activando `BILLING_ENABLED` mientras dure la Beta. Se bloquean Checkout y portal tanto por HTTP como dentro del servicio. No hay una ruta pública para activar planes. Los campos históricos de facturación de la cartera ya no se serializan en el perfil: la fuente de límites es `/plans` o `/account/usage`.
+
+**Cierre futuro, manual:** avisar con antelación, preparar la oferta de agradecimiento del Plan Fundador y permitir exportar antes de cambiar condiciones. Solo después cambiar `BETA_PROGRAM_ENABLED=false` y desplegar; `BILLING_ENABLED` debe seguir en `false` hasta validar la comercialización. Las cuentas creadas en Beta tienen Gratuito como base y no se convierten automáticamente en clientes de pago. Revisar por separado las cuentas antiguas que ya tenían una suscripción en Stripe. No se ha implementado ni enviado todavía la campaña de agradecimiento.
+
+Esta sección sustituye las referencias históricas a cuotas visibles y pruebas de 14 días de los apartados siguientes.
+
 ## Beta de validación sin cobros — 15 de septiembre de 2026
 
 **Contratación desactivada por defecto** (`BILLING_ENABLED=false`). Las cuotas siguen visibles, pero ni la interfaz ni la API permiten abrir Checkout o el portal de Stripe. La prueba sigue durando 14 días y después se aplica Gratuito. No se cancelan automáticamente suscripciones o enlaces externos anteriores: revisar Stripe antes de abrir la beta. Las referencias a contratación más abajo describen el funcionamiento preparado para cuando se reactive, no el estado actual.
@@ -98,7 +132,7 @@ El [sistema visual](docs/design-system.md) documenta los estilos, componentes, a
 - Límites de inmuebles y almacenamiento aplicados siempre desde backend.
 - Stripe Checkout y Customer Portal mediante Laravel Cashier.
 - Suscripciones sincronizadas por webhooks firmados como fuente de verdad.
-- Asistente conversacional de solo lectura con historial privado, aislamiento por cartera y cuotas mensuales.
+- Asistente con consultas y propuestas confirmadas de gastos, cobros, teléfonos y notas, historial cifrado, aislamiento por cartera y cuotas mensuales.
 - Consultas asistidas sobre patrimonio, inmuebles, finanzas, cobros, contratos, incidencias, documentos y recordatorios.
 
 ## Asistente de Alquivo
@@ -107,9 +141,9 @@ Implementado pero **oculto por defecto en la beta**. Solo habilitar `ASSISTANT_V
 
 El botón **Asistente IA** de la barra superior abre un panel lateral ampliable, a pantalla completa en móvil. Incluye preguntas adaptadas a la sección, contexto del inmueble abierto, comparación de meses e inmuebles, desglose de movimientos, enlaces para contrastar respuestas y copia de texto. **Cómo usar Alquivo** ofrece guías con buscador sin gastar consultas ni necesitar saldo de IA. **Ayuda y soporte** ocupa la parte inferior izquierda del menú y tiene su propia página; configura `SUPPORT_EMAIL` con una dirección real para habilitar el contacto por correo.
 
-El frontend nunca recibe la clave ni consulta directamente al proveedor: Laravel autoriza al usuario, limita la cartera y ejecuta ocho herramientas de lectura. Las respuestas del proveedor se solicitan con almacenamiento remoto desactivado; el historial que ve el usuario se conserva en la base de datos de Alquivo y puede eliminarse desde el panel.
+El frontend nunca recibe la clave ni consulta directamente al proveedor. Laravel autoriza la cartera y conserva las ocho consultas iniciales, con búsqueda segura de inmuebles/contactos, mensualidades y detalle de contratos. Cuatro herramientas **sólo preparan** gastos, cobros de mensualidades existentes, cambios de teléfono y notas de inmuebles. Las tarjetas permiten revisar, editar y cancelar; únicamente su botón de confirmación ejecuta la operación. Repetir una confirmación devuelve el mismo resultado, sin duplicar cobros ni notas. El historial y las propuestas se guardan cifrados. El proveedor se utiliza con `store=false`, sin equipararlo a retención cero.
 
-Incluye la mascota de Alquivo con poses de bienvenida, consulta y respuesta. Las consultas ajenas a la aplicación, la falta de datos, las peticiones de escritura y los problemas que requieren soporte tienen respuestas diferenciadas. El [documento del asistente](docs/assistant.md) explica las protecciones, sus límites y las pruebas pendientes con saldo real; no basta con que pasen los tests simulados para dar por validada la calidad del modelo.
+Incluye la mascota de Alquivo con poses de bienvenida, consulta y respuesta. Las consultas ajenas a la aplicación, la falta de datos, las acciones no implementadas y los problemas de soporte tienen respuestas diferenciadas. El [documento del asistente](docs/assistant.md) explica las protecciones y pruebas pendientes con saldo real. El [progreso de Alquivo AI](docs/ai-implementation-progress.md) distingue lo terminado de las siguientes fases; no basta con tests simulados para validar la calidad del modelo.
 
 Para activar respuestas reales, añade al entorno privado del backend y reconstruye el servicio:
 
@@ -118,7 +152,13 @@ OPENAI_API_KEY=sk-...
 OPENAI_ASSISTANT_MODEL=gpt-5.4-mini
 ```
 
-El modelo es configurable sin cambios de código. Las cuotas conservadoras de beta están centralizadas en `backend/config/assistant.php`: 5 consultas/mes en Gratuito y 50 tanto en el Plan Fundador como durante la prueba. Existe además un presupuesto mensual de tokens independiente del historial, para que borrar conversaciones no recupere consumo ni un uso intensivo vuelva imprevisible el coste. Ambos límites deben ajustarse con datos reales. Antes de producción se debe reflejar el tratamiento de datos por IA en privacidad, condiciones y registro de proveedores; el asistente no envía archivos ni el contenido de documentos.
+`backend/config/ai.php` centraliza perfiles, tarifas versionadas y presupuestos por ejecución, cartera y proveedor. `AI_CHAT_PROFILE=legacy` conserva el modelo configurado; `fast` selecciona Luna. El fallback se activa expresamente con `AI_FALLBACK_PROFILE`, no por defecto. Astra sigue desactivado. El [harness de evaluaciones](docs/ai-evaluations.md) es actualmente offline: no mide la precisión real ni consume API. Las cuotas de `config/assistant.php` son Beta 20, Gratuito 5 y Fundador/prueba 50 consultas mensuales. Borrar chats no restaura cuota. Las acciones requieren cuenta verificada, activación vigente, permisos y plan habilitado; `AI_ACTIONS_ENABLED=false` las desactiva sin romper consultas. El aviso `2026-09-22` informa de los nombres de contactos que se pueden consultar y del teléfono o texto que el usuario envíe al chat. El asistente aún no procesa documentos ni actúa autónomamente; sigue pendiente validación con modelos reales antes de abrirlo a la beta.
+
+## Document AI — laboratorio local
+
+Facturas y contratos cuentan con un flujo de importación asistida **simulado**, accesible sólo al administrador local desde **Documentos → Importación IA · demo**. Incluye dos PDF ficticios descargables, cola, borrador cifrado con fragmentos, edición y confirmación explícita. Facturas registran un gasto; contratos crean un contrato en borrador con inmueble/inquilinos elegidos o adjuntan el documento a uno existente. Nada se crea antes de confirmar.
+
+No consume saldo ni envía archivos a OpenAI. Sólo los ejemplos conocidos tienen datos precargados; otros archivos muestran campos vacíos y aviso de ausencia de análisis. Requiere consentimiento documental separado; `ASSISTANT_VALIDATED=false` permanece intacto. Consulta [operación y demostración de Document AI](docs/document-ai.md) y [estado de implementación](docs/ai-implementation-progress.md). La lectura real de documentos sigue pendiente de evaluación y nueva aceptación de privacidad.
 
 ## Fiscalidad premium (beta)
 
@@ -248,7 +288,7 @@ Se han reforzado autenticación, verificación de correo, firmas de Stripe, lím
 - El backend es la fuente de verdad de métricas y reglas financieras.
 - Los cargos mensuales se generan mediante un comando idempotente programado diariamente.
 - Los movimientos recurrentes se generan como pendientes: el propietario confirma cuándo se han pagado o cobrado.
-- Las funciones futuras no se exponen hasta aportar valor al MVP; la IA comienza como una capa de consulta estrictamente de lectura.
+- Las funciones futuras no se exponen hasta aportar valor al MVP; la IA consulta datos y puede preparar propuestas de gasto, que sólo se ejecutan tras revisión y confirmación explícita del usuario.
 
 ## Mantenibilidad y deuda técnica conocida
 
@@ -295,7 +335,7 @@ Los primeros usuarios deben decidir qué se desarrolla después. Las hipótesis 
 - Gestión básica de préstamos e hipotecas para calcular patrimonio neto y flujo real.
 - Onboarding guiado que lleve al usuario hasta su primer inmueble y contrato en pocos minutos.
 
-No deben incorporarse al MVP sin validación integraciones bancarias, marketplace, chat entre personas, seguros, automatizaciones avanzadas o gestión para grandes inmobiliarias. El asistente de lectura debe medirse como experimento de beta antes de ampliar sus capacidades.
+No deben incorporarse al MVP sin validación integraciones bancarias, marketplace, mensajería entre propietarios e inquilinos, seguros, automatizaciones avanzadas o gestión para grandes inmobiliarias. El chat de soporte sí está disponible. Las consultas y propuestas del asistente deben medirse antes de ampliar sus capacidades o abrirlas a todos los usuarios de la beta.
 
 ### Señales para ampliar el producto
 

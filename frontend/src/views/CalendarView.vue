@@ -6,6 +6,7 @@ import api from "../api";
 import { fetchAllPages } from "../pagination";
 import ConfirmDialog from "../components/ConfirmDialog.vue";
 import { useConfirmDialog } from "../composables/useConfirmDialog";
+import { useRecordAnchor } from "../composables/useRecordAnchor";
 const route = useRoute(),
   router = useRouter(),
   events = ref([]),
@@ -42,7 +43,14 @@ async function load() {
   loadError.value = "";
   try {
     const [e, p] = await Promise.all([
-      api.get("/calendar"),
+      api.get("/calendar", {
+        params: /^\d{4}-\d{2}-\d{2}$/.test(route.query.date || "")
+          ? {
+              from: `${route.query.date} 00:00:00`,
+              to: `${route.query.date} 23:59:59`,
+            }
+          : {},
+      }),
       fetchAllPages(api, "/properties"),
     ]);
     events.value = e.data.events;
@@ -125,6 +133,7 @@ async function removeReminder(event) {
       "No se pudo eliminar el recordatorio.";
   }
 }
+useRecordAnchor(loading, "reminder");
 onMounted(load);
 </script>
 <template>
@@ -139,6 +148,21 @@ onMounted(load);
         <Plus :size="16" />Nuevo recordatorio
       </button>
     </header>
+    <p v-if="route.query.date" class="notice">
+      Mostrando el día del aviso: {{ route.query.date }}.
+      <button
+        type="button"
+        class="button secondary"
+        @click="
+          async () => {
+            await router.replace('/calendar');
+            await load();
+          }
+        "
+      >
+        Ver calendario completo
+      </button>
+    </p>
     <section v-if="loading" class="empty" role="status">
       Cargando calendario…
     </section>
@@ -150,7 +174,7 @@ onMounted(load);
       <div v-for="[date, list] in groups" :key="date" class="timeline-day">
         <time>{{ date }}</time>
         <div>
-          <article v-for="e in list" :key="e.id">
+          <article v-for="e in list" :key="e.id" :id="e.id" tabindex="-1">
             <span :class="e.type"></span>
             <div>
               <strong>{{ e.title }}</strong

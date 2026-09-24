@@ -16,7 +16,7 @@ class AssistantUsageService
     {
         $plan = $this->plans->effectiveCode($portfolio);
         $onTrial = $portfolio->trial_ends_at?->isFuture() ?? false;
-        $limitCode = $onTrial ? 'trial' : $plan;
+        $limitCode = $plan === 'admin' ? 'founder' : ($plan === 'beta' ? 'beta' : ($onTrial ? 'trial' : $plan));
         $limit = (int) config("assistant.limits.{$limitCode}", 0);
         $tokenLimits = config("assistant.token_limits.{$limitCode}", ['input' => 0, 'output' => 0]);
         $usage = DB::table('ai_monthly_usage')->where('portfolio_id', $portfolio->id)

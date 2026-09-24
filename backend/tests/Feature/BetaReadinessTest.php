@@ -32,7 +32,7 @@ class BetaReadinessTest extends TestCase
         config(['beta.fiscality_enabled' => false, 'beta.assistant_validated' => false, 'support.email' => 'soporte@alquivo.com']);
         Http::preventStrayRequests();
         $this->getJson('/api/v1/public/config')->assertOk()->assertExactJson([
-            'assistant' => false, 'fiscality' => false, 'billing_enabled' => false, 'support_email' => 'soporte@alquivo.com',
+            'assistant' => false, 'fiscality' => false, 'beta_program' => false, 'billing_enabled' => false, 'support_email' => 'soporte@alquivo.com',
         ]);
         $catalog = $this->getJson('/api/v1/public/plans')->assertOk()->getContent();
         $this->assertStringNotContainsString('Fiscalidad', $catalog);

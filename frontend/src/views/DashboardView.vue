@@ -11,14 +11,13 @@ import {
   CalendarDays,
   Wallet,
   TrendingUp,
-  CircleCheck,
-  Clock3,
   CircleAlert,
   RefreshCw,
 } from "@lucide/vue";
 import api from "../api";
 import { useSession } from "../session";
 import PropertyImage from "../components/PropertyImage.vue";
+import AttentionPanel from "../components/AttentionPanel.vue";
 import "../dashboard.css";
 
 const session = useSession();
@@ -51,13 +50,6 @@ const percent = (value) =>
     : new Intl.NumberFormat("es-ES", { maximumFractionDigits: 2 }).format(
         value,
       ) + " %";
-const shortDate = (value) =>
-  value
-    ? new Intl.DateTimeFormat("es-ES", {
-        day: "numeric",
-        month: "short",
-      }).format(new Date(`${value.slice(0, 10)}T12:00:00`))
-    : "Sin fecha";
 const steps = computed(() => [
   {
     done: Boolean(data.value?.properties.length),
@@ -135,40 +127,36 @@ const cashflow = computed(() => [
     type: "expense",
   },
 ]);
-const attention = computed(() => data.value?.attention || []);
-const attentionLink = (type) =>
-  ({
-    lease_expiring: "/leases",
-    issue: "/issues",
-    document_expiry: "/documents?status=upcoming",
-    reminder: "/calendar",
-  })[type] || "/finance";
-const attentionIcon = (type) =>
-  type === "rent_overdue"
-    ? CircleAlert
-    : type === "reminder"
-      ? CalendarDays
-      : Clock3;
 let controller;
 async function load() {
   controller?.abort();
-  controller = new AbortController();
+  const current = new AbortController();
+  controller = current;
   loading.value = true;
   error.value = "";
   try {
-    data.value = (
-      await api.get("/dashboard", { signal: controller.signal })
-    ).data;
+    data.value = (await api.get("/dashboard", { signal: current.signal })).data;
   } catch (exception) {
     if (exception.code !== "ERR_CANCELED")
       error.value =
         "No hemos podido preparar tu resumen. Comprueba la conexión y vuelve a intentarlo.";
   } finally {
-    loading.value = false;
+    if (controller === current) loading.value = false;
   }
 }
-onMounted(load);
-onBeforeUnmount(() => controller?.abort());
+const changes = [
+  "alquivo:finance-changed",
+  "alquivo:leases-changed",
+  "alquivo:properties-changed",
+];
+onMounted(() => {
+  load();
+  changes.forEach((event) => window.addEventListener(event, load));
+});
+onBeforeUnmount(() => {
+  controller?.abort();
+  changes.forEach((event) => window.removeEventListener(event, load));
+});
 </script>
 
 <template>
@@ -307,6 +295,12 @@ onBeforeUnmount(() => controller?.abort());
         </article>
       </section>
 
+      <AttentionPanel
+        v-if="data?.attention_summary"
+        :items="data.attention"
+        :summary="data.attention_summary"
+      />
+
       <section class="dashboard-grid">
         <article class="panel cashflow-panel">
           <header class="dashboard-panel-heading">
@@ -387,58 +381,6 @@ onBeforeUnmount(() => controller?.abort());
             /></RouterLink>
           </div>
         </article>
-      </section>
-
-      <section class="panel dashboard-attention">
-        <header class="dashboard-panel-heading">
-          <div>
-            <p class="eyebrow">Tu agenda, al día</p>
-            <h2>
-              {{ attention.length ? "Próximos pasos" : "Todo bajo control"
-              }}<span v-if="attention.length" class="attention-count">{{
-                attention.length
-              }}</span>
-            </h2>
-          </div>
-          <RouterLink class="dashboard-text-link" to="/calendar"
-            >Abrir calendario <ArrowUpRight :size="15"
-          /></RouterLink>
-        </header>
-        <div v-if="attention.length" class="dashboard-attention-list">
-          <RouterLink
-            v-for="(item, index) in attention.slice(0, 4)"
-            :key="`${item.type}-${index}`"
-            :to="attentionLink(item.type)"
-            ><span
-              class="attention-item-icon"
-              :class="{ overdue: item.type === 'rent_overdue' }"
-              ><component :is="attentionIcon(item.type)" :size="19"
-            /></span>
-            <div>
-              <strong>{{ item.title }}</strong
-              ><small>{{ item.detail }}</small>
-            </div>
-            <time :datetime="item.date">{{ shortDate(item.date) }}</time
-            ><strong v-if="item.amount" class="attention-amount">{{
-              money(item.amount)
-            }}</strong
-            ><ArrowUpRight class="attention-arrow" :size="16"
-          /></RouterLink>
-        </div>
-        <div v-else class="dashboard-calm">
-          <span><CircleCheck :size="23" /></span>
-          <div>
-            <strong>Un poco más de tranquilidad.</strong>
-            <p>
-              No hay cobros pendientes ni avisos próximos que requieran tu
-              atención.
-            </p>
-          </div>
-        </div>
-        <p v-if="attention.length > 4" class="cashflow-note">
-          Mostrando los 4 primeros de {{ attention.length }} avisos. Consulta el
-          calendario y las finanzas para ver el resto.
-        </p>
       </section>
     </template>
   </main>

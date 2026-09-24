@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Domain\Finance\Actions\CreateExpense;
 use App\Domain\Finance\Models\Transaction;
 use App\Domain\Properties\Models\Property;
 use App\Http\Controllers\Controller;
@@ -31,6 +32,9 @@ class TransactionController extends Controller
             'due_date' => ['nullable', 'date'], 'status' => ['required', Rule::in(['pending', 'paid', 'cancelled'])],
             'payment_method' => ['nullable', 'string', 'max:40'], 'notes' => ['nullable', 'string'],
         ]);
+        if ($data['direction'] === 'expense') {
+            return response()->json(app(CreateExpense::class)->execute($portfolio, $request->user(), $data), 201);
+        }
         if (! empty($data['property_id'])) {
             Property::where('portfolio_id', $portfolio->id)->findOrFail($data['property_id']);
         }

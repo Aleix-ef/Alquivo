@@ -13,11 +13,24 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Cashier\Billable;
 use Laravel\Sanctum\HasApiTokens;
+use Laravel\Sanctum\TransientToken;
 
 #[Fillable(['name', 'email', 'password', 'email_verified_at', 'terms_accepted_at', 'terms_version'])]
 #[Hidden(['password', 'remember_token', 'two_factor_secret', 'two_factor_recovery_codes', 'two_factor_last_step'])]
 class User extends Authenticatable implements MustVerifyEmail
 {
+    // Informational capability; never accepted from registration/profile payloads.
+    protected $appends = ['local_admin'];
+
+    public function getLocalAdminAttribute(): bool
+    {
+        $token = $this->currentAccessToken();
+
+        return app()->environment('local') && $this->role === 'admin'
+            && $this->hasVerifiedEmail() && (bool) $this->two_factor_confirmed_at
+            && (! $token || $token instanceof TransientToken);
+    }
+
     /** @use HasFactory<UserFactory> */
     use Billable, HasApiTokens, HasFactory, Notifiable;
 

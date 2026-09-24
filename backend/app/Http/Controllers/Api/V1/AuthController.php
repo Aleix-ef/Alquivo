@@ -36,14 +36,15 @@ class AuthController extends Controller
                 'name' => $data['portfolio_name'] ?? 'Mi patrimonio',
                 'currency' => 'EUR', 'country_code' => 'ES',
                 'plan' => 'free', 'storage_limit_bytes' => config('plans.free.storage_limit_bytes'),
-                'subscription_status' => 'trialing', 'trial_ends_at' => now()->addDays(14),
+                'subscription_status' => config('beta.program_enabled') ? 'free' : 'trialing',
+                'trial_ends_at' => config('beta.program_enabled') ? null : now()->addDays(14),
             ]);
             $portfolio->members()->attach($user->id, ['role' => 'owner']);
 
             return [$user, $portfolio];
         });
 
-        Auth::login($user);
+        Auth::guard('web')->login($user);
         $user->sendEmailVerificationNotification();
         if ($request->hasSession()) {
             $request->session()->regenerate();

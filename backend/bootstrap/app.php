@@ -17,6 +17,9 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->statefulApi();
+        // Crawlers and direct browser requests may omit Accept: application/json.
+        // API authentication must still return 401, not resolve a missing web login route.
+        $middleware->redirectGuestsTo(fn (Request $request) => $request->is('api/*') ? null : '/login');
         $middleware->append(SecurityHeaders::class);
         $middleware->trustProxies(headers: Request::HEADER_X_FORWARDED_FOR | Request::HEADER_X_FORWARDED_PROTO);
         $middleware->validateCsrfTokens(except: ['stripe/webhook']);

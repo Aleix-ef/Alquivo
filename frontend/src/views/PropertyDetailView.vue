@@ -3,7 +3,7 @@ import { useProduct } from "../stores/product";
 import { usePlanAccess } from "../stores/planAccess";
 const product = useProduct(),
   planAccess = usePlanAccess();
-import { ref, computed, watch, onBeforeUnmount } from "vue";
+import { ref, computed, watch, onMounted, onBeforeUnmount } from "vue";
 import {
   ArrowLeft,
   ArrowUpRight,
@@ -336,7 +336,22 @@ watch(
   },
   { immediate: true },
 );
-onBeforeUnmount(() => loadController?.abort());
+function refreshProperty(event) {
+  if (
+    !event.detail?.propertyId ||
+    String(event.detail.propertyId) === String(route.params.id)
+  )
+    load();
+}
+onMounted(() => {
+  window.addEventListener("alquivo:properties-changed", refreshProperty);
+  window.addEventListener("alquivo:leases-changed", refreshProperty);
+});
+onBeforeUnmount(() => {
+  loadController?.abort();
+  window.removeEventListener("alquivo:properties-changed", refreshProperty);
+  window.removeEventListener("alquivo:leases-changed", refreshProperty);
+});
 </script>
 
 <template>
@@ -411,7 +426,7 @@ onBeforeUnmount(() => loadController?.abort());
             <RouterLink
               class="button photo-button"
               :to="`/fiscality?property=${property.id}`"
-              v-if="product.features.fiscality"
+              v-if="product.accountFeatures.fiscality"
               ><FileText :size="16" />Fiscalidad</RouterLink
             >
             <button
@@ -602,7 +617,10 @@ onBeforeUnmount(() => loadController?.abort());
               <dd>{{ property.bathrooms }}</dd>
             </div>
           </dl>
-          <p v-if="property.notes" class="property-panel-description">
+          <p
+            v-if="property.notes"
+            class="property-panel-description property-notes"
+          >
             {{ property.notes }}
           </p>
           <button

@@ -13,7 +13,7 @@ const normalize = (text) =>
 const guides = computed(() =>
   helpGuides.filter(
     (guide) =>
-      (guide.to !== "/fiscality" || product.features.fiscality) &&
+      (guide.to !== "/fiscality" || product.accountFeatures.fiscality) &&
       normalize(guide.title + " " + guide.steps.join(" ")).includes(
         normalize(search.value),
       ),

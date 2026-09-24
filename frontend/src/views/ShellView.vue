@@ -71,7 +71,8 @@ const navGroups = computed(() => [
     items: nav
       .slice(4)
       .filter(
-        ([, path]) => path !== "/fiscality" || product.features.fiscality,
+        ([, path]) =>
+          path !== "/fiscality" || product.accountFeatures.fiscality,
       ),
   },
 ]);
@@ -182,6 +183,12 @@ async function logout() {
         </div>
       </nav>
       <div class="sidebar-bottom">
+        <RouterLink
+          v-if="s.user?.local_admin"
+          to="/support/inbox"
+          class="sidebar-settings"
+          ><LifeBuoy :size="20" /><span>Bandeja del equipo</span></RouterLink
+        >
         <RouterLink to="/support" class="sidebar-settings support-entry"
           ><LifeBuoy :size="20" /><span>Ayuda y soporte</span></RouterLink
         >
@@ -236,7 +243,9 @@ async function logout() {
         </div>
         <div class="topbar-actions">
           <button
-            v-if="s.user?.email_verified_at && product.features.assistant"
+            v-if="
+              s.user?.email_verified_at && product.accountFeatures.assistant
+            "
             class="button secondary assistant-entry"
             aria-haspopup="dialog"
             aria-controls="alquivo-assistant-panel"
@@ -254,6 +263,11 @@ async function logout() {
         </div>
       </header>
       <div id="main-content" tabindex="-1">
+        <p v-if="s.user?.local_admin" class="plan-access-notice" role="status">
+          Administrador local · Funciones en pruebas visibles solo para esta
+          cuenta. Los pagos siguen sujetos al bloqueo de la beta y la IA
+          mantiene sus límites de consumo.
+        </p>
         <p
           v-if="planAccess.usage?.properties.read_only_count"
           class="plan-access-notice"
@@ -272,7 +286,7 @@ async function logout() {
       </footer>
     </section>
     <AssistantWidget
-      v-if="s.user?.email_verified_at && product.features.assistant"
+      v-if="s.user?.email_verified_at && product.accountFeatures.assistant"
       ref="assistant"
       @open-change="assistantOpen = $event"
     />

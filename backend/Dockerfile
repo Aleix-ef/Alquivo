@@ -8,7 +8,7 @@ RUN mkdir -p bootstrap/cache storage/framework/cache/data storage/framework/sess
     && composer dump-autoload --optimize --no-dev
 
 FROM php:8.3-fpm-alpine
-RUN apk add --no-cache icu-dev libpq-dev libzip-dev \
+RUN apk add --no-cache icu-dev libpq-dev libzip-dev poppler-utils util-linux \
     && docker-php-ext-install bcmath intl opcache pcntl pdo_pgsql zip
 WORKDIR /app
 COPY --from=vendor /app /app

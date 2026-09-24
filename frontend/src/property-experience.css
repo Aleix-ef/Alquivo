@@ -513,6 +513,11 @@
   display: block;
   margin-top: 24px;
 }
+.property-notes {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
 .property-panel-description {
   color: var(--muted);
   font-size: 13px;

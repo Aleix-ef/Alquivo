@@ -11,8 +11,9 @@ const api = axios.create({
   withXSRFToken: true,
   headers: { Accept: "application/json" },
 });
-export const csrf = () =>
+export const csrf = (options = {}) =>
   axios.get(csrfURL, {
+    ...options,
     withCredentials: true,
   });
 api.interceptors.response.use(

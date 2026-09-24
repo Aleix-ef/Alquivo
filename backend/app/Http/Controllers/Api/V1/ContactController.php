@@ -2,9 +2,12 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Domain\Leasing\Actions\UpdateContactPhone;
 use App\Domain\Leasing\Models\Contact;
+use App\Domain\Portfolio\Models\Portfolio;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
 class ContactController extends Controller
@@ -27,19 +30,30 @@ class ContactController extends Controller
         return response()->json(Contact::create([...$data, 'portfolio_id' => $request->user()->portfolio()->id]), 201);
     }
 
-    public function update(Request $request, Contact $contact)
+    public function update(Request $request, Contact $contact, UpdateContactPhone $updatePhone)
     {
         $this->ensureOwned($request, $contact);
-        $contact->update($request->validate([
+        $data = $request->validate([
             'kind' => ['sometimes', Rule::in(['person', 'company'])],
             'name' => ['sometimes', 'string', 'max:120'],
             'tax_id' => ['sometimes', 'nullable', 'string', 'max:30'],
             'email' => ['sometimes', 'nullable', 'email', 'max:255'],
             'phone' => ['sometimes', 'nullable', 'string', 'max:30'],
             'notes' => ['sometimes', 'nullable', 'string'],
-        ]));
+        ]);
 
-        return $contact->fresh();
+        return DB::transaction(function () use ($request, $contact, $updatePhone, $data) {
+            $portfolio = Portfolio::query()->lockForUpdate()->findOrFail($request->user()->portfolio()->id);
+            abort_unless($portfolio->members()->whereKey($request->user()->id)->wherePivot('role', 'owner')->exists(), 404);
+            $contact = Contact::query()->where('portfolio_id', $portfolio->id)->lockForUpdate()->findOrFail($contact->id);
+            if (array_key_exists('phone', $data)) {
+                $contact = $updatePhone->execute($portfolio, $request->user(), ['contact_id' => $contact->id, 'phone' => $data['phone']]);
+                unset($data['phone']);
+            }
+            $contact->update($data);
+
+            return $contact->fresh();
+        });
     }
 
     public function destroy(Request $request, Contact $contact)

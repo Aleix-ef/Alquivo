@@ -2,12 +2,13 @@
 
 use App\Http\Controllers\Api\V1\AccountController;
 use App\Http\Controllers\Api\V1\AssistantController;
+use App\Http\Controllers\Api\V1\AssistantProposalController;
 use App\Http\Controllers\Api\V1\AuthController;
-use App\Http\Controllers\Api\V1\TwoFactorController;
 use App\Http\Controllers\Api\V1\BillingController;
 use App\Http\Controllers\Api\V1\CalendarController;
 use App\Http\Controllers\Api\V1\ContactController;
 use App\Http\Controllers\Api\V1\DashboardController;
+use App\Http\Controllers\Api\V1\DocumentAiController;
 use App\Http\Controllers\Api\V1\DocumentController;
 use App\Http\Controllers\Api\V1\FiscalityController;
 use App\Http\Controllers\Api\V1\IssueController;
@@ -19,8 +20,10 @@ use App\Http\Controllers\Api\V1\PublicPlanController;
 use App\Http\Controllers\Api\V1\RecurringRuleController;
 use App\Http\Controllers\Api\V1\RentPaymentController;
 use App\Http\Controllers\Api\V1\ReportController;
+use App\Http\Controllers\Api\V1\SupportChatController;
 use App\Http\Controllers\Api\V1\SupportController;
 use App\Http\Controllers\Api\V1\TransactionController;
+use App\Http\Controllers\Api\V1\TwoFactorController;
 use App\Http\Middleware\AvailableFeature;
 use App\Http\Middleware\WithinPropertyPlan;
 use App\Support\ProductFeatures;
@@ -38,9 +41,33 @@ Route::get('/public/plans', PublicPlanController::class)->middleware('throttle:a
 Route::get('/public/config', fn (ProductFeatures $features) => $features->publicConfiguration())->middleware('throttle:api');
 Route::post('/public/support', [SupportController::class, 'store'])->middleware('throttle:support');
 
+// Public conversations are scoped to the existing secure browser session, not an email or URL token.
+Route::prefix('/public/support/chat')->middleware('throttle:api')->group(function () {
+    Route::get('/conversations', [SupportChatController::class, 'index']);
+    Route::post('/conversations', [SupportChatController::class, 'store'])->middleware('throttle:support');
+    Route::get('/conversations/{conversation}', [SupportChatController::class, 'show'])->whereUuid('conversation');
+    Route::post('/conversations/{conversation}/messages', [SupportChatController::class, 'send'])->whereUuid('conversation')->middleware('throttle:support-chat');
+    Route::post('/conversations/{conversation}/read', [SupportChatController::class, 'read'])->whereUuid('conversation');
+    Route::post('/conversations/{conversation}/close', [SupportChatController::class, 'close'])->whereUuid('conversation')->middleware('throttle:support-chat');
+    Route::get('/conversations/{conversation}/attachments/{attachment}', [SupportChatController::class, 'attachment'])->whereUuid(['conversation', 'attachment'])->middleware('throttle:30,1');
+});
+
 Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
     Route::get('/support', SupportController::class);
     Route::post('/support', [SupportController::class, 'store'])->middleware('throttle:support');
+    foreach (['/support/chat', '/support/team'] as $prefix) {
+        Route::prefix($prefix)->group(function () use ($prefix) {
+            Route::get('/conversations', [SupportChatController::class, 'index']);
+            if ($prefix === '/support/chat') {
+                Route::post('/conversations', [SupportChatController::class, 'store'])->middleware('throttle:support');
+            }
+            Route::get('/conversations/{conversation}', [SupportChatController::class, 'show'])->whereUuid('conversation');
+            Route::post('/conversations/{conversation}/messages', [SupportChatController::class, 'send'])->whereUuid('conversation')->middleware('throttle:support-chat');
+            Route::post('/conversations/{conversation}/read', [SupportChatController::class, 'read'])->whereUuid('conversation');
+            Route::post('/conversations/{conversation}/close', [SupportChatController::class, 'close'])->whereUuid('conversation')->middleware('throttle:support-chat');
+            Route::get('/conversations/{conversation}/attachments/{attachment}', [SupportChatController::class, 'attachment'])->whereUuid(['conversation', 'attachment'])->middleware('throttle:30,1');
+        });
+    }
     Route::get('/auth/me', [AuthController::class, 'me']);
     Route::get('/account/two-factor', [TwoFactorController::class, 'status']);
     Route::post('/account/two-factor/setup', [TwoFactorController::class, 'setup'])->middleware('throttle:two-factor-settings');
@@ -55,10 +82,25 @@ Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
     Route::get('/plans', PlanController::class);
     Route::delete('/account', [AccountController::class, 'destroy'])->middleware('throttle:6,1');
     Route::middleware('verified')->group(function () {
+        Route::prefix('document-ai')->controller(DocumentAiController::class)->group(function () {
+            Route::get('/', 'index');
+            Route::post('/consent', 'consent');
+            Route::delete('/consent', 'revoke');
+            Route::get('/examples/{kind}', 'example');
+            Route::post('/extractions', 'store')->middleware('throttle:10,1');
+            Route::get('/extractions/{extraction}', 'show')->whereUuid('extraction');
+            Route::post('/extractions/{extraction}/{operation}', 'mutate')->whereUuid('extraction')
+                ->whereIn('operation', ['revise', 'confirm', 'cancel', 'retry'])->middleware('throttle:20,1');
+        });
         Route::post('/billing/checkout', [BillingController::class, 'checkout']);
         Route::post('/billing/portal', [BillingController::class, 'portal']);
         Route::get('/dashboard', DashboardController::class);
         Route::get('/assistant/conversations', [AssistantController::class, 'index']);
+        Route::get('/assistant/runs/{run}', [AssistantController::class, 'run'])->whereUuid('run');
+        Route::get('/assistant/proposals/{proposal}', [AssistantProposalController::class, 'show'])->whereUuid('proposal');
+        Route::post('/assistant/proposals/{proposal}/revise', [AssistantProposalController::class, 'revise'])->whereUuid('proposal')->middleware('throttle:20,1');
+        Route::post('/assistant/proposals/{proposal}/confirm', [AssistantProposalController::class, 'confirm'])->whereUuid('proposal')->middleware('throttle:20,1');
+        Route::post('/assistant/proposals/{proposal}/cancel', [AssistantProposalController::class, 'cancel'])->whereUuid('proposal')->middleware('throttle:20,1');
         Route::post('/assistant/activation', [AssistantController::class, 'enable'])->middleware(AvailableFeature::class.':assistant');
         Route::delete('/assistant/activation', [AssistantController::class, 'disable']);
         Route::post('/assistant/conversations', [AssistantController::class, 'store'])->middleware(AvailableFeature::class.':assistant');

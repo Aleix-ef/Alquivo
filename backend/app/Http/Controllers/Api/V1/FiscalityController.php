@@ -112,7 +112,7 @@ class FiscalityController extends Controller
     private function assertAccess(Request $request, int $year): void
     {
         abort_unless(in_array($year, config('fiscality.years'), true), 422, 'El ejercicio solicitado todavía no está habilitado.');
-        abort_unless($this->plans->hasFeature($request->user()->portfolio(), 'fiscal_reports'), 403, 'La fiscalidad está incluida en el Plan Fundador y durante la prueba.');
+        abort_unless($this->plans->hasFeature($request->user()->portfolio(), 'fiscal_reports'), 403, 'La fiscalidad no está disponible en tu plan actual.');
     }
 
     private function lockedYear(Request $request, int $year): TaxYear

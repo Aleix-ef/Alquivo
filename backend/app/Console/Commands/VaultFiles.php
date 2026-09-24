@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Domain\Documents\Models\Document;
 use App\Domain\Documents\Services\PrivateFileVault;
 use App\Domain\Properties\Models\PropertyPhoto;
+use App\Domain\Support\Models\SupportAttachment;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Storage;
 
@@ -23,7 +24,7 @@ class VaultFiles extends Command
         }
         $vault->encrypter();
         $count = 0;
-        foreach ([Document::class, PropertyPhoto::class] as $model) {
+        foreach ([Document::class, PropertyPhoto::class, SupportAttachment::class] as $model) {
             foreach ($model::select(['id', 'storage_key', 'size'])->cursor() as $file) {
                 try {
                     $disk = Storage::disk('local');

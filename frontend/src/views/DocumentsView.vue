@@ -1,8 +1,11 @@
 <script setup>
 import { ref, computed, onMounted } from "vue";
+import { useRecordAnchor } from "../composables/useRecordAnchor";
 import { FileText, Plus, Download, Pencil, Trash2 } from "@lucide/vue";
 import { useRoute, useRouter } from "vue-router";
 import api from "../api";
+import { useSession } from "../session";
+const session = useSession();
 import { fetchAllPages } from "../pagination";
 import ConfirmDialog from "../components/ConfirmDialog.vue";
 import { useConfirmDialog } from "../composables/useConfirmDialog";
@@ -130,6 +133,7 @@ async function download(d) {
     loadError.value = "No se pudo descargar el documento.";
   }
 }
+useRecordAnchor(loading, "document");
 onMounted(load);
 </script>
 <template>
@@ -140,6 +144,12 @@ onMounted(load);
         <h1>Documentos</h1>
         <p>Contratos, facturas y documentación vinculada a tu cartera.</p>
       </div>
+      <RouterLink
+        v-if="session.user?.local_admin"
+        class="button secondary"
+        to="/documents/import"
+        >Importación IA · demo</RouterLink
+      >
       <RouterLink class="button primary" to="?new=1"
         ><Plus :size="16" />Subir documento</RouterLink
       >
@@ -189,7 +199,13 @@ onMounted(load);
       <button class="button secondary" @click="load">Volver a intentar</button>
     </section>
     <section v-else-if="docs.length" class="document-grid">
-      <article v-for="d in docs" :key="d.id" class="document-card">
+      <article
+        v-for="d in docs"
+        :key="d.id"
+        :id="`document-${d.id}`"
+        tabindex="-1"
+        class="document-card"
+      >
         <FileText :size="24" />
         <div>
           <strong>{{ d.name }}</strong
@@ -198,6 +214,11 @@ onMounted(load);
               d.property?.name || d.lease?.property?.name || "Cartera general"
             }}
             · {{ d.category }}</small
+          >
+          <small v-if="d.transaction_id"
+            ><RouterLink to="/finance"
+              >Vinculado al gasto #{{ d.transaction_id }}</RouterLink
+            ></small
           >
           <small
             v-if="d.expires_at"

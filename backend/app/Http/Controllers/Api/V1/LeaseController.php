@@ -3,9 +3,9 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Domain\Finance\Services\RentChargeService;
+use App\Domain\Leasing\Actions\CreateLease;
 use App\Domain\Leasing\Models\Contact;
 use App\Domain\Leasing\Models\Lease;
-use App\Domain\Properties\Models\Property;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -33,36 +33,7 @@ class LeaseController extends Controller
 
     public function store(Request $request)
     {
-        $portfolio = $request->user()->portfolio();
-        $data = $request->validate([
-            'property_id' => ['required', 'integer'],
-            'contact_ids' => ['required', 'array', 'min:1'], 'contact_ids.*' => ['integer', 'distinct'],
-            'status' => ['required', Rule::in(['draft', 'active'])],
-            'start_date' => ['required', 'date'], 'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
-            'monthly_rent' => ['required', 'numeric', 'gt:0'], 'deposit_amount' => ['nullable', 'numeric', 'min:0'],
-            'payment_day' => ['required', 'integer', 'between:1,28'], 'notes' => ['nullable', 'string'],
-        ]);
-
-        $property = Property::where('portfolio_id', $portfolio->id)->findOrFail($data['property_id']);
-        $contacts = Contact::where('portfolio_id', $portfolio->id)->whereIn('id', $data['contact_ids'])->get();
-        if ($contacts->count() !== count($data['contact_ids'])) {
-            throw ValidationException::withMessages(['contact_ids' => ['Algún inquilino no pertenece a esta cartera.']]);
-        }
-        if ($data['status'] === 'active' && $property->leases()->where('status', 'active')->exists()) {
-            throw ValidationException::withMessages(['property_id' => ['La propiedad ya tiene un arrendamiento activo.']]);
-        }
-
-        $lease = DB::transaction(function () use ($data, $portfolio) {
-            $contacts = $data['contact_ids'];
-            unset($data['contact_ids']);
-            $lease = Lease::create([...$data, 'portfolio_id' => $portfolio->id]);
-            $lease->participants()->attach(collect($contacts)->mapWithKeys(
-                fn ($id, $index) => [$id => ['role' => 'tenant', 'is_primary' => $index === 0]],
-            ));
-            $this->charges->ensureCurrentCharge($lease);
-
-            return $lease;
-        });
+        $lease = app(CreateLease::class)->execute($request->user()->portfolio(), $request->user(), $request->all());
 
         return response()->json($lease->load(['property', 'participants', 'charges']), 201);
     }

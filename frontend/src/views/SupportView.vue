@@ -2,7 +2,7 @@
 import { ref } from "vue";
 import api from "../api";
 import HelpGuides from "../components/HelpGuides.vue";
-import SupportForm from "../components/SupportForm.vue";
+import SupportChat from "../components/SupportChat.vue";
 import ConfirmDialog from "../components/ConfirmDialog.vue";
 import { useConfirmDialog } from "../composables/useConfirmDialog";
 import { useSession } from "../session";
@@ -48,12 +48,11 @@ async function clearAssistant() {
       <section class="panel support-compose">
         <h2>Escríbenos sin salir de Alquivo</h2>
         <p>
-          Si tienes un problema con tu cuenta, tu suscripción o algo no
-          funciona, cuéntanos qué estabas haciendo y qué mensaje aparece.
-          También puedes proponernos mejoras: estamos construyendo la beta
-          contigo.
+          Si tienes un problema con tu cuenta, tu acceso o algo no funciona,
+          cuéntanos qué estabas haciendo y qué mensaje aparece. También puedes
+          proponernos mejoras: estamos construyendo la beta contigo.
         </p>
-        <SupportForm />
+        <SupportChat />
       </section>
       <HelpGuides />
     </div>

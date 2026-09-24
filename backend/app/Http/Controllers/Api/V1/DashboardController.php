@@ -2,12 +2,8 @@
 
 namespace App\Http\Controllers\Api\V1;
 
-use App\Domain\Attention\Models\Issue;
-use App\Domain\Attention\Models\Reminder;
-use App\Domain\Documents\Models\Document;
-use App\Domain\Finance\Models\RentCharge;
+use App\Domain\Attention\Services\PortfolioAttention;
 use App\Domain\Finance\Models\Transaction;
-use App\Domain\Leasing\Models\Lease;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 
@@ -25,45 +21,7 @@ class DashboardController extends Controller
         $value = (float) $properties->sum('current_value');
         $debt = (float) $properties->sum('outstanding_debt');
         $monthlyRent = (float) $properties->flatMap->leases->sum('monthly_rent');
-        $charges = RentCharge::where('portfolio_id', $portfolio->id)
-            ->whereIn('status', ['pending', 'partial', 'overdue'])
-            ->with('lease.property')->orderBy('due_date')->get();
-        $expiring = Lease::where('portfolio_id', $portfolio->id)->where('status', 'active')
-            ->whereBetween('end_date', [today(), today()->addDays(60)])
-            ->with('property')->orderBy('end_date')->get();
-        $issues = Issue::where('portfolio_id', $portfolio->id)
-            ->whereNotIn('status', ['resolved', 'cancelled'])
-            ->where(fn ($query) => $query->where('priority', 'high')->orWhereDate('due_date', '<=', today()->addDays(14)))
-            ->with('property')->orderBy('due_date')->get();
-        $documents = Document::where('portfolio_id', $portfolio->id)
-            ->whereBetween('expires_at', [today(), today()->addDays(30)])
-            ->with('property')->orderBy('expires_at')->get();
-        $reminders = Reminder::where('portfolio_id', $portfolio->id)->whereNull('completed_at')
-            ->whereBetween('starts_at', [now(), now()->addDays(14)])
-            ->with('property')->orderBy('starts_at')->get();
-        $attention = $charges->map(fn (RentCharge $charge) => [
-            'type' => $charge->due_date->isPast() ? 'rent_overdue' : 'rent_pending',
-            'title' => $charge->due_date->isPast() ? 'Alquiler atrasado' : 'Alquiler pendiente',
-            'detail' => $charge->lease->property->name,
-            'amount' => (float) $charge->amount - (float) $charge->paid_amount,
-            'date' => $charge->due_date->toDateString(),
-        ])->concat($expiring->map(fn (Lease $lease) => [
-            'type' => 'lease_expiring', 'title' => 'Contrato próximo a vencer',
-            'detail' => $lease->property->name, 'amount' => null, 'date' => $lease->end_date->toDateString(),
-        ]))->concat($issues->map(fn (Issue $issue) => [
-            'type' => 'issue', 'title' => 'Incidencia pendiente',
-            'detail' => $issue->property->name.' · '.$issue->title,
-            'amount' => $issue->estimated_cost ? (float) $issue->estimated_cost : null,
-            'date' => $issue->due_date?->toDateString() ?? $issue->reported_at->toDateString(),
-        ]))->concat($documents->map(fn (Document $document) => [
-            'type' => 'document_expiry', 'title' => 'Documento próximo a vencer',
-            'detail' => $document->name.($document->property ? ' · '.$document->property->name : ''),
-            'amount' => null, 'date' => $document->expires_at->toDateString(),
-        ]))->concat($reminders->map(fn (Reminder $reminder) => [
-            'type' => 'reminder', 'title' => $reminder->title,
-            'detail' => $reminder->property?->name ?? 'Cartera general',
-            'amount' => null, 'date' => $reminder->starts_at->toDateString(),
-        ]))->sortBy('date')->values();
+        $attention = app(PortfolioAttention::class)->snapshot($portfolio);
 
         return [
             'period' => now()->format('Y-m'),
@@ -75,7 +33,8 @@ class DashboardController extends Controller
                 'occupancy_rate' => $properties->count() ? round(($properties->filter(fn ($p) => $p->leases->isNotEmpty())->count() / $properties->count()) * 100, 1) : null,
             ],
             'properties' => $properties->take(6)->values(),
-            'attention' => $attention,
+            'attention' => $attention['items'],
+            'attention_summary' => array_diff_key($attention, ['items' => true]),
         ];
     }
 }

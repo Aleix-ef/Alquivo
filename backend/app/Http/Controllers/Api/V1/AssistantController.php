@@ -2,22 +2,31 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Domain\Assistant\Models\AiActionProposal;
 use App\Domain\Assistant\Models\AiConversation;
+use App\Domain\Assistant\Models\AiDocumentExtraction;
+use App\Domain\Assistant\Models\AiRun;
+use App\Domain\Assistant\Services\ActionProposalService;
+use App\Domain\Assistant\Services\AiCapabilities;
+use App\Domain\Assistant\Services\AssistantOrchestrator;
 use App\Domain\Assistant\Services\AssistantUsageService;
-use App\Domain\Assistant\Services\OpenAiPortfolioAssistant;
+use App\Domain\Portfolio\Services\PlanService;
 use App\Http\Controllers\Controller;
+use App\Models\User;
+use App\Support\ProductFeatures;
 use App\Support\SecurityAudit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 class AssistantController extends Controller
 {
     public function __construct(
-        private readonly OpenAiPortfolioAssistant $assistant,
+        private readonly AssistantOrchestrator $assistant,
         private readonly AssistantUsageService $usage,
     ) {}
 
@@ -26,11 +35,12 @@ class AssistantController extends Controller
         $portfolio = $request->user()->portfolio();
 
         return [
-            'available' => app(\App\Support\ProductFeatures::class)->assistant(),
+            'available' => app(ProductFeatures::class)->assistant($request->user()),
             'enabled' => $this->enabled($request),
             'notice_version' => config('assistant.notice_version'),
             'retention_days' => config('assistant.retention_days'),
             'usage' => $this->usage->summary($portfolio, $request->user()),
+            'capabilities' => app(AiCapabilities::class)->forUser($portfolio, $request->user()),
             'conversations' => AiConversation::query()
                 ->where('portfolio_id', $portfolio->id)->where('user_id', $request->user()->id)
                 ->orderByDesc('last_message_at')->orderByDesc('id')->limit(20)->get(),
@@ -66,7 +76,10 @@ class AssistantController extends Controller
         $this->authorizeConversation($request, $conversation);
 
         return $this->withLock($request, function () use ($conversation) {
-            $conversation->delete();
+            DB::transaction(function () use ($conversation) {
+                AiActionProposal::whereIn('run_id', AiRun::where('conversation_id', $conversation->id)->select('id'))->delete();
+                $conversation->delete();
+            });
 
             return response()->noContent();
         });
@@ -85,10 +98,19 @@ class AssistantController extends Controller
         $request->user()->refresh();
         abort_unless($this->enabled($request), 403, 'El asistente está desactivado.');
         $conversation->refresh();
-        $data = $request->validate(['message' => ['required', 'string', 'max:2000'], 'property_id' => ['nullable', 'integer', 'min:1']]);
+        $data = $request->validate(['message' => ['required', 'string', 'max:2000'], 'property_id' => ['nullable', 'integer', 'min:1'], 'client_request_id' => ['sometimes', 'required', 'uuid']]);
         $portfolio = $request->user()->portfolio();
         if (! empty($data['property_id'])) {
             $portfolio->properties()->findOrFail($data['property_id']);
+        }
+        $clientId = $data['client_request_id'] ?? (string) Str::uuid();
+        $hash = hash_hmac('sha256', json_encode([$conversation->id, trim($data['message']), $data['property_id'] ?? null], JSON_THROW_ON_ERROR), (string) config('app.key'));
+        $existing = AiRun::where('user_id', $request->user()->id)->where('client_request_id', $clientId)->first();
+        if ($existing) {
+            abort_unless($existing->portfolio_id === $portfolio->id && $existing->conversation_id === $conversation->id
+                && hash_equals($existing->request_hash, $hash), 409, 'Este identificador ya corresponde a otra consulta.');
+
+            return $this->runResponse($request, $existing);
         }
         $usage = $this->usage->summary($portfolio, $request->user());
         if ($usage['remaining'] < 1) {
@@ -98,37 +120,77 @@ class AssistantController extends Controller
             return response()->json(['message' => 'El asistente todavía no está configurado.'], 503);
         }
         abort_if($conversation->messages()->count() >= config('assistant.max_messages'), 422, 'Esta conversación está completa. Inicia otra.');
-        $this->usage->reserve($portfolio, $request->user());
+        [$run, $userMessage] = DB::transaction(function () use ($request, $portfolio, $conversation, $data, $clientId, $hash) {
+            $this->usage->reserve($portfolio, $request->user());
+            $run = AiRun::create([
+                'portfolio_id' => $portfolio->id, 'user_id' => $request->user()->id, 'conversation_id' => $conversation->id,
+                'client_request_id' => $clientId, 'request_hash' => $hash,
+                'plan' => app(PlanService::class)->effectiveCode($portfolio),
+                'routing_version' => config('ai.routing_version'), 'billing_month' => now()->startOfMonth()->toDateString(),
+            ]);
+            $userMessage = $conversation->messages()->create(['role' => 'user', 'content' => trim($data['message'])]);
+            $run->update(['user_message_id' => $userMessage->id]);
+            $conversation->update(['title' => $conversation->title ?: 'Consulta del '.today()->format('d/m/Y'), 'last_message_at' => now()]);
 
-        $userMessage = $conversation->messages()->create(['role' => 'user', 'content' => trim($data['message'])]);
-        if (! $conversation->title) {
-            $conversation->title = 'Consulta del '.today()->format('d/m/Y');
-        }
-        $conversation->last_message_at = now();
-        $conversation->save();
+            return [$run, $userMessage];
+        });
 
         $history = $conversation->messages()->where('created_at', '>=', now()->subDays(config('assistant.retention_days')))->latest('id')->limit((int) config('assistant.history_messages'))->get()->reverse()->values();
         try {
-            $answer = $this->assistant->answer($portfolio, $request->user(), $history, $data['property_id'] ?? null);
+            $answer = $this->assistant->answer($portfolio, $request->user(), $history, $data['property_id'] ?? null, $run);
+            $request->user()->refresh();
+            abort_unless($this->enabled($request) && AiConversation::whereKey($conversation->id)->exists(), 403);
+            DB::transaction(function () use ($conversation, $answer, $run) {
+                $assistantMessage = $conversation->messages()->create([
+                    'role' => 'assistant', 'content' => $answer['content'], 'model' => $answer['model'],
+                    'input_tokens' => $answer['input_tokens'], 'output_tokens' => $answer['output_tokens'], 'metadata' => $answer['metadata'],
+                ]);
+                $run->update(['status' => 'completed', 'assistant_message_id' => $assistantMessage->id, 'finished_at' => now()]);
+                $conversation->update(['last_message_at' => now()]);
+            });
         } catch (\Throwable $exception) {
             Log::warning('Assistant request failed', ['user_id' => $request->user()->id, 'conversation_id' => $conversation->id, 'type' => get_class($exception)]);
 
-            return response()->json(['message' => 'Ahora mismo no puedo responder. Inténtalo más tarde y, si el problema persiste, escribe a soporte de Alquivo. La consulta iniciada cuenta para el límite mensual.', 'user_message' => $userMessage, 'usage' => $this->usage->summary($portfolio, $request->user())], 502);
+            $run->update(['status' => 'failed', 'error_code' => 'request_failed', 'finished_at' => now()]);
         }
 
-        $assistantMessage = $conversation->messages()->create([
-            'role' => 'assistant', 'content' => $answer['content'], 'model' => $answer['model'],
-            'input_tokens' => $answer['input_tokens'], 'output_tokens' => $answer['output_tokens'],
-            'metadata' => $answer['metadata'],
-        ]);
-        $conversation->update(['last_message_at' => now()]);
+        return $this->runResponse($request, $run->fresh());
+    }
 
-        return [
-            'conversation' => $conversation->fresh(),
-            'user_message' => $userMessage,
+    public function run(Request $request, AiRun $run)
+    {
+        abort_unless($run->portfolio_id === $request->user()->portfolio()?->id && $run->user_id === $request->user()->id, 404);
+        abort_unless($run->conversation_id && $this->enabled($request), 404);
+
+        return $this->runResponse($request, $run);
+    }
+
+    private function runResponse(Request $request, AiRun $run)
+    {
+        $conversation = AiConversation::whereKey($run->conversation_id)->firstOrFail();
+        $messages = $conversation->messages();
+        $assistantMessage = (clone $messages)->find($run->assistant_message_id);
+        if ($assistantMessage && isset($assistantMessage->metadata['proposals'])) {
+            $proposals = AiActionProposal::where('run_id', $run->id)->where('user_id', $request->user()->id)->get();
+            $assistantMessage->metadata = [...$assistantMessage->metadata,
+                'proposals' => $proposals->map(fn ($proposal) => app(ActionProposalService::class)->present($proposal))->all()];
+        }
+        // A worker/process that died cannot be restarted with a new side effect by replaying its request.
+        if ($run->status === 'processing' && $run->created_at->lt(now()->subMinutes(2))) {
+            $run->update(['status' => 'failed', 'error_code' => 'interrupted', 'finished_at' => now(), 'cost_incomplete' => true]);
+        }
+
+        $data = [
+            'run' => $run->publicStatus(), 'conversation' => $conversation,
+            'user_message' => (clone $messages)->find($run->user_message_id),
             'assistant_message' => $assistantMessage,
-            'usage' => $this->usage->summary($portfolio, $request->user()),
+            'usage' => $this->usage->summary($request->user()->portfolio(), $request->user()),
         ];
+        if ($run->status === 'failed') {
+            return response()->json([...$data, 'message' => 'Ahora mismo no puedo responder. Inténtalo más tarde y, si el problema persiste, escribe a soporte de Alquivo. La consulta iniciada cuenta para el límite mensual.'], 502);
+        }
+
+        return response()->json($data, $run->status === 'processing' ? 202 : 200);
     }
 
     public function enable(Request $request)
@@ -147,7 +209,13 @@ class AssistantController extends Controller
     {
         return $this->withLock($request, function () use ($request) {
             DB::transaction(function () use ($request) {
-                $request->user()->forceFill(['assistant_enabled_at' => null, 'assistant_notice_version' => null])->save();
+                $user = User::whereKey($request->user()->id)->lockForUpdate()->firstOrFail();
+                $user->forceFill(['assistant_enabled_at' => null, 'assistant_notice_version' => null,
+                    'document_ai_accepted_at' => null, 'document_ai_notice_version' => null])->save();
+                AiDocumentExtraction::where('user_id', $user->id)->where('status', '!=', 'confirmed')
+                    ->update(['status' => 'cancelled', 'draft' => null]);
+                AiDocumentExtraction::where('user_id', $user->id)->where('status', 'confirmed')->update(['draft' => null]);
+                AiActionProposal::where('user_id', $request->user()->id)->delete();
                 AiConversation::where('user_id', $request->user()->id)->delete();
             });
             SecurityAudit::record('assistant.disabled', $request->user()->id);

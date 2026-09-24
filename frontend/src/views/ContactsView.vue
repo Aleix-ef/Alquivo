@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, onBeforeUnmount, ref } from "vue";
 import { Archive, Pencil, Plus, UsersRound } from "@lucide/vue";
 import { useRoute, useRouter } from "vue-router";
 import api from "../api";
@@ -32,15 +32,19 @@ const mainLease = (contact) =>
   contact.leases?.find((lease) => lease.status === "active") ||
   contact.leases?.[0];
 
+let loadGeneration = 0;
 async function load() {
+  const generation = ++loadGeneration;
   loading.value = true;
   loadError.value = "";
   try {
-    contacts.value = await fetchAllPages(api, "/contacts");
+    const data = await fetchAllPages(api, "/contacts");
+    if (generation === loadGeneration) contacts.value = data;
   } catch {
+    if (generation !== loadGeneration) return;
     loadError.value = "No hemos podido cargar tus contactos.";
   } finally {
-    loading.value = false;
+    if (generation === loadGeneration) loading.value = false;
   }
 }
 
@@ -99,7 +103,14 @@ async function archive(contact) {
   }
 }
 
-onMounted(load);
+onMounted(() => {
+  window.addEventListener("alquivo:contacts-changed", load);
+  load();
+});
+onBeforeUnmount(() => {
+  loadGeneration++;
+  window.removeEventListener("alquivo:contacts-changed", load);
+});
 </script>
 
 <template>

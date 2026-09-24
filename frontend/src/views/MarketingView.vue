@@ -17,39 +17,33 @@ import {
 import api from "../api";
 import BrandLogo from "../components/BrandLogo.vue";
 import { useProduct } from "../stores/product";
+import { guides } from "../content/guides.js";
 
 const plans = ref([]);
 const product = useProduct();
 
 const fallbackPlans = [
   {
-    code: "free",
-    name: "Gratuito",
+    code: "beta",
+    name: "Beta gratuita",
     price_monthly: 0,
-    price_yearly: 0,
-    property_limit: 1,
+    price_yearly: null,
+    property_limit: 10,
     features: [
       "Dashboard, alquileres y finanzas",
-      "Un inmueble",
-      "50 MB de documentos",
-    ],
-  },
-  {
-    code: "founder",
-    name: "Plan Fundador",
-    price_monthly: 6.99,
-    price_yearly: null,
-    property_limit: 20,
-    features: [
-      "Hasta 20 inmuebles",
-      "2 GB de documentos",
+      "Hasta 10 inmuebles",
+      "1 GB de documentos y fotos",
       "Informes y exportación de datos",
     ],
   },
 ];
 
 const visiblePlans = computed(() =>
-  plans.value.length ? plans.value : fallbackPlans,
+  plans.value.length
+    ? plans.value
+    : product.features.beta_program
+      ? fallbackPlans
+      : [],
 );
 const money = (value) =>
   new Intl.NumberFormat("es-ES", {
@@ -78,6 +72,7 @@ onMounted(async () => {
         <a href="#como-funciona">Cómo funciona</a>
         <a href="#funciones">Funciones</a>
         <a href="#planes">Planes</a>
+        <RouterLink to="/guias">Guías</RouterLink>
       </nav>
       <div class="marketing-header-actions">
         <RouterLink class="button button-quiet marketing-login" to="/login"
@@ -97,7 +92,9 @@ onMounted(async () => {
         <h1>Gestiona tus alquileres <em>sin complicaciones.</em></h1>
         <p class="hero-lead">
           Cobros, gastos, contratos y rentabilidad. Todo lo importante de tu
-          patrimonio, en un único lugar y fácil de entender.
+          patrimonio, en un único lugar y fácil de entender. Una aplicación de
+          gestión de alquileres para propietarios particulares y pequeños
+          inversores.
         </p>
         <div class="hero-actions">
           <RouterLink class="button button-large" to="/register">
@@ -108,9 +105,23 @@ onMounted(async () => {
           /></a>
         </div>
         <div class="hero-reassurance" aria-label="Condiciones de prueba">
-          <span><CircleCheck :size="16" /> 14 días de prueba</span>
+          <span
+            ><CircleCheck :size="16" />
+            {{
+              product.features.beta_program
+                ? "Beta gratuita"
+                : "14 días de prueba"
+            }}</span
+          >
           <span><CircleCheck :size="16" /> Sin tarjeta</span>
-          <span><CircleCheck :size="16" /> Después, plan gratuito</span>
+          <span
+            ><CircleCheck :size="16" />
+            {{
+              product.features.beta_program
+                ? "Hasta 10 inmuebles"
+                : "Sin renovación automática"
+            }}</span
+          >
         </div>
       </div>
 
@@ -163,7 +174,7 @@ onMounted(async () => {
             </div>
           </div>
         </div>
-        <div class="preview-note">Tu patrimonio, con claridad.</div>
+        <div class="preview-note">Ejemplo ilustrativo con datos ficticios.</div>
       </div>
     </section>
 
@@ -221,7 +232,7 @@ onMounted(async () => {
           </p>
           <div class="feature-stat">
             <span>Resultado neto anual</span><strong>+ 14.860 €</strong
-            ><small>Actualizado con tus movimientos</small>
+            ><small>Ejemplo ilustrativo, no una previsión de resultados</small>
           </div>
         </article>
         <article class="feature-card">
@@ -273,24 +284,44 @@ onMounted(async () => {
     <section id="planes" class="plans-section">
       <div class="section-heading centered">
         <p class="marketing-eyebrow">Empieza con calma.</p>
-        <h2>Un plan que acompaña tu cartera.</h2>
-        <p>
+        <h2>
+          {{
+            product.features.beta_program
+              ? "La beta es gratis. Tu opinión nos ayuda a crecer."
+              : "Un plan que acompaña tu cartera."
+          }}
+        </h2>
+        <p v-if="product.features.beta_program">
+          Gestiona hasta 10 inmuebles durante toda la beta, sin tarjeta ni
+          pagos. No es una prueba de 14 días.
+        </p>
+        <p v-else>
           Todos los planes comienzan con 14 días para probar Alquivo completo.
           Sin tarjeta ni renovación automática.
         </p>
-        <p v-if="!product.features.billing_enabled">
+        <p
+          v-if="
+            !product.features.beta_program && !product.features.billing_enabled
+          "
+        >
           Estamos validando Alquivo: puedes probarlo gratis. Los precios son
           informativos; todavía no aceptamos pagos.
         </p>
       </div>
-      <div class="marketing-plans">
+      <div
+        class="marketing-plans"
+        :class="{ 'beta-only': product.features.beta_program }"
+      >
         <article
           v-for="plan in visiblePlans"
           :key="plan.code"
           class="marketing-plan"
-          :class="{ featured: plan.code === 'founder' }"
+          :class="{ featured: plan.code === 'founder' || plan.code === 'beta' }"
         >
-          <span v-if="plan.code === 'founder'" class="plan-label"
+          <span v-if="plan.code === 'beta'" class="plan-label"
+            >Acceso durante toda la beta</span
+          >
+          <span v-else-if="plan.code === 'founder'" class="plan-label"
             >Precio fundador</span
           >
           <p class="plan-name">{{ plan.name }}</p>
@@ -309,7 +340,7 @@ onMounted(async () => {
           </p>
           <RouterLink
             class="button"
-            :class="{ 'button-quiet': plan.code !== 'founder' }"
+            :class="{ 'button-quiet': plan.code === 'free' }"
             to="/register"
             >Empezar gratis</RouterLink
           >
@@ -336,16 +367,29 @@ onMounted(async () => {
           <summary>
             ¿Necesito tarjeta para probar Alquivo?<ChevronRight :size="19" />
           </summary>
-          <p>
+          <p v-if="product.features.beta_program">
+            No. La Beta es gratuita y no te pediremos datos de pago.
+          </p>
+          <p v-else>
             No. Puedes crear tu cuenta, probar todas las funciones durante 14
             días y decidir después con calma.
           </p>
         </details>
         <details>
           <summary>
-            ¿Qué pasa cuando termina la prueba?<ChevronRight :size="19" />
+            {{
+              product.features.beta_program
+                ? "¿Qué pasará al terminar la beta?"
+                : "¿Qué pasa cuando termina la prueba?"
+            }}<ChevronRight :size="19" />
           </summary>
-          <p>
+          <p v-if="product.features.beta_program">
+            Te avisaremos con antelación y te ofreceremos condiciones especiales
+            de agradecimiento por haber participado. Tú decidirás si quieres
+            continuar: no habrá ningún cobro automático. Podrás exportar tus
+            datos antes del cambio.
+          </p>
+          <p v-else>
             Tu cartera pasa al plan gratuito. Puedes seguir gestionando un
             inmueble y consultar y exportar los demás. No se realiza ningún
             cobro automático.
@@ -374,6 +418,53 @@ onMounted(async () => {
       </div>
     </section>
 
+    <section
+      class="simple-section"
+      aria-labelledby="about-alquivo"
+      itemscope
+      itemtype="https://schema.org/SoftwareApplication"
+    >
+      <div class="section-heading">
+        <p class="marketing-eyebrow">Qué es Alquivo</p>
+        <h2 id="about-alquivo">
+          <span itemprop="name">Alquivo</span>: gestión de alquileres para
+          propietarios.
+        </h2>
+        <p itemprop="description">
+          Alquivo es una aplicación web para organizar inmuebles, inquilinos,
+          contratos, cobros, gastos, documentos e incidencias. Está pensada para
+          propietarios particulares y pequeños inversores que quieren tener una
+          visión clara de su cartera.
+        </p>
+        <p>
+          <span itemprop="applicationCategory"
+            >Software de gestión inmobiliaria</span
+          >
+          · <span itemprop="operatingSystem">Navegador web</span>
+        </p>
+        <p>
+          No es una inmobiliaria, no cobra automáticamente a tus inquilinos y no
+          sustituye a tu asesor. Los resúmenes dependen de los datos que
+          registres.
+        </p>
+      </div>
+    </section>
+
+    <section class="simple-section" aria-labelledby="guides-heading">
+      <div class="section-heading">
+        <p class="marketing-eyebrow">Recursos para propietarios</p>
+        <h2 id="guides-heading">Empieza por tenerlo claro.</h2>
+      </div>
+      <div class="guide-grid">
+        <article v-for="guide in guides" :key="guide.path" class="guide-card">
+          <h3>
+            <RouterLink :to="guide.path">{{ guide.title }}</RouterLink>
+          </h3>
+          <p>{{ guide.description }}</p>
+        </article>
+      </div>
+    </section>
+
     <section class="closing-section">
       <p class="marketing-eyebrow"><span></span> Empieza hoy</p>
       <h2>Deja de buscar tus números.<br />Empieza a entenderlos.</h2>
@@ -389,6 +480,7 @@ onMounted(async () => {
       <div>
         <RouterLink to="/terms">Condiciones</RouterLink
         ><RouterLink to="/privacy">Privacidad</RouterLink
+        ><RouterLink to="/guias">Guías para propietarios</RouterLink
         ><RouterLink to="/login">Entrar</RouterLink>
       </div>
     </footer>

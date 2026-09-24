@@ -4,7 +4,13 @@ import { Plus, Send, Trash2, X, Copy, Maximize2, Minimize2 } from "@lucide/vue";
 import { useRoute } from "vue-router";
 import api from "../api";
 import AssistantMascot from "./AssistantMascot.vue";
+import AssistantActionPreview from "./AssistantActionPreview.vue";
 import { contentParts, replyPose, safeSources } from "../assistantPresentation";
+import {
+  assistantRequest,
+  actionProposalReferences,
+  mergeAssistantMessages,
+} from "../assistantActions";
 import { assistantContext } from "../assistantHelp";
 import HelpGuides from "./HelpGuides.vue";
 import { useDialog } from "../composables/useDialog";
@@ -33,6 +39,18 @@ const loading = ref(false);
 const sending = ref(false);
 const available = ref(true);
 const enabled = ref(false);
+const capabilities = ref({
+  chat: false,
+  actions: false,
+  documents: false,
+  intelligence: false,
+});
+const pendingTurn = ref(null);
+const recoverableTurn = computed(
+  () =>
+    pendingTurn.value &&
+    ["processing", "unknown"].includes(pendingTurn.value.status),
+);
 const noticeVersion = ref("");
 const retentionDays = ref(30);
 const conversations = ref([]);
@@ -67,7 +85,26 @@ async function confirmDeletion() {
   else await removeConversation();
 }
 let celebrationTimer;
-onBeforeUnmount(() => clearTimeout(celebrationTimer));
+let generation = 0;
+let mounted = true;
+const requestControllers = new Set();
+async function request(method, path, payload, timeout = 20000) {
+  const controller = new AbortController();
+  requestControllers.add(controller);
+  try {
+    return method === "get"
+      ? await api.get(path, { signal: controller.signal, timeout })
+      : await api.post(path, payload, { signal: controller.signal, timeout });
+  } finally {
+    requestControllers.delete(controller);
+  }
+}
+onBeforeUnmount(() => {
+  mounted = false;
+  generation++;
+  clearTimeout(celebrationTimer);
+  for (const controller of requestControllers) controller.abort();
+});
 const mascotState = computed(() => {
   if (sending.value || loading.value) return "thinking";
   if (error.value || !available.value) return "uncertain";
@@ -112,12 +149,20 @@ async function toggle() {
 defineExpose({ toggle });
 
 async function initialize() {
+  const version = generation;
   loading.value = true;
   error.value = "";
   try {
-    const { data } = await api.get("/assistant/conversations");
+    const { data } = await request("get", "/assistant/conversations");
+    if (!mounted || version !== generation) return;
     available.value = data.available;
     enabled.value = data.enabled;
+    capabilities.value = {
+      chat: data.capabilities?.chat === true,
+      actions: data.capabilities?.actions === true,
+      documents: false,
+      intelligence: false,
+    };
     noticeVersion.value = data.notice_version;
     retentionDays.value = data.retention_days;
     usage.value = data.usage;
@@ -128,13 +173,17 @@ async function initialize() {
       await loadConversation();
     }
   } catch {
+    if (!mounted) return;
     error.value = "No hemos podido abrir el asistente.";
   } finally {
-    loading.value = false;
+    if (mounted) loading.value = false;
   }
 }
 
 async function loadConversation() {
+  const version = ++generation;
+  const selectedId = conversationId.value;
+  pendingTurn.value = null;
   // A failed fetch must never display the previous chat under a new identifier.
   messages.value = [];
   historyFailed.value = false;
@@ -146,21 +195,31 @@ async function loadConversation() {
   loading.value = true;
   error.value = "";
   try {
-    const { data } = await api.get(
-      `/assistant/conversations/${conversationId.value}`,
+    const { data } = await request(
+      "get",
+      `/assistant/conversations/${selectedId}`,
     );
+    if (
+      !mounted ||
+      version !== generation ||
+      selectedId !== conversationId.value
+    )
+      return;
     messages.value = data.messages;
     await scrollToBottom();
   } catch {
+    if (!mounted || version !== generation) return;
     historyFailed.value = true;
     error.value = "No hemos podido recuperar esta conversación.";
   } finally {
-    loading.value = false;
+    if (mounted && version === generation) loading.value = false;
   }
 }
 
 function newConversation() {
   if (sending.value || loading.value) return;
+  generation++;
+  pendingTurn.value = null;
   conversationId.value = "";
   historyFailed.value = false;
   messages.value = [];
@@ -173,6 +232,9 @@ async function removeConversation() {
   loading.value = true;
   try {
     await api.delete(`/assistant/conversations/${conversationId.value}`);
+    if (!mounted) return;
+    generation++;
+    pendingTurn.value = null;
     conversations.value = conversations.value.filter(
       (conversation) => String(conversation.id) !== conversationId.value,
     );
@@ -197,7 +259,9 @@ async function enableAssistant() {
       accepted: true,
       notice_version: noticeVersion.value,
     });
+    if (!mounted) return;
     enabled.value = true;
+    await initialize();
   } catch {
     error.value = "No hemos podido activar el asistente.";
   } finally {
@@ -210,6 +274,9 @@ async function disableAssistant() {
   loading.value = true;
   try {
     await api.delete("/assistant/activation");
+    if (!mounted) return;
+    generation++;
+    pendingTurn.value = null;
     enabled.value = false;
     conversations.value = [];
     conversationId.value = "";
@@ -226,7 +293,65 @@ async function disableAssistant() {
   }
 }
 
-async function send(suggestion) {
+function acceptResponse(data, turn) {
+  if (data.run?.id) turn.runId = data.run.id;
+  turn.status =
+    data.run?.status || (data.assistant_message ? "completed" : "processing");
+  if (data.usage) usage.value = data.usage;
+  if (data.user_message || data.assistant_message) {
+    messages.value = mergeAssistantMessages(
+      messages.value.filter(
+        (message) => message.id !== `temporary-${turn.clientRequestId}`,
+      ),
+      [data.user_message, data.assistant_message],
+    );
+  }
+  if (data.assistant_message) {
+    pendingTurn.value = null;
+    if (data.assistant_message.metadata?.kind === "answer") {
+      clearTimeout(celebrationTimer);
+      celebrating.value = true;
+      celebrationTimer = setTimeout(() => {
+        celebrating.value = false;
+      }, 2400);
+    }
+  }
+  if (data.conversation) {
+    const index = conversations.value.findIndex(
+      (conversation) => String(conversation.id) === turn.conversationId,
+    );
+    if (index >= 0) conversations.value[index] = data.conversation;
+  }
+}
+
+function receiveFailure(exception, turn) {
+  const data = exception.response?.data || {};
+  acceptResponse(data, turn);
+  const terminal =
+    data.run?.status === "failed" ||
+    (exception.response &&
+      exception.response.status < 500 &&
+      exception.response.status !== 409);
+  if (terminal) {
+    pendingTurn.value = null;
+    input.value = turn.message;
+    messages.value = messages.value.filter(
+      (message) => message.id !== `temporary-${turn.clientRequestId}`,
+    );
+  } else {
+    // Retain the original text, context and key until the server confirms its outcome.
+    turn.status = data.run?.status === "processing" ? "processing" : "unknown";
+    pendingTurn.value = turn;
+  }
+  error.value =
+    data.errors?.message?.[0] ||
+    (exception.response?.status < 500 && data.message) ||
+    (terminal
+      ? "No he podido responder. Puedes enviar otra consulta; los intentos iniciados también cuentan."
+      : "No sabemos si la respuesta terminó. Comprueba el estado para recuperar la misma consulta sin duplicarla.");
+}
+
+async function send(suggestion, resuming = false) {
   const content = (suggestion || input.value).trim();
   if (
     !content ||
@@ -237,62 +362,94 @@ async function send(suggestion) {
     !enabled.value
   )
     return;
-  if (usage.value && usage.value.remaining < 1) {
+  if (!resuming && recoverableTurn.value) {
+    error.value = "Comprueba primero el estado de la consulta anterior.";
+    return;
+  }
+  if (!resuming && usage.value && usage.value.remaining < 1) {
     error.value = "Has alcanzado el límite mensual del asistente.";
     return;
   }
 
+  const version = generation;
+  pendingTurn.value =
+    resuming && pendingTurn.value
+      ? pendingTurn.value
+      : assistantRequest(pendingTurn.value, {
+          message: content,
+          propertyId: context.value.propertyId ?? null,
+          conversationId: conversationId.value,
+        });
+  const turn = pendingTurn.value;
   sending.value = true;
   error.value = "";
   input.value = "";
-  const temporaryId = `temporary-${Date.now()}`;
-  messages.value.push({ id: temporaryId, role: "user", content });
+  const temporaryId = `temporary-${turn.clientRequestId}`;
+  messages.value = mergeAssistantMessages(messages.value, [
+    { id: temporaryId, role: "user", content },
+  ]);
   await scrollToBottom();
 
   try {
     if (!conversationId.value) {
-      const { data } = await api.post("/assistant/conversations");
+      const { data } = await request("post", "/assistant/conversations");
+      if (!mounted || version !== generation) return;
       conversationId.value = String(data.id);
+      turn.conversationId = conversationId.value;
       conversations.value.unshift(data);
     }
-    const { data } = await api.post(
-      `/assistant/conversations/${conversationId.value}/messages`,
-      { message: content, property_id: context.value.propertyId ?? null },
+    const { data } = await request(
+      "post",
+      `/assistant/conversations/${turn.conversationId}/messages`,
+      {
+        message: turn.message,
+        property_id: turn.propertyId,
+        client_request_id: turn.clientRequestId,
+      },
+      65000,
     );
-    messages.value = messages.value.filter(
-      (message) => message.id !== temporaryId,
-    );
-    messages.value.push(data.user_message, data.assistant_message);
-    if (data.assistant_message.metadata?.kind === "answer") {
-      clearTimeout(celebrationTimer);
-      celebrating.value = true;
-      celebrationTimer = setTimeout(() => {
-        celebrating.value = false;
-      }, 2400);
-    }
-    usage.value = data.usage;
-    const index = conversations.value.findIndex(
-      (conversation) => String(conversation.id) === conversationId.value,
-    );
-    if (index >= 0) conversations.value[index] = data.conversation;
+    if (
+      !mounted ||
+      version !== generation ||
+      turn.conversationId !== conversationId.value
+    )
+      return;
+    acceptResponse(data, turn);
   } catch (requestError) {
-    // Keep the question editable. Never retry automatically: a retry can use quota.
-    input.value = content;
-    if (requestError.response?.data?.usage)
-      usage.value = requestError.response.data.usage;
-    messages.value = messages.value.filter(
-      (message) => message.id !== temporaryId,
-    );
-    if (requestError.response?.data?.user_message) {
-      messages.value.push(requestError.response.data.user_message);
-    }
-    error.value =
-      requestError.response?.data?.errors?.message?.[0] ||
-      requestError.response?.data?.message ||
-      "No he podido responder ahora mismo. Inténtalo de nuevo.";
+    if (!mounted || version !== generation) return;
+    receiveFailure(requestError, turn);
   } finally {
-    sending.value = false;
-    await scrollToBottom();
+    if (mounted && version === generation) {
+      sending.value = false;
+      await scrollToBottom();
+    }
+  }
+}
+
+async function recoverResponse() {
+  const turn = pendingTurn.value;
+  if (!turn || sending.value || loading.value) return;
+  if (!turn.runId) return send(turn.message, true);
+  const version = generation;
+  sending.value = true;
+  error.value = "";
+  try {
+    const { data } = await request("get", `/assistant/runs/${turn.runId}`);
+    if (
+      !mounted ||
+      version !== generation ||
+      turn.conversationId !== conversationId.value
+    )
+      return;
+    acceptResponse(data, turn);
+  } catch (exception) {
+    if (!mounted || version !== generation) return;
+    receiveFailure(exception, turn);
+  } finally {
+    if (mounted && version === generation) {
+      sending.value = false;
+      await scrollToBottom();
+    }
   }
 }
 
@@ -376,7 +533,15 @@ async function scrollToBottom() {
           </div>
           <div v-show="tab === 'chat'" class="assistant-chat">
             <p class="assistant-context">
-              Consultando: {{ context.label }} <span>· Solo lectura</span>
+              Consultando: {{ context.label }}
+              <span
+                >·
+                {{
+                  capabilities.actions
+                    ? "Los cambios requieren tu confirmación"
+                    : "Solo lectura"
+                }}</span
+              >
             </p>
 
             <div v-if="conversations.length" class="assistant-history">
@@ -473,8 +638,20 @@ async function scrollToBottom() {
                 <p>
                   Para responder, enviaremos a OpenAI tus preguntas, el
                   historial reciente y los datos de inmuebles y finanzas
-                  necesarios. Las herramientas excluyen nombres de inquilinos,
-                  direcciones completas y el contenido de archivos.
+                  necesarios. Para localizar un contacto, las herramientas
+                  pueden compartir su nombre, pero no su teléfono actual,
+                  correo, DNI, dirección completa ni notas existentes. No se
+                  envía el contenido de archivos.
+                </p>
+                <p>
+                  Cuando las acciones estén disponibles, también podrás pedir
+                  borradores de gastos y cobros, actualizar teléfonos y añadir
+                  notas a inmuebles. Nada se guardará hasta que revises la
+                  propuesta y pulses su botón de confirmación. Los teléfonos o
+                  notas nuevos que escribas en el chat también se envían a
+                  OpenAI; puedes introducirlos directamente en los formularios
+                  de Alquivo si prefieres no compartirlos con el proveedor de
+                  IA.
                 </p>
                 <p>
                   No escribas DNI, datos bancarios, datos de salud ni
@@ -510,7 +687,53 @@ async function scrollToBottom() {
                   asuntos. Solo respondo sobre Alquivo y tus datos; si falta
                   información, te lo diré.
                 </p>
+                <p v-if="capabilities.actions">
+                  También puedo preparar gastos y cobros, cambiar un teléfono y
+                  añadir una nota a un inmueble. Siempre podrás revisar y editar
+                  cada propuesta antes de confirmarla.
+                </p>
                 <div class="assistant-suggestions">
+                  <button
+                    v-if="capabilities.actions"
+                    :disabled="sending || quotaExhausted"
+                    @click="
+                      chooseSuggestion(
+                        'Quiero registrar un gasto de fontanería',
+                      )
+                    "
+                  >
+                    Preparar un gasto
+                  </button>
+                  <template v-if="capabilities.actions">
+                    <button
+                      :disabled="sending || quotaExhausted"
+                      @click="
+                        chooseSuggestion(
+                          'Quiero registrar un cobro de alquiler',
+                        )
+                      "
+                    >
+                      Registrar un cobro
+                    </button>
+                    <button
+                      :disabled="sending || quotaExhausted"
+                      @click="
+                        chooseSuggestion(
+                          'Quiero actualizar el teléfono de un contacto',
+                        )
+                      "
+                    >
+                      Cambiar un teléfono
+                    </button>
+                    <button
+                      :disabled="sending || quotaExhausted"
+                      @click="
+                        chooseSuggestion('Quiero añadir una nota a un inmueble')
+                      "
+                    >
+                      Añadir una nota
+                    </button>
+                  </template>
                   <button
                     v-for="suggestion in suggestions"
                     :key="suggestion"
@@ -545,6 +768,15 @@ async function scrollToBottom() {
                       </template>
                     </p>
                     <template v-if="message.role === 'assistant'">
+                      <AssistantActionPreview
+                        v-for="proposal in actionProposalReferences(
+                          message.metadata,
+                        )"
+                        :key="proposal.id"
+                        :proposal-id="proposal.id"
+                        :enabled="capabilities.actions && enabled && available"
+                        @navigate="close"
+                      />
                       <nav
                         v-if="safeSources(message.metadata).length"
                         class="assistant-sources"
@@ -608,6 +840,27 @@ async function scrollToBottom() {
             <p v-if="copyError" class="assistant-error" role="status">
               {{ copyError }}
             </p>
+            <div
+              v-if="recoverableTurn && !sending"
+              class="assistant-run-recovery"
+              role="status"
+            >
+              <p>
+                {{
+                  pendingTurn.status === "processing"
+                    ? "Tu consulta sigue en proceso."
+                    : "Hay una consulta pendiente de comprobar."
+                }}
+                Recuperarla no inicia otra consulta de IA.
+              </p>
+              <button
+                class="button secondary"
+                :disabled="loading"
+                @click="recoverResponse"
+              >
+                Comprobar respuesta
+              </button>
+            </div>
             <p v-if="quotaExhausted" class="assistant-quota" role="status">
               Has agotado el uso de IA de este mes. Se renueva el
               {{ resetDate }}. Las guías de «Cómo usar Alquivo» siguen
@@ -624,6 +877,7 @@ async function scrollToBottom() {
                   historyFailed ||
                   !available ||
                   !enabled ||
+                  recoverableTurn ||
                   quotaExhausted
                 "
                 placeholder="Pregunta sobre tu patrimonio…"
@@ -639,6 +893,7 @@ async function scrollToBottom() {
                   historyFailed ||
                   !available ||
                   !enabled ||
+                  recoverableTurn ||
                   quotaExhausted
                 "
                 @click="send()"
@@ -651,7 +906,8 @@ async function scrollToBottom() {
                 consultas extensas.</small
               >
               <small
-                >Las consultas iniciadas cuentan aunque fallen. Revisa los datos
+                >Las consultas iniciadas cuentan aunque fallen. Recuperar la
+                misma consulta no la duplica. Revisa los datos
                 importantes.</small
               >
               <button

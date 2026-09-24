@@ -2,6 +2,7 @@
 
 namespace App\Domain\Documents\Models;
 
+use App\Domain\Finance\Models\Transaction;
 use App\Domain\Leasing\Models\Lease;
 use App\Domain\Properties\Models\Property;
 use Illuminate\Database\Eloquent\Model;
@@ -25,5 +26,10 @@ class Document extends Model
     public function lease()
     {
         return $this->belongsTo(Lease::class);
+    }
+
+    public function transaction()
+    {
+        return $this->belongsTo(Transaction::class);
     }
 }

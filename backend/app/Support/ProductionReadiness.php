@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Domain\Documents\Services\PrivateFileVault;
 use Illuminate\Encryption\Encrypter;
 
 class ProductionReadiness
@@ -13,7 +14,7 @@ class ProductionReadiness
             && ! in_array(parse_url($url, PHP_URL_HOST), ['localhost', '127.0.0.1', 'example.com', 'alquivo.example'], true);
         $connection = config('database.connections.'.config('database.default'), []);
         try {
-            $fileKey = app(\App\Domain\Documents\Services\PrivateFileVault::class)->encrypter()->getKey();
+            $fileKey = app(PrivateFileVault::class)->encrypter()->getKey();
             $appKey = str_starts_with((string) config('app.key'), 'base64:') ? base64_decode(substr(config('app.key'), 7), true) : config('app.key');
             $vaultReady = is_string($appKey) && ! hash_equals($appKey, $fileKey);
         } catch (\Throwable) {
@@ -49,7 +50,7 @@ class ProductionReadiness
         if (filled(config('cashier.secret'))) {
             $checks['Configura STRIPE_WEBHOOK_SECRET para validar eventos.'] = str_starts_with((string) config('cashier.webhook.secret'), 'whsec_');
         }
-        if (config('beta.billing_enabled')) {
+        if (app(ProductFeatures::class)->billing()) {
             $checks['Configura Stripe antes de activar la contratación.'] = filled(config('cashier.secret'));
             $checks['Configura el precio mensual del Plan Fundador en Stripe.'] = str_starts_with((string) config('plans.founder.prices.monthly'), 'price_');
         }

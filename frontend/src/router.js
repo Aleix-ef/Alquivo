@@ -2,6 +2,8 @@ import { createRouter, createWebHistory } from "vue-router";
 import { useSession } from "./session";
 import { useProduct } from "./stores/product";
 import { safeReturnPath } from "./authNavigation";
+import { publicRoutes } from "./publicRoutes.js";
+import { updateHead } from "./seo.js";
 const publicPage = (n) => ({
   name: n,
   component: () => import("./views/RecoveryView.vue"),
@@ -11,16 +13,12 @@ const router = createRouter({
   history: createWebHistory(),
   scrollBehavior(to, from, savedPosition) {
     if (savedPosition) return savedPosition;
+    if (to.hash) return { el: to.hash, top: 24 };
     if (to.path === from.path) return false;
     return { top: 0 };
   },
   routes: [
-    {
-      path: "/",
-      name: "home",
-      component: () => import("./views/MarketingView.vue"),
-      meta: { public: true },
-    },
+    ...publicRoutes,
     {
       path: "/login",
       name: "login",
@@ -40,22 +38,14 @@ const router = createRouter({
       component: () => import("./views/VerifyEmailView.vue"),
     },
     {
-      path: "/terms",
-      name: "terms",
-      component: () => import("./views/LegalView.vue"),
-      meta: { public: true },
-    },
-    {
-      path: "/privacy",
-      name: "privacy",
-      component: () => import("./views/LegalView.vue"),
-      meta: { public: true },
-    },
-    {
       path: "/",
       component: () => import("./views/ShellView.vue"),
       children: [
         { path: "support", component: () => import("./views/SupportView.vue") },
+        {
+          path: "support/inbox",
+          component: () => import("./views/SupportInboxView.vue"),
+        },
         {
           path: "dashboard",
           component: () => import("./views/DashboardView.vue"),
@@ -93,15 +83,20 @@ const router = createRouter({
           component: () => import("./views/DocumentsView.vue"),
         },
         {
+          path: "documents/import/:id?",
+          component: () => import("./views/DocumentImportView.vue"),
+        },
+        {
           path: "settings",
           component: () => import("./views/SettingsView.vue"),
         },
         { path: "plans", component: () => import("./views/PlansView.vue") },
-        {
-          path: ":pathMatch(.*)*",
-          component: () => import("./views/NotFoundView.vue"),
-        },
       ],
+    },
+    {
+      path: "/:pathMatch(.*)*",
+      component: () => import("./views/NotFoundView.vue"),
+      meta: { public: true },
     },
   ],
 });
@@ -123,7 +118,15 @@ router.beforeEach(async (to) => {
     return "/settings";
   }
   if (to.meta.guestOnly && s.ready) return safeReturnPath(to.query.redirect);
-  if (to.path === "/fiscality" && !product.features.fiscality)
+  if (to.path === "/fiscality" && !product.accountFeatures.fiscality)
     return "/reports";
+});
+router.afterEach((to, from, failure) => {
+  if (!failure)
+    updateHead(
+      to.matched.some((record) => record.path.includes(":pathMatch"))
+        ? "/404"
+        : to.path,
+    );
 });
 export default router;

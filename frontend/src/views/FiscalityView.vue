@@ -144,7 +144,7 @@ onBeforeUnmount(() => store.clear());
   <main class="page fiscal-page">
     <header class="heading">
       <div>
-        <p class="eyebrow">Fiscalidad · Plan Fundador</p>
+        <p class="eyebrow">Fiscalidad</p>
         <h1>La renta de tus inmuebles, preparada</h1>
         <p>
           Reúne tus cifras, revisa lo que falta y prepara el dossier para tu
@@ -168,7 +168,7 @@ onBeforeUnmount(() => store.clear());
       class="panel fiscal-locked"
     >
       <LockKeyhole :size="30" />
-      <h2>Tu dossier fiscal, incluido en el Plan Fundador</h2>
+      <h2>Consulta la disponibilidad del dossier fiscal en tu plan</h2>
       <p>
         Ficha anual por inmueble, cálculo explicado y descarga en PDF o CSV.
         Disponible también durante la prueba.

@@ -4,6 +4,115 @@
   z-index: 80;
   background: var(--overlay);
 }
+.assistant-action-preview {
+  margin: 16px 0;
+  padding: 16px;
+  border: 1px solid #466a79;
+  border-radius: 14px;
+  background: #101f2a;
+  color: var(--ink);
+}
+.assistant-action-preview > header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+.assistant-action-preview > header strong {
+  font-size: 17px;
+  color: #b3eed3;
+}
+.assistant-action-preview > header span {
+  font-size: 14px;
+  color: var(--muted);
+}
+.assistant-action-summary {
+  display: grid;
+  gap: 12px;
+  margin: 18px 0;
+}
+.assistant-action-summary > div {
+  display: grid;
+  gap: 3px;
+}
+.assistant-action-summary dt {
+  color: var(--muted);
+  font-size: 14px;
+}
+.assistant-action-summary dd {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+.assistant-action-note {
+  white-space: pre-wrap;
+}
+.assistant-action-form textarea {
+  resize: vertical;
+  font: inherit;
+}
+.assistant-action-summary .assistant-action-amount {
+  font-size: 26px;
+  font-weight: 650;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+.assistant-action-preview p,
+.assistant-run-recovery p {
+  margin: 12px 0;
+  font-size: 15px;
+  line-height: 1.55;
+}
+.assistant-action-buttons,
+.assistant-action-form {
+  display: grid;
+  gap: 10px;
+}
+.assistant-action-buttons {
+  margin-top: 14px;
+}
+.assistant-action-preview .button,
+.assistant-run-recovery .button {
+  min-height: 44px;
+  white-space: normal;
+  line-height: 1.4;
+  text-align: center;
+  font-size: 15px;
+}
+.assistant-action-form label {
+  display: grid;
+  gap: 6px;
+  color: var(--ink);
+  font-size: 15px;
+}
+.assistant-action-form input,
+.assistant-action-form select,
+.assistant-action-form textarea {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  padding: 10px;
+  border: 1px solid #466a79;
+  border-radius: 8px;
+  background: #0b1822;
+  color: var(--ink);
+  font-size: 16px;
+}
+.assistant-action-form input:focus-visible,
+.assistant-action-form textarea:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 2px;
+}
+.assistant-run-recovery {
+  flex-shrink: 0;
+  margin: 0 16px 10px;
+  padding: 12px 14px;
+  border: 1px solid #466a79;
+  border-radius: 10px;
+  background: #101f2a;
+}
 .assistant-widget {
   position: absolute;
   inset: 16px 16px 16px auto;

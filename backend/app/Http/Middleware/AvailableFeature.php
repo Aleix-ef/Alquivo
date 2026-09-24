@@ -12,7 +12,7 @@ final class AvailableFeature
     {
         $features = app(ProductFeatures::class);
         abort_unless(match ($feature) {
-            'fiscality' => $features->fiscality(), 'assistant' => config('beta.assistant_validated') && config('assistant.enabled'), default => false
+            'fiscality' => $features->fiscality($request->user()), 'assistant' => $request->user()?->local_admin || (config('beta.assistant_validated') && config('assistant.enabled')), default => false
         }, 404);
 
         return $next($request);

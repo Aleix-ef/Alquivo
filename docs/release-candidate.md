@@ -4,11 +4,13 @@ Este documento es el punto de entrada operativo. No es un certificado de segurid
 
 ## Contratación cerrada
 
-`BILLING_ENABLED=false` es el valor predeterminado en todos los entornos. La landing conserva las cuotas y permite registrarse, pero indica que son informativas. Planes no abre pagos. La API y `CheckoutService` rechazan nuevas contrataciones, incluso con claves y precios Stripe configurados. El portal también queda cerrado para evitar cobros iniciados desde él. El registro mantiene 14 días de prueba de Fundador, después Gratuito; no concede Fundador indefinidamente ni borra excedentes.
+`BETA_PROGRAM_ENABLED=true` muestra únicamente **Beta gratuita**: 10 inmuebles y 1 GB, sin caducidad a los 14 días. La API calcula los límites de Beta tanto para cuentas nuevas como existentes y no devuelve los planes comerciales. El registro conserva Gratuito como base interna para el cierre futuro, sin suscripción ni prueba de pago. Las cuotas comerciales quedan guardadas en configuración, no expuestas en el catálogo.
+
+`BILLING_ENABLED=false` sigue siendo el valor predeterminado. Además, mientras `BETA_PROGRAM_ENABLED=true`, Checkout, el portal y `CheckoutService` se bloquean incluso si el primer interruptor se activara por error. No se borran datos ni se cambian suscripciones de Stripe. La IA tiene preparada una cuota de hasta 20 consultas mensuales, sujeta a los límites de tokens y a los controles previos de activación/privacidad; no se reactiva automáticamente. Fiscalidad conserva su control de validación.
 
 **No es un interruptor de Stripe:** no cancela suscripciones existentes, no expira sesiones Checkout antiguas ni desactiva Payment Links externos. Antes de invitar usuarios, revisar esos tres elementos en Stripe. La inspección local encontró una suscripción `trialing` y configuración no-live; no se consultó ni modificó el estado remoto. Se siguen validando y procesando webhooks firmados para mantener la coherencia de suscripciones anteriores. No introducir claves live durante la validación.
 
-No activar `BILLING_ENABLED=true` hasta tener autorizada la comercialización, configuración fiscal/contractual correspondiente y pruebas sandbox de cobro, renovación, impago y cancelación. Desactivar pagos no determina por sí solo las obligaciones legales del titular.
+Al cerrar la Beta, avisar a los participantes y preparar la oferta Fundador de agradecimiento antes de cambiar `BETA_PROGRAM_ENABLED=false`. La oferta y el envío de avisos no están automatizados. No activar `BILLING_ENABLED=true` hasta tener autorizada la comercialización, configuración fiscal/contractual correspondiente y pruebas sandbox de cobro, renovación, impago y cancelación. Desactivar pagos no determina por sí solo las obligaciones legales del titular.
 
 ## Documentos y fotos cifrados
 

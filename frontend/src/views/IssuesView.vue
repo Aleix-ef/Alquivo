@@ -4,6 +4,7 @@ import { Plus, Wrench } from "@lucide/vue";
 import { useRoute, useRouter } from "vue-router";
 import api from "../api";
 import { fetchAllPages } from "../pagination";
+import { useRecordAnchor } from "../composables/useRecordAnchor";
 
 const route = useRoute();
 const router = useRouter();
@@ -12,6 +13,7 @@ const properties = ref([]);
 const contacts = ref([]);
 const propertyFilter = ref(route.query.property || "");
 const loading = ref(true);
+useRecordAnchor(loading, "issue");
 const loadError = ref("");
 const saving = ref(false);
 const error = ref("");
@@ -161,7 +163,13 @@ onMounted(load);
       <button class="button secondary" @click="load">Volver a intentar</button>
     </section>
     <section v-else-if="issues.length" class="record-list">
-      <article v-for="issue in issues" :key="issue.id" class="record">
+      <article
+        v-for="issue in issues"
+        :key="issue.id"
+        :id="`issue-${issue.id}`"
+        tabindex="-1"
+        class="record"
+      >
         <span class="record-icon"><Wrench :size="19" /></span>
         <div>
           <strong>{{ issue.title }}</strong

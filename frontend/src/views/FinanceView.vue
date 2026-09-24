@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, onBeforeUnmount } from "vue";
 import { ArrowDownLeft, ArrowUpRight, Pencil, Plus, Trash2 } from "@lucide/vue";
 import { useRoute, useRouter } from "vue-router";
 import api from "../api";
@@ -69,7 +69,9 @@ const money = (v) =>
   pendingTransactions = computed(() =>
     tx.value.filter((transaction) => transaction.status === "pending"),
   );
+let loadGeneration = 0;
 async function load() {
+  const generation = ++loadGeneration;
   loading.value = true;
   loadError.value = "";
   try {
@@ -79,14 +81,16 @@ async function load() {
       fetchAllPages(api, "/properties"),
       fetchAllPages(api, "/recurring-rules"),
     ]);
+    if (generation !== loadGeneration) return;
     tx.value = t;
     leases.value = l;
     properties.value = p;
     recurringRules.value = r;
   } catch {
+    if (generation !== loadGeneration) return;
     loadError.value = "No hemos podido cargar tus movimientos.";
   } finally {
-    loading.value = false;
+    if (generation === loadGeneration) loading.value = false;
   }
 }
 async function save() {
@@ -283,7 +287,14 @@ async function pauseRule(rule) {
       exception.response?.data?.message || "No se pudo actualizar la regla.";
   }
 }
-onMounted(load);
+onMounted(() => {
+  window.addEventListener("alquivo:finance-changed", load);
+  load();
+});
+onBeforeUnmount(() => {
+  loadGeneration++;
+  window.removeEventListener("alquivo:finance-changed", load);
+});
 </script>
 <template>
   <main class="page">

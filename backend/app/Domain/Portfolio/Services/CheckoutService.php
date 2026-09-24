@@ -3,6 +3,7 @@
 namespace App\Domain\Portfolio\Services;
 
 use App\Models\User;
+use App\Support\ProductFeatures;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -13,7 +14,7 @@ final class CheckoutService
 
     public function start(User $user, string $frontend): array
     {
-        abort_unless(config('beta.billing_enabled'), 403, 'Estamos en fase de validación. Los precios son informativos y la contratación está desactivada.');
+        abort_unless(app(ProductFeatures::class)->billing(), 403, 'La Beta es gratuita y la contratación está desactivada.');
         $lock = Cache::lock('billing-checkout:'.$user->id, 120);
         abort_unless($lock->get(), 409, 'Ya estamos preparando tu suscripción. Espera unos segundos.');
         try {

@@ -25,7 +25,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->bind(\App\Domain\Assistant\Contracts\AIProviderInterface::class, \App\Domain\Assistant\Providers\OpenAIProvider::class);
     }
 
     /**
@@ -69,6 +69,10 @@ class AppServiceProvider extends ServiceProvider
             Limit::perMinute(3)->by('support-minute:'.$request->ip()),
             Limit::perHour(10)->by('support-hour:'.$request->ip()),
             Limit::perHour(100)->by('support-global'),
+        ]);
+        RateLimiter::for('support-chat', fn (Request $request) => [
+            Limit::perMinute(12)->by('support-chat:'.($request->user()?->id ?? $request->ip())),
+            Limit::perHour(120)->by('support-chat-hour:'.($request->user()?->id ?? $request->ip())),
         ]);
         RateLimiter::for('fiscal-create', fn (Request $request) => Limit::perMinute(6)->by('fiscal-create:'.$request->user()?->id));
         RateLimiter::for('fiscal-download', fn (Request $request) => Limit::perMinute(12)->by('fiscal-download:'.$request->user()?->id));

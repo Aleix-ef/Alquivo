@@ -3,6 +3,8 @@ import { onMounted, ref } from "vue";
 import { Check } from "@lucide/vue";
 import { useRoute, useRouter } from "vue-router";
 import api from "../api";
+import { useProduct } from "../stores/product";
+const product = useProduct();
 const route = useRoute(),
   router = useRouter(),
   data = ref(null),
@@ -81,8 +83,24 @@ onMounted(async () => {
     <header class="heading">
       <div>
         <p class="eyebrow">Planes</p>
-        <h1>Crece a tu ritmo</h1>
-        <p>
+        <h1>
+          {{
+            data?.admin_preview
+              ? "Vista de administración"
+              : product.features.beta_program
+                ? "Tu Beta gratuita"
+                : "Crece a tu ritmo"
+          }}
+        </h1>
+        <p v-if="data?.admin_preview">
+          Puedes revisar todos los planes, incluidos los ocultos a los usuarios.
+          Este acceso de pruebas no crea una suscripción ni activa pagos.
+        </p>
+        <p v-else-if="product.features.beta_program">
+          Gestiona tu patrimonio y ayúdanos a mejorar Alquivo. Sin tarjeta, sin
+          pagos y sin caducidad a los 14 días.
+        </p>
+        <p v-else>
           Prueba todas las funciones del Plan Fundador durante 14 días. Después
           puedes continuar gratis. Los precios de los planes están disponibles
           para que conozcas las opciones de Alquivo.
@@ -110,7 +128,12 @@ onMounted(async () => {
         <div>
           <p class="eyebrow">Beta de validación · Sin pagos</p>
           <strong>Puedes probar Alquivo sin tarjeta.</strong>
-          <p>
+          <p v-if="data.beta_program">
+            Tienes acceso gratuito durante toda la beta. Te avisaremos antes de
+            su cierre para que puedas decidir cómo continuar. Nunca se activará
+            un pago sin tu autorización.
+          </p>
+          <p v-else>
             Los precios son informativos. La contratación todavía no está
             abierta y la prueba no se convierte en una suscripción de pago.
           </p>
@@ -181,18 +204,30 @@ onMounted(async () => {
             : "Gestionar pago, facturas o cancelación"
         }}
       </button>
-      <section class="plan-grid">
+      <section
+        class="plan-grid"
+        :class="{ 'beta-only': data.beta_program && !data.admin_preview }"
+      >
         <article
           v-for="(plan, code) in data.plans"
           :key="code"
-          :class="{ featured: code === 'founder' }"
+          :class="{ featured: code === 'founder' || code === 'beta' }"
         >
           <p class="eyebrow">
-            {{ code === data.current.code ? "Tu nivel actual" : "Para crecer" }}
+            {{
+              data.admin_preview
+                ? "Catálogo · Vista interna"
+                : code === data.current.code
+                  ? "Tu nivel actual"
+                  : "Para crecer"
+            }}
           </p>
           <h2>{{ plan.name }}</h2>
           <strong class="plan-price"
-            >{{ price(plan) }}<small>/mes</small></strong
+            >{{ code === "beta" ? "Gratis" : price(plan)
+            }}<small>{{
+              code === "beta" ? "durante la beta" : "/mes"
+            }}</small></strong
           >
           <p>Hasta {{ plan.property_limit }} inmuebles</p>
           <ul>
@@ -200,8 +235,16 @@ onMounted(async () => {
               <Check :size="15" />{{ feature }}
             </li>
           </ul>
+          <p v-if="data.admin_preview" class="plans-note">
+            Solo revisión · No cambia tus permisos
+          </p>
+          <p v-else-if="code === 'beta'" class="success" role="status">
+            Tu plan está activo · No tienes que contratar nada
+          </p>
           <button
-            v-if="data.current.can_manage_billing && !plan.checkout_available"
+            v-else-if="
+              data.current.can_manage_billing && !plan.checkout_available
+            "
             class="button secondary"
             :disabled="!!busy"
             @click="portal"
@@ -223,7 +266,17 @@ onMounted(async () => {
           </button>
         </article>
       </section>
-      <p class="plans-note">
+      <p v-if="data.admin_preview" class="plans-note">
+        Tu cartera de pruebas dispone de las funciones del Plan Fundador: 20
+        inmuebles, 2 GB y hasta 50 consultas de IA al mes, si el proveedor está
+        configurado. Este permiso no tiene efecto en producción.
+      </p>
+      <p v-else-if="data.beta_program" class="plans-note">
+        Tus datos siguen siendo tuyos: puedes descargar tus documentos y
+        exportar tus datos durante la beta. Si ya tenías más de 10 inmuebles,
+        los excedentes se conservan en modo consulta.
+      </p>
+      <p v-else class="plans-note">
         Si finaliza la prueba o vuelves al plan gratuito, podrás seguir
         gestionando el primer inmueble que añadiste. Los demás seguirán
         disponibles para consulta y exportación; sus nuevos cargos y movimientos

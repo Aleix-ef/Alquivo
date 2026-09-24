@@ -125,14 +125,15 @@ class AssistantInsightsTest extends TestCase
     {
         $portfolio = Portfolio::create(['name' => 'Mi cartera']);
         $property = $portfolio->properties()->create(['name' => 'Centro', 'type' => 'housing', 'address_line' => 'Calle 1']);
-        $lease = $property->leases()->create(['portfolio_id' => $portfolio->id, 'start_date' => '2020-01-01', 'monthly_rent' => 100]);
+        $lease = $property->leases()->create(['portfolio_id' => $portfolio->id, 'status' => 'active', 'start_date' => '2020-01-01', 'monthly_rent' => 100]);
         for ($i = 1; $i <= 21; $i++) {
-            $lease->charges()->create(['portfolio_id' => $portfolio->id, 'period' => today()->subMonths($i)->format('Y-m'), 'due_date' => today()->subMonths($i), 'amount' => 100, 'paid_amount' => 40, 'status' => 'partial']);
+            $charge = $lease->charges()->create(['portfolio_id' => $portfolio->id, 'period' => today()->subMonths($i)->format('Y-m'), 'due_date' => today()->subMonths($i), 'amount' => 100, 'paid_amount' => 40, 'status' => 'partial']);
+            $this->movement($portfolio, ['property_id' => $property->id, 'lease_id' => $lease->id, 'rent_charge_id' => $charge->id, 'category' => 'rent', 'amount' => 40]);
         }
         $result = app(PortfolioAssistantTools::class)->execute($portfolio, 'get_pending_items', ['kind' => 'rents']);
         $this->assertCount(20, $result['rents']);
         $this->assertSame(21, $result['rents_summary']['total_count']);
-        $this->assertSame(1260.0, $result['rents_summary']['pending_amount']);
+        $this->assertSame('1260.00', $result['rents_summary']['pending_amount']);
         $this->assertSame(21, $result['rents_summary']['overdue_count']);
     }
 

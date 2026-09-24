@@ -10,6 +10,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Portfolio extends Model
 {
+    // Public plan information comes from PlanService, not historical billing fields.
+    protected $hidden = ['plan', 'storage_limit_bytes', 'subscription_status', 'trial_ends_at', 'plan_changed_at', 'pending_plan', 'pending_billing_period', 'pending_plan_effective_at', 'billing_customer_id', 'billing_subscription_id', 'billing_schedule_id'];
+
     protected $fillable = ['name', 'currency', 'country_code', 'plan', 'storage_limit_bytes', 'subscription_status', 'trial_ends_at', 'plan_changed_at', 'pending_plan', 'pending_billing_period', 'pending_plan_effective_at', 'billing_customer_id', 'billing_subscription_id', 'billing_schedule_id'];
 
     protected function casts(): array

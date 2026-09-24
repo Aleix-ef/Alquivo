@@ -11,7 +11,9 @@ class PrivateFileDeletion
     // Call in the same transaction as the account/document deletion.
     public function schedule(string $path, bool $directory = false): int
     {
-        if (! preg_match('#^portfolios/[1-9][0-9]*(/[^.][^\\\\]*)?$#', $path) || str_contains($path, '..')) {
+        $portfolioPath = preg_match('#^portfolios/[1-9][0-9]*(/[^.][^\\\\]*)?$#', $path);
+        $supportPath = preg_match('#^support/conversations/[a-f0-9-]{36}(/[a-f0-9-]{36}\.enc)?$#', $path);
+        if ((! $portfolioPath && ! $supportPath) || str_contains($path, '..')) {
             throw new \InvalidArgumentException('Invalid cleanup path');
         }
 

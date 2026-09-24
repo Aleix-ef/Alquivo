@@ -6,6 +6,8 @@ use App\Domain\Documents\Services\PrivateFileDeletion;
 use App\Domain\Identity\Services\RevokeSessions;
 use App\Domain\Portfolio\Services\PlanService;
 use App\Domain\Portfolio\Services\StorageUsageService;
+use App\Domain\Support\Models\SupportConversation;
+use App\Domain\Support\Services\SupportChat;
 use App\Http\Controllers\Controller;
 use App\Support\SecurityAudit;
 use Illuminate\Http\Request;
@@ -90,8 +92,11 @@ class AccountController extends Controller
         if ($user->stripe_id) {
             $user->deleteStripeCustomer();
         }
-        $cleanupId = DB::transaction(function () use ($user, $portfolio) {
-            $cleanupId = app(PrivateFileDeletion::class)->schedule("portfolios/{$portfolio->id}", true);
+        $cleanupIds = DB::transaction(function () use ($user, $portfolio) {
+            $cleanupIds = [app(PrivateFileDeletion::class)->schedule("portfolios/{$portfolio->id}", true)];
+            foreach (SupportConversation::where('user_id', $user->id)->lockForUpdate()->get() as $conversation) {
+                $cleanupIds[] = app(SupportChat::class)->scheduleDeletion($conversation);
+            }
             app(RevokeSessions::class)->execute($user);
             $user->subscriptions()->each(function ($subscription) {
                 $subscription->items()->delete();
@@ -100,9 +105,11 @@ class AccountController extends Controller
             $portfolio->delete();
             $user->delete();
 
-            return $cleanupId;
+            return $cleanupIds;
         });
-        app(PrivateFileDeletion::class)->process($cleanupId);
+        foreach ($cleanupIds as $cleanupId) {
+            app(PrivateFileDeletion::class)->process($cleanupId);
+        }
         SecurityAudit::record('account.deleted', $user->id);
         if ($request->hasSession()) {
             $request->session()->invalidate();

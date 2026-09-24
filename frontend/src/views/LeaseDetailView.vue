@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, onBeforeUnmount, watch, ref } from "vue";
 import {
   ArrowLeft,
   CalendarDays,
@@ -34,7 +34,9 @@ const statusLabel = {
 const editForm = ref({});
 const renewalForm = ref({});
 
+let loadGeneration = 0;
 async function load() {
+  const generation = ++loadGeneration;
   loading.value = true;
   loadError.value = "";
   try {
@@ -42,15 +44,17 @@ async function load() {
       api.get(`/leases/${route.params.id}`),
       fetchAllPages(api, "/contacts"),
     ]);
+    if (generation !== loadGeneration) return;
     lease.value = leaseResponse.data;
     contacts.value = contactsResponse;
   } catch (exception) {
+    if (generation !== loadGeneration) return;
     loadError.value =
       exception.response?.status === 404
         ? "Este contrato no existe o no pertenece a tu cartera."
         : "No hemos podido cargar el contrato.";
   } finally {
-    loading.value = false;
+    if (generation === loadGeneration) loading.value = false;
   }
 }
 
@@ -129,7 +133,30 @@ async function saveRenewal() {
   }
 }
 
-onMounted(load);
+function refreshLease(event) {
+  if (
+    !event.detail?.leaseId ||
+    String(event.detail.leaseId) === String(route.params.id)
+  )
+    load();
+}
+onMounted(() => {
+  window.addEventListener("alquivo:leases-changed", refreshLease);
+  window.addEventListener("alquivo:contacts-changed", load);
+  load();
+});
+watch(
+  () => route.params.id,
+  () => {
+    lease.value = null;
+    load();
+  },
+);
+onBeforeUnmount(() => {
+  loadGeneration++;
+  window.removeEventListener("alquivo:leases-changed", refreshLease);
+  window.removeEventListener("alquivo:contacts-changed", load);
+});
 </script>
 
 <template>

@@ -62,7 +62,7 @@ export const helpGuides = [
     to: "/fiscality",
     action: "Abrir Fiscalidad",
     steps: [
-      "Fiscalidad permite preparar fichas e informes del ejercicio cubierto, con el Plan Fundador o durante la prueba.",
+      "Fiscalidad permite preparar fichas e informes del ejercicio cubierto cuando esté habilitada en tu plan.",
       "Completa el perfil fiscal, la titularidad, los periodos de uso y los importes que solicita cada inmueble.",
       "Revisa los avisos de cobertura antes de descargar el informe. La beta no presenta tu declaración ni calcula tu IRPF personal completo.",
     ],

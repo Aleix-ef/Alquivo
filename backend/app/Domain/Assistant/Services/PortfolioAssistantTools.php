@@ -3,9 +3,7 @@
 namespace App\Domain\Assistant\Services;
 
 use App\Domain\Attention\Models\Issue;
-use App\Domain\Attention\Models\Reminder;
-use App\Domain\Documents\Models\Document;
-use App\Domain\Finance\Models\RentCharge;
+use App\Domain\Attention\Services\PortfolioAttention;
 use App\Domain\Finance\Models\Transaction;
 use App\Domain\Leasing\Models\Lease;
 use App\Domain\Portfolio\Models\Portfolio;
@@ -26,6 +24,9 @@ class PortfolioAssistantTools
         $property = ['property_id' => ['type' => ['integer', 'null'], 'description' => 'Inmueble o null para toda la cartera.']];
 
         return [
+            $this->tool('get_attention_items', 'Lee Qué necesita mi atención: mismos hechos, orden y reglas que el dashboard. No recalcules prioridad, fechas ni saldos. Incluye totales completos y una página de 5 avisos; consulta la siguiente si hace falta. No crea acciones.', [
+                ...$property, 'page' => ['type' => 'integer', 'minimum' => 1, 'maximum' => 10000],
+            ], ['property_id', 'page']),
             $this->tool('compare_months', 'Compara cobros, gastos y neto de un mes con el anterior. Calcula diferencias, sin inventar porcentajes con base cero.', [
                 'month' => ['type' => ['string', 'null'], 'description' => 'YYYY-MM; null para el mes actual.'], ...$property,
             ], ['month', 'property_id']),
@@ -53,6 +54,7 @@ class PortfolioAssistantTools
     public function execute(Portfolio $portfolio, string $name, array $arguments): array
     {
         $rules = match ($name) {
+            'get_attention_items' => ['property_id' => ['nullable', 'integer', 'min:1'], 'page' => ['required', 'integer', 'min:1', 'max:10000']],
             'compare_months' => ['month' => ['nullable', 'date_format:Y-m'], 'property_id' => ['nullable', 'integer', 'min:1']],
             'compare_properties' => ['from' => ['nullable', 'date_format:Y-m-d'], 'to' => ['nullable', 'date_format:Y-m-d']],
             'list_movements' => ['from' => ['nullable', 'date_format:Y-m-d'], 'to' => ['nullable', 'date_format:Y-m-d'], 'property_id' => ['nullable', 'integer', 'min:1'], 'direction' => ['nullable', Rule::in(['income', 'expense'])]],
@@ -68,6 +70,7 @@ class PortfolioAssistantTools
         $arguments = Validator::make($arguments, $rules)->validate();
 
         return match ($name) {
+            'get_attention_items' => $this->attention($portfolio, $arguments),
             'compare_months' => app(AssistantInsights::class)->compare($portfolio, $arguments),
             'compare_properties' => app(AssistantInsights::class)->properties($portfolio, $arguments),
             'list_movements' => app(AssistantInsights::class)->movements($portfolio, $arguments),
@@ -215,45 +218,28 @@ class PortfolioAssistantTools
 
     private function pending(Portfolio $portfolio, string $kind): array
     {
+        // Compatibility adapter; never a second set of attention rules.
+        $snapshot = app(PortfolioAttention::class)->snapshot($portfolio);
+        $groups = $kind === 'all' ? array_keys($snapshot['counts']) : [$kind];
         $all = [];
-        if (in_array($kind, ['all', 'rents'], true)) {
-            $rentQuery = RentCharge::query()->where('portfolio_id', $portfolio->id)->whereIn('status', ['pending', 'partial', 'overdue']);
-            $all['rents_summary'] = [
-                'total_count' => (clone $rentQuery)->count(),
-                'pending_amount' => round((float) (clone $rentQuery)->sum('amount') - (float) (clone $rentQuery)->sum('paid_amount'), 2),
-                'overdue_count' => (clone $rentQuery)->where('due_date', '<', today())->count(),
-            ];
-            $all['rents'] = $rentQuery->with('lease.property')->orderBy('due_date')->limit(20)->get()
-                ->map(fn (RentCharge $charge) => ['property' => $charge->lease?->property?->name, 'due_date' => $charge->due_date->toDateString(), 'pending_amount' => round((float) $charge->amount - (float) $charge->paid_amount, 2), 'status' => $charge->status])->all();
-        }
-        if (in_array($kind, ['all', 'leases'], true)) {
-            $all['leases'] = Lease::query()->where('portfolio_id', $portfolio->id)->where('status', 'active')->whereNotNull('end_date')
-                ->whereBetween('end_date', [today(), today()->addDays(90)])->with('property')->orderBy('end_date')->limit(20)->get()
-                ->map(fn (Lease $lease) => ['property' => $lease->property->name, 'end_date' => $lease->end_date->toDateString(), 'monthly_rent' => (float) $lease->monthly_rent])->all();
-        }
-        if (in_array($kind, ['all', 'issues'], true)) {
-            $all['issues'] = Issue::query()->where('portfolio_id', $portfolio->id)->whereNotIn('status', ['resolved', 'cancelled'])
-                ->with('property')->orderBy('due_date')->limit(20)->get()->map(fn (Issue $issue) => [
-                    'property' => $issue->property?->name, 'title' => $issue->title, 'priority' => $issue->priority,
-                    'status' => $issue->status, 'due_date' => $issue->due_date?->toDateString(),
-                ])->all();
-        }
-        if (in_array($kind, ['all', 'documents'], true)) {
-            $all['documents'] = Document::query()->where('portfolio_id', $portfolio->id)->whereNotNull('expires_at')
-                ->whereBetween('expires_at', [today(), today()->addDays(60)])->with('property')->orderBy('expires_at')->limit(20)->get()
-                ->map(fn (Document $document) => ['name' => $document->name, 'property' => $document->property?->name, 'expires_at' => $document->expires_at->toDateString()])->all();
-        }
-        if (in_array($kind, ['all', 'reminders'], true)) {
-            $all['reminders'] = Reminder::query()->where('portfolio_id', $portfolio->id)->whereNull('completed_at')
-                ->where('starts_at', '<=', now()->addDays(30))->with('property')->orderBy('starts_at')->limit(20)->get()
-                ->map(fn (Reminder $reminder) => ['title' => $reminder->title, 'property' => $reminder->property?->name, 'starts_at' => $reminder->starts_at->toIso8601String()])->all();
+        foreach ($groups as $group) {
+            $items = collect($snapshot['items'])->where('group', $group)->take(20);
+            $all[$group] = $group === 'rents' ? $items->map(fn ($item) => [
+                'property' => $item['property']['name'], 'due_date' => $item['date'], 'pending_amount' => $item['amount'],
+                'status' => $item['type'] === 'rent_overdue' ? 'overdue' : $item['evidence']['payment_state'],
+            ])->values()->all() : $items->values()->all();
         }
 
-        return ['as_of' => now()->toIso8601String(), 'currency' => $portfolio->currency,
-            'list_limit' => 20, 'note' => 'Cada lista muestra hasta 20 registros. Si alcanza 20, puede haber más. Solo rents_summary contiene el total completo de rentas pendientes.',
-            'app_path' => match ($kind) {
-                'rents' => '/finance', 'issues' => '/issues', 'documents' => '/documents', 'leases' => '/leases', default => '/calendar'
-            }, ...$all];
+        return [...array_diff_key($snapshot, ['items' => true]), 'list_limit' => 20, ...$all];
+    }
+
+    private function attention(Portfolio $portfolio, array $arguments): array
+    {
+        $snapshot = app(PortfolioAttention::class)->snapshot($portfolio, $arguments['property_id'] ?? null);
+        $page = $arguments['page'];
+        $snapshot['items'] = array_slice($snapshot['items'], ($page - 1) * 5, 5);
+
+        return [...$snapshot, 'page' => $page, 'page_size' => 5, 'has_more' => $snapshot['total'] > $page * 5];
     }
 
     private function date(?string $value, string $fallback): CarbonImmutable

@@ -13,6 +13,10 @@ import "./shell.css";
 import "./marketing.css";
 import "./assistant.css";
 import "./support.css";
+import "./support-chat.css";
 const pinia = createPinia();
 const app = createApp(App).use(pinia);
-app.use(router).mount("#app");
+app.use(router);
+// Keep the public HTML readable while the first route/configuration loads.
+await router.isReady();
+app.mount("#app");
