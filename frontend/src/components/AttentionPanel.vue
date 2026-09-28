@@ -10,7 +10,7 @@ const props = defineProps({
   items: { type: Array, default: () => [] },
   summary: { type: Object, required: true },
 });
-const visible = ref(4);
+const visible = ref(2);
 const shown = computed(() => props.items.slice(0, visible.value));
 </script>
 

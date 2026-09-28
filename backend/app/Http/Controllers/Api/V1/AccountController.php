@@ -39,10 +39,17 @@ class AccountController extends Controller
         $email = strtolower($data['email']);
         $emailChanged = $email !== $user->email;
         $user->update(['name' => $data['name'], 'email' => $email, 'email_verified_at' => $emailChanged ? null : $user->email_verified_at]);
+        if ($emailChanged && in_array($user->two_factor_method, ['email', 'both'], true)) {
+            $user->forceFill(['two_factor_method' => 'authenticator'])->save();
+        }
         if ($emailChanged) {
             app(RevokeSessions::class)->execute($user, $request->hasSession() ? $request->session()->getId() : null);
             SecurityAudit::record('account.email_changed', $user->id);
-            $user->sendEmailVerificationNotification();
+            try {
+                $user->sendEmailVerificationNotification();
+            } catch (\Throwable $exception) {
+                report($exception);
+            }
         }
         $portfolio->update([
             'name' => $data['portfolio_name'],

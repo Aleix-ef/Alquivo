@@ -3,8 +3,12 @@ import { onMounted, ref } from "vue";
 import api from "../api";
 
 const status = ref(null),
+  devices = ref([]),
   password = ref(""),
   code = ref(""),
+  methodPassword = ref(""),
+  methodCode = ref(""),
+  selectedMethod = ref("authenticator"),
   secret = ref(""),
   recovery = ref([]);
 const busy = ref(false),
@@ -12,6 +16,10 @@ const busy = ref(false),
   message = ref("");
 async function load() {
   status.value = (await api.get("/account/two-factor")).data;
+  selectedMethod.value = status.value.method;
+  devices.value = status.value.enabled
+    ? (await api.get("/account/two-factor/devices")).data.devices
+    : [];
 }
 async function action(kind) {
   if (busy.value) return;
@@ -33,6 +41,17 @@ async function action(kind) {
       message.value =
         "Doble factor activado. Hemos cerrado las otras sesiones de tu cuenta.";
       await load();
+    } else if (kind === "method") {
+      await api.put("/account/two-factor/method", {
+        method: selectedMethod.value,
+        current_password: methodPassword.value,
+        code: methodCode.value,
+      });
+      methodPassword.value = "";
+      methodCode.value = "";
+      message.value =
+        "Método actualizado. Por seguridad, tendrás que volver a verificar tus dispositivos recordados.";
+      await load();
     } else {
       await api.delete("/account/two-factor", {
         data: { current_password: password.value, code: code.value },
@@ -53,6 +72,28 @@ async function action(kind) {
     busy.value = false;
   }
 }
+async function revokeDevice(id) {
+  error.value = "";
+  try {
+    await api.delete(`/account/two-factor/devices/${id}`);
+    await load();
+    message.value = "Dispositivo revocado. Volverá a pedir el segundo factor.";
+  } catch (e) {
+    error.value =
+      e.response?.data?.message || "No se pudo revocar el dispositivo.";
+  }
+}
+async function revokeAllDevices() {
+  error.value = "";
+  try {
+    await api.delete("/account/two-factor/devices");
+    devices.value = [];
+    message.value = "Se han revocado todos los dispositivos recordados.";
+  } catch (e) {
+    error.value =
+      e.response?.data?.message || "No se pudieron revocar los dispositivos.";
+  }
+}
 onMounted(async () => {
   try {
     await load();
@@ -70,8 +111,8 @@ onMounted(async () => {
       <h2>Verificación en dos pasos</h2>
     </div>
     <p>
-      Añade un código de tu móvil a tu contraseña. Disponible en todos los
-      planes.
+      Elige cómo verificar los accesos nuevos y qué dispositivos de confianza
+      recordar.
     </p>
     <p v-if="error" class="error" role="alert">{{ error }}</p>
     <p v-if="message" class="success" role="status">{{ message }}</p>
@@ -82,6 +123,118 @@ onMounted(async () => {
           status.enabled ? "Activada" : "Todavía no está activada"
         }}</strong>
       </p>
+      <p v-if="!status.enabled">
+        Actívala primero con una aplicación de autenticación. Después podrás
+        elegir correo o ambos métodos, si el envío de email está configurado.
+      </p>
+      <section
+        v-if="status.enabled"
+        class="mfa-methods"
+        aria-labelledby="mfa-method-title"
+      >
+        <h3 id="mfa-method-title">Método para nuevos accesos</h3>
+        <p>
+          En la opción «Ambos» tendrás que confirmar el código de tu
+          autenticador y el que llegue a tu correo.
+        </p>
+        <form @submit.prevent="action('method')">
+          <label
+            >Método de verificación
+            <select v-model="selectedMethod">
+              <option value="authenticator">Aplicación de autenticación</option>
+              <option
+                value="email"
+                :disabled="
+                  !status.email_verified || !status.email_delivery_available
+                "
+              >
+                Código por correo
+              </option>
+              <option
+                value="both"
+                :disabled="
+                  !status.email_verified || !status.email_delivery_available
+                "
+              >
+                Ambos métodos
+              </option>
+            </select>
+          </label>
+          <p v-if="!status.email_verified" class="muted">
+            Confirma {{ status.email_hint }} antes de activar el método por
+            correo.
+          </p>
+          <p v-else-if="!status.email_delivery_available" class="muted">
+            El envío de correo aún no está configurado. Mientras tanto, usa el
+            autenticador.
+          </p>
+          <label
+            >Contraseña actual<input
+              v-model="methodPassword"
+              type="password"
+              autocomplete="current-password"
+              required
+          /></label>
+          <label
+            >Código actual del autenticador o de recuperación<input
+              v-model.trim="methodCode"
+              inputmode="text"
+              autocomplete="one-time-code"
+              maxlength="40"
+              required
+          /></label>
+          <button
+            class="button secondary"
+            :disabled="busy || selectedMethod === status.method"
+          >
+            Guardar método de verificación
+          </button>
+        </form>
+      </section>
+      <section
+        v-if="status.enabled"
+        class="trusted-devices"
+        aria-labelledby="trusted-devices-title"
+      >
+        <h3 id="trusted-devices-title">Dispositivos recordados</h3>
+        <p>
+          Al iniciar sesión puedes recordar un dispositivo durante 90 días.
+          Desde aquí puedes revocarlo cuando quieras.
+        </p>
+        <p v-if="!devices.length" class="muted">
+          No hay dispositivos recordados.
+        </p>
+        <ul v-else>
+          <li v-for="device in devices" :key="device.id">
+            <span
+              ><strong>{{ device.name || "Navegador" }}</strong
+              ><small
+                >Último acceso:
+                {{
+                  device.last_used_at
+                    ? new Date(device.last_used_at).toLocaleString("es-ES")
+                    : "—"
+                }}</small
+              ></span
+            >
+            <button
+              class="button secondary"
+              type="button"
+              @click="revokeDevice(device.id)"
+            >
+              Revocar
+            </button>
+          </li>
+        </ul>
+        <button
+          v-if="devices.length"
+          class="button secondary"
+          type="button"
+          @click="revokeAllDevices"
+        >
+          Revocar todos
+        </button>
+      </section>
       <section v-if="recovery.length" aria-label="Códigos de recuperación">
         <h3>Guarda estos códigos ahora</h3>
         <p>
@@ -183,6 +336,36 @@ form {
 .recovery-codes {
   padding-left: 1.25rem;
   line-height: 1.9;
+  overflow-wrap: anywhere;
+}
+.mfa-methods,
+.trusted-devices {
+  display: grid;
+  gap: 0.8rem;
+  margin-block: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--line, rgba(255, 255, 255, 0.12));
+}
+.trusted-devices ul {
+  display: grid;
+  gap: 0.65rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.trusted-devices li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+.trusted-devices li span {
+  display: grid;
+  min-width: 0;
+  gap: 0.2rem;
+}
+.trusted-devices li strong,
+.trusted-devices li small {
   overflow-wrap: anywhere;
 }
 code {

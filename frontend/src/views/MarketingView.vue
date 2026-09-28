@@ -12,10 +12,12 @@ import {
   FileText,
   FolderLock,
   ReceiptText,
+  Sparkles,
   WalletCards,
 } from "@lucide/vue";
 import api from "../api";
 import BrandLogo from "../components/BrandLogo.vue";
+import LegalLinks from "../components/LegalLinks.vue";
 import { useProduct } from "../stores/product";
 import { guides } from "../content/guides.js";
 
@@ -70,6 +72,7 @@ onMounted(async () => {
       </RouterLink>
       <nav aria-label="Navegación principal">
         <a href="#como-funciona">Cómo funciona</a>
+        <a href="#asistente">Asistente IA</a>
         <a href="#funciones">Funciones</a>
         <a href="#planes">Planes</a>
         <RouterLink to="/guias">Guías</RouterLink>
@@ -87,30 +90,43 @@ onMounted(async () => {
     <section class="hero-section">
       <div class="hero-copy">
         <p class="marketing-eyebrow">
-          <span></span> Beta abierta · Gestión para propietarios
+          <span></span>
+          {{
+            product.features.beta_program ? "Beta gratuita" : "Plan gratuito"
+          }}
+          ·
+          {{
+            product.features.assistant
+              ? "Asistente IA disponible"
+              : "Asistente IA en preparación"
+          }}
         </p>
-        <h1>Gestiona tus alquileres <em>sin complicaciones.</em></h1>
+        <h1>Gestiona tu cartera hoy. <em>Entiéndela mejor con IA.</em></h1>
         <p class="hero-lead">
-          Cobros, gastos, contratos y rentabilidad. Todo lo importante de tu
-          patrimonio, en un único lugar y fácil de entender. Una aplicación de
-          gestión de alquileres para propietarios particulares y pequeños
-          inversores.
+          {{
+            product.features.assistant
+              ? "Organiza inmuebles, cobros y contratos desde un mismo lugar. Pregunta al asistente por la información que hayas registrado y decide si quieres activarlo tras leer su aviso de privacidad."
+              : "Organiza inmuebles, cobros y contratos desde un mismo lugar. Estamos preparando un asistente para consultar los datos que registres en Alquivo."
+          }}
         </p>
         <div class="hero-actions">
           <RouterLink class="button button-large" to="/register">
-            Empieza gratis <ArrowRight :size="18" aria-hidden="true" />
+            {{
+              product.features.beta_program
+                ? "Probar la beta gratis"
+                : "Crear cuenta gratis"
+            }}
+            <ArrowRight :size="18" aria-hidden="true" />
           </RouterLink>
-          <a class="text-action" href="#como-funciona"
-            >Ver cómo funciona <ChevronRight :size="17"
+          <a class="text-action" href="#asistente"
+            >Conocer el asistente <ChevronRight :size="17"
           /></a>
         </div>
-        <div class="hero-reassurance" aria-label="Condiciones de prueba">
+        <div class="hero-reassurance" aria-label="Condiciones de acceso">
           <span
             ><CircleCheck :size="16" />
             {{
-              product.features.beta_program
-                ? "Beta gratuita"
-                : "14 días de prueba"
+              product.features.beta_program ? "Beta gratuita" : "Plan gratuito"
             }}</span
           >
           <span><CircleCheck :size="16" /> Sin tarjeta</span>
@@ -175,6 +191,75 @@ onMounted(async () => {
           </div>
         </div>
         <div class="preview-note">Ejemplo ilustrativo con datos ficticios.</div>
+      </div>
+    </section>
+
+    <section
+      id="asistente"
+      class="ai-preview-section"
+      aria-labelledby="ai-preview-title"
+    >
+      <div class="ai-preview-inner">
+        <div class="ai-preview-copy">
+          <p class="marketing-eyebrow">
+            <Sparkles :size="17" />Alquivo AI ·
+            {{ product.features.assistant ? "Disponible" : "En preparación" }}
+          </p>
+          <h2 id="ai-preview-title">
+            Una pregunta sencilla.<br />Una respuesta con contexto.
+          </h2>
+          <p>
+            {{
+              product.features.assistant
+                ? "Consulta con el asistente la información que tengas registrada: alquileres, cobros, contratos y avisos. Si falta un dato, te lo dirá. Tú decides si lo activas antes de usarlo."
+                : "Estamos preparando un asistente que consultará la información que registres: alquileres, cobros, contratos y avisos. Te avisaremos cuando esté disponible."
+            }}
+          </p>
+          <ul class="ai-preview-points">
+            <li><Check :size="18" />Respuestas basadas en tus registros</li>
+            <li><Check :size="18" />Importes y fechas fáciles de revisar</li>
+            <li><Check :size="18" />Sin inventar información que falta</li>
+          </ul>
+          <RouterLink class="button button-large" to="/register">
+            {{
+              product.features.beta_program
+                ? "Empezar con la beta gratuita"
+                : "Empezar gratis"
+            }}
+            <ArrowRight :size="18" aria-hidden="true" />
+          </RouterLink>
+        </div>
+        <div
+          class="ai-preview-card"
+          aria-label="Ejemplo ilustrativo de una conversación futura con Alquivo AI"
+        >
+          <header class="ai-preview-card-header">
+            <span class="ai-preview-brand"
+              ><Sparkles :size="19" />Alquivo AI</span
+            >
+            <span class="ai-preview-status">Vista previa</span>
+          </header>
+          <p class="ai-preview-caption">
+            Ejemplo ilustrativo · Sin datos reales
+          </p>
+          <div class="ai-question">
+            ¿Qué alquileres y contratos debería revisar?
+          </div>
+          <div class="ai-answer">
+            <strong>Así responderá Alquivo</strong>
+            <p>
+              Consultaré los cobros y las fechas que hayas registrado. Te
+              mostraré los datos y de dónde salen; si falta información, te lo
+              indicaré.
+            </p>
+          </div>
+          <div
+            class="ai-preview-topics"
+            aria-label="Temas de consulta previstos"
+          >
+            <span>Cobros</span><span>Contratos</span><span>Avisos</span>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -296,8 +381,8 @@ onMounted(async () => {
           pagos. No es una prueba de 14 días.
         </p>
         <p v-else>
-          Todos los planes comienzan con 14 días para probar Alquivo completo.
-          Sin tarjeta ni renovación automática.
+          Empieza con el plan gratuito y amplía cuando lo necesites. Sin tarjeta
+          ni pagos automáticos.
         </p>
         <p
           v-if="
@@ -371,8 +456,8 @@ onMounted(async () => {
             No. La Beta es gratuita y no te pediremos datos de pago.
           </p>
           <p v-else>
-            No. Puedes crear tu cuenta, probar todas las funciones durante 14
-            días y decidir después con calma.
+            No. Puedes empezar con el plan gratuito sin tarjeta. Solo pagarás si
+            decides contratar un plan.
           </p>
         </details>
         <details>
@@ -380,7 +465,7 @@ onMounted(async () => {
             {{
               product.features.beta_program
                 ? "¿Qué pasará al terminar la beta?"
-                : "¿Qué pasa cuando termina la prueba?"
+                : "¿Puedo seguir en el plan gratuito?"
             }}<ChevronRight :size="19" />
           </summary>
           <p v-if="product.features.beta_program">
@@ -390,9 +475,23 @@ onMounted(async () => {
             datos antes del cambio.
           </p>
           <p v-else>
-            Tu cartera pasa al plan gratuito. Puedes seguir gestionando un
-            inmueble y consultar y exportar los demás. No se realiza ningún
-            cobro automático.
+            Sí. Puedes gestionar un inmueble con el plan gratuito y decidir
+            cuándo quieres ampliar. No se realiza ningún cobro automático.
+          </p>
+        </details>
+        <details>
+          <summary>
+            ¿Ya puedo usar el asistente de IA?<ChevronRight :size="19" />
+          </summary>
+          <p v-if="product.features.assistant">
+            Sí. Si tu plan incluye consultas, puedes activar el asistente tras
+            revisar el aviso de privacidad. Responde usando los datos que hayas
+            registrado.
+          </p>
+          <p v-else>
+            Aún estamos revisando sus respuestas. Te avisaremos cuando esté
+            disponible; ya puedes organizar tus inmuebles, alquileres y
+            finanzas.
           </p>
         </details>
         <details>
@@ -478,11 +577,10 @@ onMounted(async () => {
       <BrandLogo compact />
       <p>Gestiona tus alquileres sin complicaciones.</p>
       <div>
-        <RouterLink to="/terms">Condiciones</RouterLink
-        ><RouterLink to="/privacy">Privacidad</RouterLink
-        ><RouterLink to="/guias">Guías para propietarios</RouterLink
+        <RouterLink to="/guias">Guías para propietarios</RouterLink
         ><RouterLink to="/login">Entrar</RouterLink>
       </div>
+      <LegalLinks />
     </footer>
   </main>
 </template>

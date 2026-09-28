@@ -101,9 +101,9 @@ onMounted(async () => {
           pagos y sin caducidad a los 14 días.
         </p>
         <p v-else>
-          Prueba todas las funciones del Plan Fundador durante 14 días. Después
-          puedes continuar gratis. Los precios de los planes están disponibles
-          para que conozcas las opciones de Alquivo.
+          Empieza con el plan gratuito y amplía tu espacio cuando lo necesites.
+          Los precios están disponibles para que conozcas las opciones de
+          Alquivo.
         </p>
       </div>
     </header>
@@ -241,6 +241,13 @@ onMounted(async () => {
           <p v-else-if="code === 'beta'" class="success" role="status">
             Tu plan está activo · No tienes que contratar nada
           </p>
+          <p
+            v-else-if="code === data.current.code"
+            class="success"
+            role="status"
+          >
+            Tu plan está activo
+          </p>
           <button
             v-else-if="
               data.current.can_manage_billing && !plan.checkout_available
@@ -277,7 +284,7 @@ onMounted(async () => {
         los excedentes se conservan en modo consulta.
       </p>
       <p v-else class="plans-note">
-        Si finaliza la prueba o vuelves al plan gratuito, podrás seguir
+        Si termina una prueba anterior o vuelves al plan gratuito, podrás seguir
         gestionando el primer inmueble que añadiste. Los demás seguirán
         disponibles para consulta y exportación; sus nuevos cargos y movimientos
         recurrentes quedarán en pausa.

@@ -122,7 +122,7 @@ class LocalAdminTest extends TestCase
     {
         Notification::fake();
         $this->postJson('/api/v1/auth/register', ['name' => 'Test', 'email' => 'new@example.test',
-            'password' => 'password123', 'password_confirmation' => 'password123', 'terms_accepted' => true,
+            'password' => 'password123', 'password_confirmation' => 'password123', 'terms_accepted' => true, 'terms_version' => config('legal.terms_version'),
             'role' => 'admin', 'local_admin' => true])->assertCreated()->assertJsonPath('user.local_admin', false);
         $user = User::where('email', 'new@example.test')->firstOrFail();
         $this->assertSame('user', $user->role);

@@ -34,10 +34,11 @@ export function useSupportChat(props, emit) {
     notice = ref(""),
     connected = ref(false);
   const canManage = ref(false),
+    mailNotificationsAvailable = ref(null),
     hasOlder = ref(false),
     page = ref(1),
     lastPage = ref(1),
-    filter = ref("");
+    filter = ref("open");
   const transcript = ref(null),
     composer = ref(null);
   const newId = ref(crypto.randomUUID());
@@ -79,7 +80,7 @@ export function useSupportChat(props, emit) {
     if (exception.response?.status === 419)
       return "Tu sesión ha caducado. Recarga la página. Conserva el texto antes de hacerlo.";
     if (exception.response?.status === 404)
-      return "La conversación ya no está disponible. Si escribías como visitante, puede haber caducado la sesión de este navegador.";
+      return "El ticket ya no está disponible. Si escribías como visitante, puede haber caducado la sesión de este navegador.";
     if (exception.response?.status === 403 && team.value)
       return "Esta bandeja requiere una cuenta autorizada, correo verificado y doble factor activado.";
     const validation = Object.values(
@@ -125,6 +126,8 @@ export function useSupportChat(props, emit) {
     conversations.value = data.conversations;
     lastPage.value = data.last_page;
     canManage.value = data.can_manage;
+    if (team.value)
+      mailNotificationsAvailable.value = data.email_notifications_available;
     connected.value = true;
   }
   async function loadMessages({ initial = false, older = false } = {}) {
@@ -285,7 +288,9 @@ export function useSupportChat(props, emit) {
       }
       drafts[data.id] = blankDraft();
       selected.value = data;
-      notice.value = "Mensaje guardado en la conversación.";
+      notice.value = team.value
+        ? "Respuesta guardada en el ticket."
+        : "Mensaje guardado en el ticket. Te responderemos aquí.";
       // The send has succeeded. A refresh failure must not suggest resending it.
       try {
         await loadMessages();
@@ -378,6 +383,8 @@ export function useSupportChat(props, emit) {
       conversations.value = [];
       messages.value = [];
       canManage.value = false;
+      mailNotificationsAvailable.value = null;
+      filter.value = "open";
       for (const key of Object.keys(drafts)) delete drafts[key];
       drafts.new = blankDraft();
       form.name = session.user?.name || "";
@@ -416,6 +423,7 @@ export function useSupportChat(props, emit) {
     notice,
     connected,
     canManage,
+    mailNotificationsAvailable,
     hasOlder,
     page,
     lastPage,

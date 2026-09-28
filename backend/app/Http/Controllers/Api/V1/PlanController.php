@@ -35,7 +35,7 @@ class PlanController extends Controller
                 'billing_status' => $beta ? null : $subscription?->stripe_status,
                 'ends_at' => $beta ? null : $subscription?->ends_at?->toIso8601String(),
             ],
-            'plans' => collect($this->plans->visibleCatalog($request->user()))->filter(fn (array $plan) => $request->user()->local_admin || $beta || $plan['commercial'])->map(fn (array $plan) => [
+            'plans' => collect($this->plans->visibleCatalog($request->user()))->map(fn (array $plan) => [
                 ...collect($plan)->except('prices')->all(),
                 'checkout_available' => $features->billing() && is_string($plan['prices']['monthly'] ?? null)
                     && str_starts_with($plan['prices']['monthly'], 'price_') && filled(config('cashier.secret')) && ! $blocked,

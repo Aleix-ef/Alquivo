@@ -50,15 +50,22 @@ class SecurityRegressionTest extends TestCase
         User::factory()->create(['email' => 'used@example.com']);
         $this->putJson('/api/v1/account', [...$data, 'email' => 'USED@example.com', 'current_password' => 'oldpass123'])->assertUnprocessable()->assertJsonValidationErrors('email');
         $this->putJson('/api/v1/account', [...$data, 'current_password' => 'oldpass123'])->assertOk()->assertJsonPath('user.email_verified_at', null);
-        $this->getJson('/api/v1/properties')->assertForbidden();
+        $this->getJson('/api/v1/properties')->assertOk();
     }
 
-    public function test_unverified_account_cannot_access_data_or_billing_but_can_verify_and_delete(): void
+    public function test_unverified_owner_can_use_own_portfolio_but_not_support_team_or_billing(): void
     {
         Notification::fake();
-        [$user] = $this->owner(false);
-        $this->actingAs($user)->getJson('/api/v1/properties')->assertForbidden();
-        $this->getJson('/api/v1/assistant/conversations')->assertForbidden();
+        [$user, $portfolio] = $this->owner(false);
+        $own = $portfolio->properties()->create(['name' => 'Mío', 'type' => 'housing', 'address_line' => 'Calle Propia']);
+        [, $otherPortfolio] = $this->owner();
+        $foreign = $otherPortfolio->properties()->create(['name' => 'Ajeno', 'type' => 'housing', 'address_line' => 'Calle Ajena']);
+        $this->actingAs($user)->getJson('/api/v1/dashboard')->assertOk()->assertJsonPath('properties.0.id', $own->id);
+        $this->getJson('/api/v1/properties')->assertOk()->assertJsonPath('data.0.id', $own->id);
+        $this->getJson('/api/v1/properties/'.$foreign->id)->assertNotFound();
+        $this->getJson('/api/v1/documents')->assertOk();
+        $this->getJson('/api/v1/assistant/conversations')->assertOk();
+        $this->getJson('/api/v1/support/team/conversations')->assertForbidden();
         $this->postJson('/api/v1/billing/checkout', [])->assertForbidden();
         $this->getJson('/api/v1/auth/me')->assertOk();
         $this->postJson('/api/v1/auth/email/resend')->assertOk();
@@ -114,7 +121,7 @@ class SecurityRegressionTest extends TestCase
     {
         [$user, $portfolio] = $this->owner();
         $user->forceFill(['assistant_enabled_at' => now(), 'assistant_notice_version' => config('assistant.notice_version')])->save();
-        config(['services.openai.key' => 'test-key', 'assistant.limits.founder' => 1]);
+        config(['services.openai.key' => 'test-key', 'assistant.limits.founder' => 1, 'ai.fallback_profile' => null]);
         Http::fake(['*' => Http::response(['error' => ['message' => 'secret-provider-internals']], 500)]);
         $this->actingAs($user);
         $id = $this->postJson('/api/v1/assistant/conversations')->json('id');

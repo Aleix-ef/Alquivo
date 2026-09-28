@@ -1,24 +1,26 @@
 <?php
 
-// Prices: standard processing, USD, verified 2026-09-20 against OpenAI's pricing.
+// Prices: standard processing, USD, verified 2026-09-25 against OpenAI's pricing.
 // Integer nano-USD per token avoids floating point accumulation. Version prices before changing them.
 return [
     'provider' => 'openai',
-    'pricing_version' => 'openai-standard-2026-09-20',
+    'pricing_version' => 'openai-standard-2026-09-25',
     'routing_version' => 'alquivo-v1',
     'routing' => [
-        'chat' => env('AI_CHAT_PROFILE', 'legacy'),
+        'chat' => env('AI_CHAT_PROFILE', 'fast'),
         'legacy' => null, // Transitional: honors assistant.model, including existing deployments.
-        'fast' => 'gpt-5.6-luna',
+        'fast' => 'gpt-6-luna',
         'document' => 'gpt-5.6-terra',
         'analysis' => 'gpt-5.6-terra',
-        'complex' => 'gpt-5.6-sol',
+        'complex' => 'gpt-6-sol',
         'exceptional' => 'gpt-6-astra',
     ],
     'exceptional_enabled' => false,
-    // Opt in only after running the same evaluations. No automatic expensive escalation.
-    'fallback_profile' => env('AI_FALLBACK_PROFILE'),
+    // One technical retry only; this is not semantic complexity routing. GPT-6 Astra remains opt-in.
+    'fallback_profile' => env('AI_FALLBACK_PROFILE', 'complex'),
     'models' => [
+        'gpt-6-luna' => ['input' => 100, 'cached_input' => 10, 'cache_write' => 125, 'output' => 500],
+        'gpt-6-sol' => ['input' => 2000, 'cached_input' => 200, 'cache_write' => 2500, 'output' => 10000],
         'gpt-5.4-mini' => ['input' => 750, 'cached_input' => 75, 'cache_write' => 938, 'output' => 4500],
         'gpt-5.6-luna' => ['input' => 200, 'cached_input' => 20, 'cache_write' => 250, 'output' => 1200],
         'gpt-5.6-terra' => ['input' => 2000, 'cached_input' => 200, 'cache_write' => 2500, 'output' => 12000],

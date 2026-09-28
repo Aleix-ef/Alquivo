@@ -5,8 +5,6 @@ import HelpGuides from "../components/HelpGuides.vue";
 import SupportChat from "../components/SupportChat.vue";
 import ConfirmDialog from "../components/ConfirmDialog.vue";
 import { useConfirmDialog } from "../composables/useConfirmDialog";
-import { useSession } from "../session";
-const session = useSession();
 const confirmation = useConfirmDialog();
 const privacyBusy = ref(false),
   privacyNotice = ref("");
@@ -46,7 +44,7 @@ async function clearAssistant() {
     </header>
     <div class="support-layout">
       <section class="panel support-compose">
-        <h2>Escríbenos sin salir de Alquivo</h2>
+        <h2>Abre un ticket sin salir de Alquivo</h2>
         <p>
           Si tienes un problema con tu cuenta, tu acceso o algo no funciona,
           cuéntanos qué estabas haciendo y qué mensaje aparece. También puedes
@@ -56,7 +54,7 @@ async function clearAssistant() {
       </section>
       <HelpGuides />
     </div>
-    <section v-if="session.user?.email_verified_at" class="panel">
+    <section class="panel">
       <h2>Privacidad del asistente</h2>
       <p>
         Si has utilizado el asistente en versiones anteriores, puedes eliminar

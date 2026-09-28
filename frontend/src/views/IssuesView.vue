@@ -115,8 +115,12 @@ async function save() {
   try {
     if (editing.value) await api.put(`/issues/${editing.value.id}`, payload);
     else await api.post("/issues", payload);
-    router.replace("/issues");
-    await load();
+    if (route.query.from === "property" && route.query.property) {
+      await router.replace(`/properties/${route.query.property}?tab=incidencias`);
+    } else {
+      await router.replace("/issues");
+      await load();
+    }
   } catch (e) {
     error.value =
       e.response?.data?.message || "No se pudo guardar la incidencia.";
@@ -200,7 +204,7 @@ onMounted(load);
       <button class="button primary" @click="openNew">Crear incidencia</button>
     </section>
 
-    <div v-if="show" class="drawer-bg" @click.self="router.replace('/issues')">
+    <div v-if="show" class="drawer-bg" @click.self="router.replace(route.query.from === 'property' && route.query.property ? `/properties/${route.query.property}?tab=incidencias` : '/issues')">
       <form class="drawer" @submit.prevent="save">
         <p class="eyebrow">
           {{ editing ? "Seguimiento" : "Nueva incidencia" }}

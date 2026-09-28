@@ -1,10 +1,11 @@
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, watch } from "vue";
 import { KeyRound, Plus } from "@lucide/vue";
 import { useRoute, useRouter } from "vue-router";
 import api from "../api";
 import { fetchAllPages } from "../pagination";
 import ConfirmDialog from "../components/ConfirmDialog.vue";
+import TenantSelector from "../components/TenantSelector.vue";
 import { useConfirmDialog } from "../composables/useConfirmDialog";
 const route = useRoute(),
   router = useRouter(),
@@ -19,9 +20,6 @@ const route = useRoute(),
 const confirmation = useConfirmDialog();
 const form = ref({
   property_id: route.query.property || "",
-  contact_id: "",
-  tenant_name: "",
-  tenant_email: "",
   start_date: new Date().toISOString().slice(0, 10),
   end_date: "",
   monthly_rent: "",
@@ -29,6 +27,10 @@ const form = ref({
   payment_day: 1,
   status: "active",
 });
+const selectedContactIds = ref([]);
+const newContacts = ref([]);
+const closeNew = () => router.replace(route.query.from === "property" && route.query.property ? `/properties/${route.query.property}?tab=alquiler` : "/leases");
+watch(() => route.query.property, (id) => { if (id) form.value.property_id = id; });
 const money = (v) =>
   new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(
     v || 0,
@@ -45,6 +47,9 @@ async function load() {
     leases.value = l;
     properties.value = p;
     contacts.value = c;
+    if (show.value && !c.length && !selectedContactIds.value.length && !newContacts.value.length) {
+      newContacts.value = [{ name: "", email: "", phone: "" }];
+    }
   } catch {
     loadError.value = "No hemos podido cargar los alquileres.";
   } finally {
@@ -55,21 +60,18 @@ async function save() {
   saving.value = true;
   error.value = "";
   try {
-    let contactId = form.value.contact_id
-      ? Number(form.value.contact_id)
-      : null;
-    if (!contactId) {
-      contactId = (
-        await api.post("/contacts", {
-          kind: "person",
-          name: form.value.tenant_name,
-          email: form.value.tenant_email || null,
-        })
-      ).data.id;
+    if (!selectedContactIds.value.length && !newContacts.value.length) {
+      error.value = "Añade al menos un inquilino.";
+      return;
     }
-    await api.post("/leases", {
+    const { data } = await api.post("/leases", {
       property_id: Number(form.value.property_id),
-      contact_ids: [contactId],
+      contact_ids: selectedContactIds.value,
+      new_contacts: newContacts.value.map((contact) => ({
+        name: contact.name.trim(),
+        email: contact.email.trim() || null,
+        phone: contact.phone.trim() || null,
+      })),
       status: "active",
       start_date: form.value.start_date,
       end_date: form.value.end_date || null,
@@ -77,8 +79,11 @@ async function save() {
       deposit_amount: Number(form.value.deposit_amount || 0),
       payment_day: Number(form.value.payment_day),
     });
-    router.replace("/leases");
-    await load();
+    if (route.query.from === "property" && route.query.property) {
+      await router.replace(`/properties/${route.query.property}?tab=alquiler`);
+    } else {
+      await router.replace(`/leases/${data.id}`);
+    }
   } catch (e) {
     error.value = e.response?.data?.message || "No se pudo crear el alquiler.";
   } finally {
@@ -107,7 +112,7 @@ onMounted(load);
 </script>
 <template>
   <main class="page">
-    <header class="heading">
+    <header class="heading" data-tour="leases">
       <div>
         <p class="eyebrow">Alquileres</p>
         <h1>Arrendamientos</h1>
@@ -161,7 +166,7 @@ onMounted(load);
         >Primero añade una propiedad</RouterLink
       >
     </section>
-    <div v-if="show" class="drawer-bg" @click.self="router.replace('/leases')">
+    <div v-if="show" class="drawer-bg" @click.self="closeNew">
       <form class="drawer" @submit.prevent="save">
         <header>
           <div>
@@ -178,25 +183,11 @@ onMounted(load);
             </option>
           </select></label
         >
-        <h3>Inquilino</h3>
-        <label
-          >Contacto existente<select v-model="form.contact_id">
-            <option value="">Crear una persona nueva</option>
-            <option
-              v-for="contact in contacts"
-              :key="contact.id"
-              :value="contact.id"
-            >
-              {{ contact.name }}{{ contact.email ? ` · ${contact.email}` : "" }}
-            </option>
-          </select></label
-        >
-        <template v-if="!form.contact_id">
-          <label>Nombre<input v-model="form.tenant_name" required /></label
-          ><label
-            >Email<input v-model="form.tenant_email" type="email"
-          /></label>
-        </template>
+        <TenantSelector
+          :contacts="contacts"
+          v-model:selected-ids="selectedContactIds"
+          v-model:new-contacts="newContacts"
+        />
         <h3>Condiciones</h3>
         <label
           >Inicio<input v-model="form.start_date" type="date" required /></label

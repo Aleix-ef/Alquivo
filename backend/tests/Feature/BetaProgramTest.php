@@ -73,10 +73,14 @@ class BetaProgramTest extends TestCase
         $this->getJson('/api/v1/account/usage')->assertJsonPath('code', 'beta')->assertJsonPath('properties.limit', 10)->assertJsonPath('storage.limit', 1073741824);
         $this->assertSame('founder', $portfolio->fresh()->plan); // No destructive rewrite of paid history.
         Notification::fake();
-        $this->postJson('/api/v1/auth/register', ['name' => 'Nuevo', 'email' => 'new@beta.test', 'password' => 'secret1234', 'password_confirmation' => 'secret1234', 'terms_accepted' => true])->assertCreated();
-        $new = User::where('email', 'new@beta.test')->firstOrFail()->portfolio();
+        $this->postJson('/api/v1/auth/register', ['name' => 'Nuevo', 'email' => 'new@beta.test', 'password' => 'secret1234', 'password_confirmation' => 'secret1234', 'terms_accepted' => true, 'terms_version' => config('legal.terms_version')])->assertCreated();
+        $newUser = User::where('email', 'new@beta.test')->firstOrFail();
+        $new = $newUser->portfolio();
+        $this->assertNull($newUser->email_verified_at);
         $this->assertNull($new->trial_ends_at);
         $this->assertSame('beta', app(PlanService::class)->effectiveCode($new));
+        $this->postJson('/api/v1/properties', ['name' => 'Primer piso', 'type' => 'housing', 'address_line' => 'Calle Beta'])->assertCreated();
+        $this->actingAs($newUser)->getJson('/api/v1/account/usage')->assertJsonPath('code', 'beta');
     }
 
     public function test_tenth_property_is_allowed_eleventh_denied_and_excess_data_preserved(): void

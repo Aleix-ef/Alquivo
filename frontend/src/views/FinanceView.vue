@@ -19,13 +19,13 @@ const route = useRoute(),
   error = ref(""),
   show = computed(() => route.query.new === "1"),
   form = ref({
-    direction: "expense",
+    direction: route.query.direction === "income" ? "income" : "expense",
     category: "maintenance",
     description: "",
     amount: "",
     transaction_date: new Date().toISOString().slice(0, 10),
     status: "paid",
-    property_id: "",
+    property_id: route.query.property || "",
     recurring: false,
     frequency: "monthly",
   });
@@ -86,6 +86,13 @@ async function load() {
     leases.value = l;
     properties.value = p;
     recurringRules.value = r;
+    if (route.query.charge) {
+      const charge = l.flatMap((lease) => lease.charges || []).find((item) => String(item.id) === String(route.query.charge));
+      if (charge && !["paid", "cancelled"].includes(charge.status)) openPayment(charge);
+      const query = { ...route.query };
+      delete query.charge;
+      router.replace({ query });
+    }
   } catch {
     if (generation !== loadGeneration) return;
     loadError.value = "No hemos podido cargar tus movimientos.";
@@ -119,13 +126,24 @@ async function save() {
         status: form.value.status,
       });
     }
-    router.replace("/finance");
-    await load();
+    if (route.query.from === "property" && route.query.property) {
+      await router.replace(`/properties/${route.query.property}?tab=dinero`);
+    } else {
+      await router.replace("/finance");
+      await load();
+    }
   } catch (e) {
     error.value =
       e.response?.data?.message || "No se pudo guardar el movimiento.";
   } finally {
     saving.value = false;
+  }
+}
+function closePayment() {
+  if (saving.value) return;
+  paymentTarget.value = null;
+  if (route.query.from === "property" && route.query.property) {
+    router.replace(`/properties/${route.query.property}?tab=dinero`);
   }
 }
 function openPayment(charge) {
@@ -180,7 +198,11 @@ async function savePayment() {
       );
     }
     paymentTarget.value = null;
-    await load();
+    if (route.query.from === "property" && route.query.property) {
+      await router.replace(`/properties/${route.query.property}?tab=dinero`);
+    } else {
+      await load();
+    }
   } catch (exception) {
     actionError.value =
       exception.response?.data?.message || "No se pudo guardar el cobro.";
@@ -298,7 +320,7 @@ onBeforeUnmount(() => {
 </script>
 <template>
   <main class="page">
-    <header class="heading">
+    <header class="heading" data-tour="finance">
       <div>
         <p class="eyebrow">Finanzas</p>
         <h1>Tu dinero, sin ruido</h1>
@@ -475,7 +497,7 @@ onBeforeUnmount(() => {
       </div>
       <div v-else class="empty"><p>Aún no hay movimientos.</p></div>
     </section>
-    <div v-if="show" class="drawer-bg" @click.self="router.replace('/finance')">
+    <div v-if="show" class="drawer-bg" @click.self="router.replace(route.query.from === 'property' && route.query.property ? `/properties/${route.query.property}?tab=dinero` : '/finance')">
       <form class="drawer" @submit.prevent="save">
         <header>
           <div>
@@ -536,7 +558,7 @@ onBeforeUnmount(() => {
     <div
       v-if="paymentTarget"
       class="drawer-bg"
-      @click.self="!saving && (paymentTarget = null)"
+      @click.self="closePayment"
     >
       <form class="drawer" @submit.prevent="savePayment">
         <p class="eyebrow">Alquiler</p>
@@ -579,7 +601,7 @@ onBeforeUnmount(() => {
             class="button secondary"
             type="button"
             :disabled="saving"
-            @click="paymentTarget = null"
+            @click="closePayment"
           >
             Cancelar
           </button>

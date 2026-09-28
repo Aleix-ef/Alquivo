@@ -27,7 +27,6 @@ final class AiCapabilities
 
         return config('ai.actions.enabled') && config('assistant.enabled')
             && ($user->local_admin || config('beta.assistant_validated'))
-            && $user->hasVerifiedEmail()
             && $user->assistant_enabled_at !== null
             && $user->assistant_notice_version === config('assistant.notice_version')
             && $portfolio->members()->whereKey($user->id)->wherePivot('role', 'owner')->exists()

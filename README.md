@@ -1,6 +1,20 @@
 # Alquivo
 
+
+## Estado de IA para beta (25 de septiembre de 2026)
+
+El asistente conversacional se ha habilitado **solo en el entorno local** para que el propietario lo pruebe antes de publicar. GPT-6 Luna es el modelo normal; GPT-6 Sol solo se usa como respaldo técnico si una petición falla o la respuesta no tiene el formato esperado. Astra sigue apagado. La IA tiene ahora protagonismo en el dashboard y en la navegación.
+
+Cada usuario conserva activación voluntaria con aviso previo; no se envía nada hasta aceptar y escribir al asistente. La plantilla y producción continúan apagadas por defecto. No se ha hecho una consulta real a OpenAI ni una evaluación de calidad; Document AI sigue simulada. Por tanto, esta activación **no es autorización para publicar**. Revisar pruebas, costes y requisitos legales en [progreso de implementación IA](docs/ai-implementation-progress.md).
 Producto SaaS Alquivo. Este directorio es independiente del proyecto académico anterior.
+
+## Textos legales de la beta — 24 de septiembre de 2026
+
+Disponibles en `/legal`, `/terms`, `/privacy`, `/cookies` y `/data-processing`, con enlaces desde landing, registro, guías e interior, índice y opción de imprimir/guardar PDF. El registro exige aceptar la versión que muestra el frontend; el servidor rechaza versiones antiguas y registra la fecha y versión aceptadas sin alterar aceptaciones anteriores.
+
+**Estado: borrador implementado, pendiente de datos y revisión final antes de publicar.** Faltan identidad/NIF/domicilio del titular, entidades y ubicaciones de los proveedores, garantías de transferencias y plazos reales de copias/buzón/logs. Se centralizan en `frontend/src/content/legalOperator.js`; no introducir secretos. No se ha contratado ningún proveedor ni inventado sus datos.
+
+Las condiciones propuestas comprometen un aviso de 30 días antes del fin de la beta o una reducción sustancial, sin conversión automática a pago, y 15 días para cambios de subencargados. Requieren cumplir el procedimiento operativo documentado. Guía de publicación, obligaciones y fuentes: [textos legales de la beta](docs/legal-beta.md).
 
 ## Demo administradora local — 17 de septiembre de 2026
 
@@ -8,17 +22,19 @@ Por petición del propietario, `demo@alquivo.test` dispone de un rol explícito 
 
 El permiso no funciona en producción/staging ni añade a la demo al equipo permanente de soporte. La beta pública y las demás cuentas no cambian. Comando de activación: `docker compose exec backend php artisan demo:admin`; añadir `--revoke` para retirarlo. Ver [administración local](docs/local-admin.md). Verificación: 182 pruebas de backend y 970 aserciones, pruebas de frontend y compilación correctas.
 
-## Chat de soporte humano — 17 de septiembre de 2026
+## Tickets de soporte humano
 
-Las consultas nuevas se guardan como conversaciones: el usuario escribe y recibe la respuesta del equipo en el mismo chat. Disponible en Ayuda y soporte y en el botón público, con historial, adjuntos privados, mensajes sin leer, cierre/reapertura y actualización cada 15 segundos mientras esté abierto. No depende del correo para guardar mensajes y no afirma atención inmediata. No hay todavía avisos push/email de nuevas respuestas.
+Cada consulta abre un ticket con asunto e historial de mensajes. El usuario puede tener varios abiertos, adjuntar archivos, consultar respuestas, marcarlo resuelto y reabrirlo. Disponible en Ayuda y soporte y en el botón público; la bandeja se actualiza cada 15 segundos mientras está abierta. Los tickets se guardan aunque el correo no esté configurado.
+
+Cada ticket nuevo y cada respuesta posterior del cliente generan un aviso a `soporte@alquivo.com` cuando hay un proveedor de correo real y un worker activo. El aviso incluye solo una referencia y un enlace a la bandeja; los mensajes y adjuntos permanecen dentro de la app. Con `MAIL_MAILER=log` no se genera correo y la bandeja del equipo muestra esa limitación. Aún no se envían avisos por correo a los clientes cuando responde el equipo.
 
 El equipo responde desde `/support/inbox`, con autorización explícita, correo verificado y doble factor. La cuenta elegida es **soporte@alquivo.com**, pero no existía al comprobarla: debe registrarse, verificarse y activar MFA antes de concederle acceso mediante `support:agent`. La demo puede revisar la bandeja únicamente con el rol local descrito arriba; no se han creado credenciales ni permisos permanentes de soporte para ella. Los visitantes conservan acceso solo mientras siga activa su sesión del navegador; su correo declarado no es prueba de identidad.
 
-La IA de soporte queda **pendiente y sin implementar**. Funcionamiento, activación, límites, privacidad, borrado y operación en [soporte por chat](docs/support-chat.md).
+La IA de soporte queda **pendiente y sin implementar**. Funcionamiento, activación, límites, privacidad, borrado y operación en [tickets de soporte](docs/support-chat.md).
 
 ## SEO y descubrimiento en IA — 17 de septiembre de 2026
 
-La portada y las nuevas guías públicas ya se generan como HTML legible sin JavaScript, manteniendo Vue y la API privada. Se añaden metadatos por página, canonical, datos estructurados, sitemap, robots, respuestas 404 reales, enlaces internos y compresión. Las cuentas, datos privados y pantallas de acceso no se indexan; no se ha relajado la CSP ni activado la IA del producto.
+La portada y las nuevas guías públicas ya se generan como HTML legible sin JavaScript, manteniendo Vue y la API privada. Se añaden metadatos por página, canonical, datos estructurados, sitemap, robots, respuestas 404 reales, enlaces internos y compresión. Las cuentas, datos privados y pantallas de acceso no se indexan; no se ha relajado la CSP y el asistente solo está activado en el entorno local de pruebas.
 
 **La indexación está desactivada en local y por defecto.** Para el lanzamiento hay que configurar el dominio HTTPS definitivo en `VITE_PUBLIC_SITE_URL`, activar `VITE_SEO_INDEXABLE=true` y reconstruir web; después verificar el dominio y enviar el sitemap a Google/Bing. No se ha publicado ni enviado ninguna URL. Manual de activación, pruebas, contenido y estrategia: [SEO y descubrimiento](docs/seo-and-discovery.md).
 
@@ -28,17 +44,19 @@ Verificación: 150 pruebas de backend / 764 aserciones, 20 pruebas de frontend y
 
 `BETA_PROGRAM_ENABLED=true` hace que **Beta gratuita sea el único plan visible y accesible** en landing, Planes y API. Incluye 10 inmuebles, 1 GB de documentos/fotos, gestión de inquilinos, contratos, cobros, gastos, incidencias, calendario, informes, exportación, soporte y doble factor. Es gratuito durante toda la beta: **no caduca a los 14 días**. Se aplica a cuentas nuevas y existentes sin modificar su historial de facturación ni borrar datos. Si una cuenta ya supera los límites, los inmuebles excedentes permanecen en consulta; superar el almacenamiento impide nuevas subidas, no descargas.
 
-La cuota preparada de IA es de **hasta 20 consultas mensuales**, con límites adicionales de 200.000 tokens de entrada y 20.000 de salida. No se aumenta a 50 por una prueba antigua. El asistente sigue sujeto a `ASSISTANT_VALIDATED`, `ASSISTANT_ENABLED`, proveedor configurado y consentimiento del usuario; no se ha reactivado ni se anuncia cuando está apagado. Fiscalidad también conserva su control de validación: tener el permiso en Beta no activa un módulo todavía pendiente de revisión.
+La beta dispone de **hasta 20 consultas mensuales**, con límites adicionales de 200.000 tokens de entrada y 20.000 de salida. El entorno local ya activa el asistente para las pruebas autorizadas; la plantilla permanece apagada por defecto y cada persona debe aceptar el aviso antes de enviar una consulta al proveedor. Fiscalidad conserva su control de validación y sigue pendiente de revisión.
 
 Gratuito y Fundador siguen implementados, pero no aparecen en los catálogos ni pueden contratarse, ni siquiera activando `BILLING_ENABLED` mientras dure la Beta. Se bloquean Checkout y portal tanto por HTTP como dentro del servicio. No hay una ruta pública para activar planes. Los campos históricos de facturación de la cartera ya no se serializan en el perfil: la fuente de límites es `/plans` o `/account/usage`.
 
 **Cierre futuro, manual:** avisar con antelación, preparar la oferta de agradecimiento del Plan Fundador y permitir exportar antes de cambiar condiciones. Solo después cambiar `BETA_PROGRAM_ENABLED=false` y desplegar; `BILLING_ENABLED` debe seguir en `false` hasta validar la comercialización. Las cuentas creadas en Beta tienen Gratuito como base y no se convierten automáticamente en clientes de pago. Revisar por separado las cuentas antiguas que ya tenían una suscripción en Stripe. No se ha implementado ni enviado todavía la campaña de agradecimiento.
 
+**Alta y correo:** las cuentas nuevas pueden usar toda su cartera y las funciones de su plan aunque el correo no esté confirmado. Durante la beta se aplica Beta gratuita; al cerrarla, una cuenta nueva sin pago empieza en Gratuito, sin prueba premium automática. La confirmación se recomienda con un aviso descartable y puede solicitarse de nuevo desde Configuración. Sigue siendo obligatoria para recibir códigos de doble factor por correo y para trabajar en la bandeja interna de soporte, que además requiere doble factor y autorización explícita.
+
 Esta sección sustituye las referencias históricas a cuotas visibles y pruebas de 14 días de los apartados siguientes.
 
 ## Beta de validación sin cobros — 15 de septiembre de 2026
 
-**Contratación desactivada por defecto** (`BILLING_ENABLED=false`). Las cuotas siguen visibles, pero ni la interfaz ni la API permiten abrir Checkout o el portal de Stripe. La prueba sigue durando 14 días y después se aplica Gratuito. No se cancelan automáticamente suscripciones o enlaces externos anteriores: revisar Stripe antes de abrir la beta. Las referencias a contratación más abajo describen el funcionamiento preparado para cuando se reactive, no el estado actual.
+**Contratación desactivada por defecto** (`BILLING_ENABLED=false`). Las cuotas siguen visibles, pero ni la interfaz ni la API permiten abrir Checkout o el portal de Stripe. Las altas nuevas quedan en Beta mientras esté activa y después comenzarán en Gratuito; las pruebas antiguas conservan su fecha de fin. No se cancelan automáticamente suscripciones o enlaces externos anteriores: revisar Stripe antes de abrir la beta. Las referencias a contratación más abajo describen el funcionamiento preparado para cuando se reactive, no el estado actual.
 
 Se han incorporado cifrado autenticado de documentos/fotos con una clave independiente, doble factor opcional en Configuración para todos los planes, códigos de recuperación de un solo uso, copias locales cifradas con Restic y un ensayo de restauración aislado. La configuración de producción incluye PostgreSQL privado, proxy HTTPS, worker, scheduler y antivirus; todavía no se ha desplegado contra un dominio real.
 
@@ -63,7 +81,7 @@ Conserva las claves en un gestor de contraseñas externo al equipo. La copia en 
 La beta tendrá **registro abierto**, aunque los primeros usuarios lleguen por invitación personal. No hay listas de correos autorizados ni códigos de acceso. Contacto configurado: **soporte@alquivo.com** (`SUPPORT_EMAIL`). Configurarlo no crea el buzón ni demuestra que reciba correo: hay que verificar su entrega antes de publicar.
 
 - **Acceso:** los correos de recuperación llevan a `/reset-password`. Los de verificación pasan por `/verify-email`, conservan la firma de Laravel y permiten iniciar sesión antes de confirmar; no dependen de que el lector de correo envíe un `Referer` de la app. Se comprueban enlaces caducados, manipulados y de otra cuenta.
-- **Funciones pendientes de validar:** Fiscalidad queda oculta y su API deshabilitada con `FISCALITY_ENABLED=false`. El asistente queda oculto y no admite nuevas consultas con `ASSISTANT_VALIDATED=false`. No se borran sus datos ni su implementación. Desaparecen también sus promesas en los planes, la landing y las guías. Las guías normales siguen en Ayuda y soporte; allí se puede eliminar el historial antiguo de IA aunque esté desactivada.
+- **Funciones pendientes de validar:** Fiscalidad queda oculta y su API deshabilitada con `FISCALITY_ENABLED=false`. La IA conversacional se habilita solo en el entorno local actual; el archivo de plantilla la mantiene desactivada para otros despliegues. No se borran datos ni implementación. Las guías normales siguen en Ayuda y soporte; allí se puede eliminar el historial antiguo de IA.
 - **Paso a Gratuito:** se mantiene editable el primer inmueble añadido (orden de ID); los excedentes quedan en consulta, con sus datos, documentos y exportaciones accesibles. Se bloquean modificaciones también por API y cambios de asociación que intenten saltarse el límite. Se permite eliminar archivos y archivar inmuebles vacíos para liberar espacio. No hay borrados automáticos de datos por bajar de plan.
 - **Generación al superar el límite:** no se crean nuevas rentas ni movimientos recurrentes de los inmuebles en consulta. Las reglas conservan su próxima fecha; al recuperar el plan, los movimientos recurrentes pendientes se generan con la lógica de recuperación existente, sin duplicados. Las rentas conservan su lógica mensual, sin prometer una reconstrucción automática de todos los meses omitidos. Los estados vencidos de cargos históricos pueden seguir actualizándose.
 - **Facturación:** se conserva el acceso al portal con pagos pendientes y se bloquea otra contratación si existe una suscripción local o en Stripe. Checkout usa un intento persistente por usuario, bloqueo compartido e idempotencia; los reintentos reutilizan parámetros y sesión. Se comprueba que el precio remoto sea activo, mensual, en euros y coincida con 6,99 €. Volver por una URL de éxito no se presenta como prueba de pago: los webhooks siguen siendo la fuente de confirmación.
@@ -78,13 +96,13 @@ Verificación del 15 de septiembre: **117 pruebas / 591 aserciones de backend**,
 
 ## Interfaz Alquivo
 
-### Formulario de soporte
+### Formulario de soporte anterior
 
-En **Ayuda y soporte** se puede escribir una consulta con nombre, asunto, mensaje y adjuntos, usando como correo de respuesta el de la cuenta (también si todavía no está verificada). La landing, el acceso, el registro y las páginas legales muestran el botón flotante **¿Te ayudamos?** abajo a la derecha; el formulario público solicita además el correo del visitante. El texto se mantiene al cerrar/reabrir el panel y ante errores mientras se permanece en la página; no se guarda en almacenamiento persistente del navegador.
+El formulario anterior se conserva solo en los endpoints indicados abajo; la interfaz de **Ayuda y soporte** y el botón flotante **¿Te ayudamos?** usan ahora tickets. El formulario anterior permite nombre, asunto, mensaje y adjuntos, con el correo de la cuenta o del visitante como dirección de respuesta.
 
 Los endpoints `POST /api/v1/support` y `POST /api/v1/public/support` admiten hasta 3 imágenes JPG/PNG/WebP o PDF, máximo 2 MB cada uno. Validan contenido MIME y tamaño, pasan los adjuntos por el scanner existente (obligatorio en producción) y comparten límites por IP y globales, más un campo trampa antispam. El mensaje HTML se escapa, el destinatario siempre procede de `SUPPORT_EMAIL` y el correo del visitante solo se usa como `Reply-To`. No se envía respuesta automática a direcciones introducidas por terceros.
 
-Los adjuntos usan archivos temporales de la petición y se envían de forma síncrona al buzón; no se crean enlaces públicos ni documentos de cartera. No hay un gestor de tickets ni un historial de soporte en base de datos. El correo incluye una referencia para localizarlo en el buzón. Configura la retención, permisos y proveedor del buzón en la documentación de privacidad antes de publicar.
+Estos endpoints anteriores envían correo directo y se mantienen por compatibilidad; el flujo visible actual usa tickets persistidos mediante `/support/chat` y `/public/support/chat`. Los adjuntos del formulario anterior usan archivos temporales de la petición y se envían de forma síncrona al buzón; no se crean enlaces públicos ni documentos de cartera. Configura la retención, permisos y proveedor del buzón en la documentación de privacidad antes de publicar.
 
 **Activación del envío:** configurar un mailer real (`MAIL_MAILER`, credenciales privadas y remitente autorizado) y comprobar entrega a `soporte@alquivo.com`. El mailer local `log` no envía ni registra el contenido de estas consultas; devuelve un aviso de envío no configurado y conserva el formulario. También se rechazan transportes de prueba y failover que puedan terminar escribiendo datos en logs. No se han enviado correos reales en las pruebas. SMTP tiene un timeout de 15 segundos; la interfaz no confirma éxito ante un error del proveedor. Si el navegador pierde la respuesta, podría haberse aceptado el correo antes del corte: comprobar el buzón antes de reintentar repetidamente.
 
@@ -126,7 +144,7 @@ El [sistema visual](docs/design-system.md) documenta los estilos, componentes, a
 - Informes de flujo mensual y rendimiento por inmueble basados en movimientos confirmados.
 - Exportaciones CSV seguras de propiedades, contratos y finanzas.
 - Consentimiento legal versionado y base completa de verificación de correo.
-- Prueba de producto de 14 días con todos los límites del Plan Fundador y paso automático al plan gratuito.
+- Las pruebas históricas conservan su vencimiento; las nuevas cuentas no reciben una prueba premium automática.
 - Eliminación protegida de cuenta, cartera y archivos asociados.
 - Catálogo de beta simplificado: Gratuito y Plan Fundador por 6,99 €/mes.
 - Límites de inmuebles y almacenamiento aplicados siempre desde backend.
@@ -158,7 +176,7 @@ OPENAI_ASSISTANT_MODEL=gpt-5.4-mini
 
 Facturas y contratos cuentan con un flujo de importación asistida **simulado**, accesible sólo al administrador local desde **Documentos → Importación IA · demo**. Incluye dos PDF ficticios descargables, cola, borrador cifrado con fragmentos, edición y confirmación explícita. Facturas registran un gasto; contratos crean un contrato en borrador con inmueble/inquilinos elegidos o adjuntan el documento a uno existente. Nada se crea antes de confirmar.
 
-No consume saldo ni envía archivos a OpenAI. Sólo los ejemplos conocidos tienen datos precargados; otros archivos muestran campos vacíos y aviso de ausencia de análisis. Requiere consentimiento documental separado; `ASSISTANT_VALIDATED=false` permanece intacto. Consulta [operación y demostración de Document AI](docs/document-ai.md) y [estado de implementación](docs/ai-implementation-progress.md). La lectura real de documentos sigue pendiente de evaluación y nueva aceptación de privacidad.
+No consume saldo ni envía archivos a OpenAI. Sólo los ejemplos conocidos tienen datos precargados; otros archivos muestran campos vacíos y aviso de ausencia de análisis. Requiere consentimiento documental separado; la activación del chat no cambia el modo de Document AI, que permanece en simulación y solo es visible al administrador local. Consulta [operación y demostración de Document AI](docs/document-ai.md) y [estado de implementación](docs/ai-implementation-progress.md). La lectura real de documentos sigue pendiente de evaluación y nueva aceptación de privacidad.
 
 ## Fiscalidad premium (beta)
 
@@ -177,7 +195,7 @@ stripe login
 stripe listen --forward-to http://127.0.0.1:8100/stripe/webhook
 ```
 
-Copia el valor `whsec_...` mostrado por Stripe CLI en `STRIPE_WEBHOOK_SECRET` y reinicia el backend. La prueba comienza al registrar la cuenta, no al introducir una tarjeta. Durante 14 días se aplican siempre los límites del Plan Fundador; después se aplica el plan gratuito si no existe una suscripción activa. El checkout conserva los días de prueba restantes y vuelve a `/plans`. En la beta solo se ofrece facturación mensual.
+Copia el valor `whsec_...` mostrado por Stripe CLI en `STRIPE_WEBHOOK_SECRET` y reinicia el backend. Las nuevas cuentas comienzan en Beta gratuita durante el programa y en Gratuito después, sin tarjeta. Una prueba heredada puede conservar sus días restantes en el checkout; los límites pasan a Gratuito al vencer si no hay suscripción activa. La contratación se activará por separado cuando termine la beta y se hayan validado los pagos.
 
 ## Cierre funcional de beta
 

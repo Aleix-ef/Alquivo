@@ -1,10 +1,9 @@
 <script setup>
-import { ref, onMounted, onBeforeUnmount, computed } from "vue";
+import { ref, onMounted, onBeforeUnmount, computed, inject } from "vue";
 import {
   Building2,
   BadgeEuro,
   KeyRound,
-  Check,
   ArrowUpRight,
   ArrowDownLeft,
   ArrowRight,
@@ -13,18 +12,26 @@ import {
   TrendingUp,
   CircleAlert,
   RefreshCw,
+  Sparkles,
 } from "@lucide/vue";
 import api from "../api";
 import { useSession } from "../session";
-import PropertyImage from "../components/PropertyImage.vue";
 import AttentionPanel from "../components/AttentionPanel.vue";
+import { useProduct } from "../stores/product";
 import "../dashboard.css";
 
 const session = useSession();
+const product = useProduct();
+const openAssistant = inject("open-assistant", () => {});
+const startTour = inject("start-tour", () => {});
+const assistantNeedsIntroduction = computed(
+  () => !product.accountFeatures.assistant,
+);
 const data = ref(null);
 const error = ref("");
 const loading = ref(true);
 const metrics = computed(() => data.value?.metrics || {});
+const hasProperties = computed(() => Boolean(data.value?.properties?.length));
 const now = new Date();
 const greeting =
   now.getHours() < 12
@@ -75,9 +82,7 @@ const steps = computed(() => [
     icon: KeyRound,
   },
 ]);
-const completed = computed(
-  () => steps.value.filter((step) => step.done).length,
-);
+const nextStep = computed(() => steps.value.find((step) => !step.done));
 const metricCards = computed(() => [
   {
     label: "Ingresos cobrados",
@@ -99,32 +104,6 @@ const metricCards = computed(() => [
     detail: "Ingresos menos gastos",
     icon: Wallet,
     tone: metrics.value.net_profit < 0 ? "expense" : "neutral",
-  },
-  {
-    label: "Ocupación",
-    value: percent(metrics.value.occupancy_rate),
-    detail: "Propiedades con alquiler activo",
-    icon: KeyRound,
-    tone: "neutral",
-  },
-]);
-const cashflowMax = computed(() =>
-  Math.max(
-    Number(metrics.value.monthly_income || 0),
-    Number(metrics.value.monthly_expenses || 0),
-    1,
-  ),
-);
-const cashflow = computed(() => [
-  {
-    label: "Ingresos",
-    value: Number(metrics.value.monthly_income || 0),
-    type: "income",
-  },
-  {
-    label: "Gastos",
-    value: Number(metrics.value.monthly_expenses || 0),
-    type: "expense",
   },
 ]);
 let controller;
@@ -161,16 +140,16 @@ onBeforeUnmount(() => {
 
 <template>
   <main class="page dashboard-page">
-    <header class="heading dashboard-heading">
+    <header class="heading dashboard-heading" data-tour="summary">
       <div>
         <p class="eyebrow">Una mirada a tu patrimonio</p>
         <h1>
           {{ greeting }}, {{ session.user?.name?.split(" ")[0] || "bienvenido"
           }}<span class="greeting-dot">.</span>
         </h1>
-        <p>Lo importante de tu cartera, de un vistazo.</p>
+        <p v-if="hasProperties">Lo esencial de tu cartera.</p>
       </div>
-      <span class="dashboard-period"
+      <span v-if="hasProperties" class="dashboard-period"
         ><CalendarDays :size="15" />{{ month }}</span
       >
     </header>
@@ -193,195 +172,187 @@ onBeforeUnmount(() => {
       <div v-for="number in 4" :key="number"></div>
     </section>
     <template v-else-if="data">
-      <section v-if="completed < steps.length" class="setup-panel">
-        <header>
-          <div>
-            <p class="eyebrow">Empezamos juntos</p>
-            <h2>Dale forma a tu cartera</h2>
-          </div>
-          <span class="setup-count">{{ completed }} de {{ steps.length }}</span>
-        </header>
-        <div
-          class="setup-progress"
-          role="progressbar"
-          :aria-valuenow="completed"
-          :aria-valuemax="steps.length"
-          aria-valuemin="0"
-          aria-label="Primeros pasos completados"
-        >
-          <span
-            :style="{ width: `${(completed / steps.length) * 100}%` }"
-          ></span>
-        </div>
-        <div class="setup-steps">
-          <RouterLink
-            v-for="step in steps"
-            :key="step.title"
-            :to="step.to"
-            :class="{ done: step.done }"
-            ><span
-              ><Check v-if="step.done" :size="17" /><component
-                :is="step.icon"
-                v-else
-                :size="17"
-            /></span>
-            <div>
-              <strong>{{ step.title }}</strong
-              ><small>{{ step.detail }}</small>
-            </div></RouterLink
-          >
-        </div>
-      </section>
-
-      <section class="wealth-card" aria-label="Valor del patrimonio">
-        <div class="wealth-content">
-          <span class="wealth-label"
-            ><span></span>Tu patrimonio inmobiliario</span
-          ><strong class="wealth-value">{{
-            money(metrics.portfolio_value)
-          }}</strong>
-          <p>Valor estimado de tus propiedades</p>
-          <div class="wealth-foot">
-            <span
-              >Patrimonio neto <b>{{ money(metrics.net_equity) }}</b></span
-            ><RouterLink to="/properties"
-              >Ver mi cartera <ArrowUpRight :size="16"
-            /></RouterLink>
-          </div>
-        </div>
-        <div class="wealth-yield">
-          <span class="wealth-icon"
-            ><TrendingUp :size="24" :stroke-width="1.5" /></span
-          ><span>Rentabilidad bruta anual</span
-          ><strong>{{ percent(metrics.gross_yield) }}</strong
-          ><small>Renta contratada / valor estimado</small>
-        </div>
-        <svg
-          class="wealth-lines"
-          viewBox="0 0 440 280"
-          fill="none"
-          aria-hidden="true"
-        >
-          <path
-            d="M100 290V162L194 125V290M194 125L250 155V290M250 290V67L331 35V290M331 35L389 69V290M28 290V216L100 189"
-            stroke="currentColor"
-            stroke-width="1.5"
-          />
-          <path
-            d="M124 186L170 168M124 211L170 193M124 236L170 218M275 106L310 92M275 133L310 119M275 160L310 146M275 187L310 173M275 214L310 200"
-            stroke="currentColor"
-          />
-        </svg>
-      </section>
-
       <section
-        class="metrics dashboard-metrics"
-        aria-label="Indicadores del mes"
+        v-if="!hasProperties"
+        class="dashboard-welcome"
+        aria-labelledby="welcome-title"
       >
-        <article v-for="metric in metricCards" :key="metric.label">
-          <div class="metric-top">
-            <span>{{ metric.label }}</span
-            ><span class="metric-icon" :class="metric.tone"
-              ><component :is="metric.icon" :size="17"
-            /></span>
-          </div>
-          <strong
-            :class="{
-              'negative-value':
-                metric.label === 'Beneficio neto' && metrics.net_profit < 0,
-            }"
-            >{{ metric.value }}</strong
-          ><small>{{ metric.detail }}</small>
-        </article>
-      </section>
-
-      <AttentionPanel
-        v-if="data?.attention_summary"
-        :items="data.attention"
-        :summary="data.attention_summary"
-      />
-
-      <section class="dashboard-grid">
-        <article class="panel cashflow-panel">
-          <header class="dashboard-panel-heading">
-            <div>
-              <p class="eyebrow">Tus números</p>
-              <h2>El balance de este mes</h2>
-            </div>
-            <RouterLink class="dashboard-text-link" to="/reports"
-              >Ver informes <ArrowUpRight :size="15"
-            /></RouterLink>
-          </header>
-          <div class="cashflow-net">
-            <strong :class="{ 'negative-value': metrics.net_profit < 0 }">{{
-              money(metrics.net_profit)
-            }}</strong
-            ><span>Resultado neto registrado</span>
-          </div>
-          <div class="cashflow-bars">
-            <div v-for="item in cashflow" :key="item.type" class="cashflow-row">
-              <div>
-                <span><i :class="item.type"></i>{{ item.label }}</span
-                ><strong>{{ money(item.value) }}</strong>
-              </div>
-              <div class="cashflow-track">
-                <span
-                  :class="item.type"
-                  :style="{ width: `${(item.value / cashflowMax) * 100}%` }"
-                ></span>
-              </div>
-            </div>
-          </div>
-          <div class="cashflow-foot">
-            <span><KeyRound :size="15" />Renta mensual contratada</span
-            ><strong>{{ money(metrics.contracted_rent) }}</strong>
-          </div>
-          <p class="cashflow-note">
-            Solo se incluyen ingresos cobrados y gastos pagados de {{ month }}.
+        <div class="welcome-start">
+          <span class="welcome-icon"
+            ><Building2 :size="26" aria-hidden="true"
+          /></span>
+          <p class="eyebrow">Tu primer paso</p>
+          <h2 id="welcome-title">Empieza por tu primer inmueble</h2>
+          <p>
+            Con una dirección y un nombre podrás empezar a organizar tu
+            patrimonio.
           </p>
-        </article>
-        <article class="panel dashboard-properties">
-          <header class="dashboard-panel-heading">
-            <div>
-              <p class="eyebrow">Tus espacios</p>
-              <h2>Tu cartera</h2>
-            </div>
-            <RouterLink class="dashboard-text-link" to="/properties"
-              >Ver todas <ArrowRight :size="15"
+          <div class="welcome-actions">
+            <RouterLink class="button primary" to="/properties?new=1"
+              >Añadir mi inmueble <ArrowRight :size="17"
             /></RouterLink>
-          </header>
-          <div v-if="data.properties.length" class="dashboard-property-list">
-            <RouterLink
-              v-for="property in data.properties.slice(0, 4)"
-              :key="property.id"
-              :to="`/properties/${property.id}`"
-              ><div class="dashboard-property-image">
-                <PropertyImage :property="property" :show-label="false" />
-              </div>
-              <div class="dashboard-property-name">
-                <strong>{{ property.name }}</strong
-                ><small>{{ property.city || "Ubicación por completar" }}</small>
-              </div>
-              <div class="dashboard-property-value">
-                <strong>{{ money(property.current_value) }}</strong
-                ><small :class="{ rented: property.leases?.length }">{{
-                  property.leases?.length ? "Alquilada" : "Sin alquiler"
-                }}</small>
-              </div></RouterLink
+            <button
+              class="welcome-tour-link"
+              type="button"
+              @click="startTour()"
             >
+              Ver recorrido de Alquivo
+            </button>
           </div>
-          <div v-else class="empty">
-            <Building2 :size="30" />
-            <p>
-              El próximo capítulo de tu patrimonio empieza con tu primera
-              propiedad.
-            </p>
-            <RouterLink class="button secondary" to="/properties?new=1"
-              >Añadir propiedad <ArrowRight :size="15"
-            /></RouterLink>
-          </div>
-        </article>
+        </div>
+        <div class="welcome-ai" data-tour="ai">
+          <span class="welcome-ai-icon"
+            ><Sparkles :size="22" aria-hidden="true"
+          /></span>
+          <p class="eyebrow">Alquivo AI</p>
+          <h3>Tu cartera, en conversación</h3>
+          <p>
+            Cuando añadas datos, podrás preguntar por tus inmuebles, cobros y
+            gastos.
+          </p>
+          <button
+            v-if="product.accountFeatures.assistant"
+            class="welcome-ai-link"
+            type="button"
+            @click="openAssistant()"
+          >
+            Conocer el asistente <ArrowRight :size="16" />
+          </button>
+          <span v-else class="welcome-ai-soon">Disponible próximamente</span>
+        </div>
       </section>
+      <template v-else>
+        <section
+          v-if="product.accountFeatures.assistant"
+          class="dashboard-ai-intro is-live"
+          data-tour="ai"
+          aria-labelledby="dashboard-ai-title"
+        >
+          <span class="dashboard-ai-icon"
+            ><Sparkles :size="23" aria-hidden="true"
+          /></span>
+          <div>
+            <h2 id="dashboard-ai-title">Entiende tu patrimonio preguntando</h2>
+            <p>
+              Pregunta por cobros, gastos o contratos. Por ejemplo: «¿Cuánto he
+              cobrado este mes?»
+            </p>
+          </div>
+          <div class="dashboard-ai-action">
+            <button
+              class="button primary"
+              type="button"
+              @click="openAssistant()"
+            >
+              <Sparkles :size="17" aria-hidden="true" />
+              Hablar con Alquivo
+            </button>
+          </div>
+        </section>
+        <section
+          v-if="assistantNeedsIntroduction"
+          class="dashboard-ai-intro"
+          data-tour="ai"
+          aria-labelledby="dashboard-ai-title"
+        >
+          <span class="dashboard-ai-icon"
+            ><Sparkles :size="23" aria-hidden="true"
+          /></span>
+          <div>
+            <p class="eyebrow">El siguiente paso de Alquivo</p>
+            <h2 id="dashboard-ai-title">Tu asistente IA está en preparación</h2>
+            <p>
+              Cuando esté disponible, podrás consultar tu cartera en lenguaje
+              sencillo.
+            </p>
+          </div>
+          <span class="dashboard-ai-status">Próximamente</span>
+        </section>
+        <section
+          v-if="nextStep"
+          class="dashboard-next-step"
+          aria-label="Siguiente paso"
+        >
+          <span class="next-step-icon"
+            ><component :is="nextStep.icon" :size="20" aria-hidden="true"
+          /></span>
+          <div>
+            <strong>Siguiente paso: {{ nextStep.title }}</strong
+            ><span>{{ nextStep.detail }}</span>
+          </div>
+          <RouterLink :to="nextStep.to"
+            >Ir ahora <ArrowRight :size="16"
+          /></RouterLink>
+        </section>
+
+        <section class="wealth-card" aria-label="Valor del patrimonio">
+          <div class="wealth-content">
+            <span class="wealth-label"
+              ><span></span>Tu patrimonio inmobiliario</span
+            ><strong class="wealth-value">{{
+              money(metrics.portfolio_value)
+            }}</strong>
+            <p>Valor estimado de tus propiedades</p>
+            <div class="wealth-foot">
+              <span
+                >Patrimonio neto <b>{{ money(metrics.net_equity) }}</b></span
+              ><RouterLink to="/properties"
+                >Ver mi cartera <ArrowUpRight :size="16"
+              /></RouterLink>
+            </div>
+          </div>
+          <div class="wealth-yield">
+            <span class="wealth-icon"
+              ><TrendingUp :size="24" :stroke-width="1.5" /></span
+            ><span>Rentabilidad bruta anual</span
+            ><strong>{{ percent(metrics.gross_yield) }}</strong
+            ><small>Renta contratada / valor estimado</small>
+          </div>
+          <svg
+            class="wealth-lines"
+            viewBox="0 0 440 280"
+            fill="none"
+            aria-hidden="true"
+          >
+            <path
+              d="M100 290V162L194 125V290M194 125L250 155V290M250 290V67L331 35V290M331 35L389 69V290M28 290V216L100 189"
+              stroke="currentColor"
+              stroke-width="1.5"
+            />
+            <path
+              d="M124 186L170 168M124 211L170 193M124 236L170 218M275 106L310 92M275 133L310 119M275 160L310 146M275 187L310 173M275 214L310 200"
+              stroke="currentColor"
+            />
+          </svg>
+        </section>
+
+        <section
+          class="metrics dashboard-metrics"
+          aria-label="Indicadores del mes"
+        >
+          <article v-for="metric in metricCards" :key="metric.label">
+            <div class="metric-top">
+              <span>{{ metric.label }}</span
+              ><span class="metric-icon" :class="metric.tone"
+                ><component :is="metric.icon" :size="17"
+              /></span>
+            </div>
+            <strong
+              :class="{
+                'negative-value':
+                  metric.label === 'Beneficio neto' && metrics.net_profit < 0,
+              }"
+              >{{ metric.value }}</strong
+            ><small>{{ metric.detail }}</small>
+          </article>
+        </section>
+
+        <AttentionPanel
+          v-if="data?.attention_summary?.total"
+          :items="data.attention"
+          :summary="data.attention_summary"
+        />
+      </template>
     </template>
   </main>
 </template>

@@ -484,8 +484,8 @@ async function scrollToBottom() {
               class="assistant-header-mascot"
             />
             <div>
-              <strong>Tu asistente de Alquivo</strong>
-              <small>Consulta tus datos y encuentra el siguiente paso</small>
+              <strong>Asistente IA de Alquivo</strong>
+              <small>Respuestas sobre los datos de tu cartera</small>
             </div>
             <button
               class="assistant-icon-button assistant-expand"
@@ -634,38 +634,45 @@ async function scrollToBottom() {
                   state="greeting"
                   class="assistant-consent-mascot"
                 />
-                <strong>Activa tu asistente de IA</strong>
-                <p>
-                  Para responder, enviaremos a OpenAI tus preguntas, el
-                  historial reciente y los datos de inmuebles y finanzas
-                  necesarios. Para localizar un contacto, las herramientas
-                  pueden compartir su nombre, pero no su teléfono actual,
-                  correo, DNI, dirección completa ni notas existentes. No se
-                  envía el contenido de archivos.
+                <strong>Activa Alquivo AI</strong>
+                <p class="assistant-consent-summary">
+                  Para responder, enviaremos a OpenAI tus preguntas y los datos
+                  necesarios de tu cartera. No se envía el contenido de tus
+                  archivos.
                 </p>
-                <p>
-                  Cuando las acciones estén disponibles, también podrás pedir
-                  borradores de gastos y cobros, actualizar teléfonos y añadir
-                  notas a inmuebles. Nada se guardará hasta que revises la
-                  propuesta y pulses su botón de confirmación. Los teléfonos o
-                  notas nuevos que escribas en el chat también se envían a
-                  OpenAI; puedes introducirlos directamente en los formularios
-                  de Alquivo si prefieres no compartirlos con el proveedor de
-                  IA.
+                <p class="assistant-consent-summary">
+                  Tu historial se elimina a los {{ retentionDays }} días. Puedes
+                  desactivar el asistente y borrarlo cuando quieras.
                 </p>
-                <p>
-                  No escribas DNI, datos bancarios, datos de salud ni
-                  información sensible. Los nombres y títulos que hayas dado a
-                  tus inmuebles o incidencias sí pueden compartirse.
-                </p>
-                <p>
-                  El historial se elimina a los {{ retentionDays }} días. OpenAI
-                  puede conservar registros de seguridad hasta 30 días, salvo
-                  excepciones legales. Puedes desactivar el asistente y borrar
-                  tu historial cuando quieras.
-                </p>
+                <details class="assistant-privacy-details">
+                  <summary>Cómo se usan y protegen mis datos</summary>
+                  <div>
+                    <p>
+                      Se comparte el historial reciente y la información de
+                      inmuebles y finanzas necesaria para cada respuesta. Para
+                      localizar contactos puede compartirse su nombre, pero no
+                      su teléfono actual, correo, DNI, dirección completa ni
+                      notas existentes.
+                    </p>
+                    <p>
+                      Si están disponibles las acciones, podrás pedir borradores
+                      de gastos y cobros, actualizar teléfonos y añadir notas a
+                      inmuebles. Nada se guarda sin que revises y confirmes la
+                      propuesta. Los teléfonos o notas nuevos que escribas en el
+                      chat sí se enviarán a OpenAI; puedes usar los formularios
+                      de Alquivo si prefieres no compartirlos.
+                    </p>
+                    <p>
+                      Evita escribir DNI, datos bancarios, datos de salud u otra
+                      información sensible. Los nombres y títulos de tus
+                      inmuebles o incidencias pueden compartirse. OpenAI puede
+                      conservar registros de seguridad hasta 30 días, salvo
+                      excepciones legales.
+                    </p>
+                  </div>
+                </details>
                 <RouterLink to="/privacy" @click="close"
-                  >Información de privacidad</RouterLink
+                  >Ver la política de privacidad completa</RouterLink
                 >
                 <button
                   class="button primary"

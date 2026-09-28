@@ -11,6 +11,9 @@ export const useSession = defineStore("session", {
     user: readSessionValue(sessionKeys.user),
     portfolio: readSessionValue(sessionKeys.portfolio),
     initialized: false,
+    twoFactorMethods: [],
+    twoFactorEmailHint: null,
+    twoFactorEmailUnavailable: false,
   }),
   getters: { ready: (s) => !!s.user },
   actions: {
@@ -24,6 +27,9 @@ export const useSession = defineStore("session", {
       this.user = null;
       this.portfolio = null;
       this.initialized = true;
+      this.twoFactorMethods = [];
+      this.twoFactorEmailHint = null;
+      this.twoFactorEmailUnavailable = false;
       clearSessionStorage();
     },
     async login(p) {
@@ -31,14 +37,33 @@ export const useSession = defineStore("session", {
       const { data } = await api.post("/auth/login", p);
       if (data.two_factor_required) {
         this.clear();
+        this.twoFactorMethods = data.methods || ["authenticator"];
+        this.twoFactorEmailHint = data.email_hint || null;
+        this.twoFactorEmailUnavailable = Boolean(data.email_delivery_failed);
         return false;
       }
+      this.twoFactorMethods = [];
+      this.twoFactorEmailHint = null;
+      this.twoFactorEmailUnavailable = false;
       this.save(data);
       return true;
     },
-    async verifyTwoFactor(code) {
+    async verifyTwoFactor(code, method, rememberDevice = false) {
       await csrf();
-      this.save((await api.post("/auth/two-factor", { code })).data);
+      const { data } = await api.post("/auth/two-factor", {
+        code,
+        method,
+        remember_device: rememberDevice,
+      });
+      if (!data.challenge_complete) {
+        this.twoFactorMethods = data.methods_remaining || [];
+        return false;
+      }
+      this.twoFactorMethods = [];
+      this.twoFactorEmailHint = null;
+      this.twoFactorEmailUnavailable = false;
+      this.save(data);
+      return true;
     },
     async register(p) {
       await csrf();

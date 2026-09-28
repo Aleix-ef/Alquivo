@@ -43,7 +43,8 @@ final class SupportChat
                     $conversation = $creating ? $query->where('creation_key', $data['conversation_id'])->first() : $query->find($conversationId);
                     if (! $conversation) {
                         abort_unless($creating, 404);
-                        abort_if((clone $scope)->count() >= 20, 422, 'Has alcanzado el límite de conversaciones conservadas. Continúa en una consulta existente.');
+                        abort_if((clone $scope)->where('status', '!=', 'closed')->count() >= 20, 422, 'Ya tienes 20 tickets abiertos. Resuelve uno o continúa en un ticket existente.');
+                        abort_if((clone $scope)->count() >= 100, 422, 'Has alcanzado el límite de tickets conservados. Continúa en uno existente o contacta con soporte.');
                         $public = $this->access->isPublic($request);
                         $conversation = SupportConversation::create([
                             'id' => (string) Str::uuid(), 'creation_key' => $data['conversation_id'], ...$this->access->owner($request),
@@ -53,6 +54,7 @@ final class SupportChat
                         ]);
                     }
                     $id = $conversation->id;
+                    $newTicket = $conversation->wasRecentlyCreated;
                     $team = $this->access->isTeam($request);
                     $role = $team ? 'support' : 'customer';
                     $author = $this->access->isPublic($request) ? null : $request->user()->id;
@@ -65,6 +67,9 @@ final class SupportChat
                         abort_unless($existing->request_hash && hash_equals($existing->request_hash, $fingerprint), 409, 'Este envío ya existe. Actualiza la conversación antes de enviar otro mensaje.');
 
                         return $conversation;
+                    }
+                    if (! $team && $conversation->status === 'closed') {
+                        abort_if((clone $scope)->where('status', '!=', 'closed')->count() >= 20, 422, 'Ya tienes 20 tickets abiertos. Resuelve uno antes de reabrir este ticket.');
                     }
                     abort_if($conversation->messages()->count() >= 100, 422, 'Esta conversación ha alcanzado su límite. Abre una nueva consulta indicando esta referencia.');
                     $used = SupportAttachment::whereIn('message_id', $conversation->messages()->select('id'))->sum('size');
@@ -91,6 +96,9 @@ final class SupportChat
                         'last_author' => $role, 'last_message_id' => $message->id,
                         $team ? 'team_read_id' : 'customer_read_id' => $message->id,
                     ]);
+                    if (! $team) {
+                        DB::afterCommit(fn () => app(SupportTicketNotifier::class)->notify($id, $newTicket));
+                    }
 
                     return $conversation;
                 });

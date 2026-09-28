@@ -4,7 +4,16 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { paths, settings, betaProgram } from "../dist-ssr/entry-public.js";
 import { publicPages } from "../src/seo.js";
+import { legalPages, legalVersion } from "../src/content/legal.js";
 
+const backendLegal = await readFile(
+  new URL("../../backend/config/legal.php", import.meta.url),
+  "utf8",
+);
+assert.ok(
+  backendLegal.includes(`'terms_version' => '${legalVersion}'`),
+  "Frontend and backend accept the same legal version",
+);
 const publicPaths = new Set(publicPages.map((page) => page.path));
 for (const path of paths) {
   const file =
@@ -50,6 +59,21 @@ for (const path of paths) {
   }
   for (const asset of html.matchAll(/(?:src|href)="(\/assets\/[^"]+)"/g)) {
     await readFile(new URL(`../dist${asset[1]}`, import.meta.url));
+  }
+  const legalPage = legalPages.find((page) => page.path === path);
+  if (legalPage) {
+    assert.ok(html.includes(legalPage.title), `${path}: legal title rendered`);
+    assert.ok(html.includes(legalVersion), `${path}: legal version rendered`);
+    for (const section of legalPage.sections)
+      assert.ok(
+        html.includes(`id="${section.id}"`),
+        `${path}: section anchor exists`,
+      );
+    for (const page of legalPages)
+      assert.ok(
+        html.includes(`href="${page.path}"`),
+        `${path}: legal navigation`,
+      );
   }
   if (path.startsWith("/guias/")) {
     assert.match(html, /itemtype="https:\/\/schema.org\/Article"/);
@@ -110,8 +134,7 @@ if (process.env.SEO_BASE_URL) {
     "/dashboard",
     "/support/inbox",
     "/properties/1",
-    "/terms",
-    "/privacy",
+    ...legalPages.map((page) => page.path),
     "/robots.txt",
     "/sitemap.xml",
   ]) {

@@ -615,3 +615,85 @@
     font-size: 21px;
   }
 }
+
+.property-section-nav {
+  display: flex;
+  gap: 7px;
+  overflow-x: auto;
+  padding: 6px 0 12px;
+  margin-top: 22px;
+  border-bottom: 1px solid var(--line);
+  scrollbar-width: thin;
+}
+.property-section-nav button {
+  flex: 0 0 auto;
+  border: 0;
+  border-radius: 9px;
+  padding: 10px 15px;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-weight: 650;
+  cursor: pointer;
+}
+.property-section-nav button:hover,
+.property-section-nav button.active {
+  color: var(--ink);
+  background: var(--pale);
+}
+.property-section-nav button:focus-visible,
+.property-overview-actions button:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 2px;
+}
+.property-overview-actions,
+.property-section-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 20px 0;
+}
+.property-overview-actions button {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 12px 16px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+}
+.property-detail-page .property-detail-grid {
+  display: block;
+  margin-top: 20px;
+}
+.property-detail-page .property-detail-grid .detail-panel {
+  max-width: 940px;
+}
+.property-detail-page .property-detail-grid .property-documents-panel {
+  grid-column: auto;
+}
+.property-detail-page .property-gallery { margin-top: 20px; }
+.property-records { display: grid; gap: 0; margin-top: 24px; }
+.property-records h3 { font-size: 15px; margin: 0 0 10px; }
+.property-records > a,
+.property-records > .property-record {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line);
+  color: var(--ink);
+  text-decoration: none;
+}
+.property-records > a:hover { color: var(--green); }
+.property-records small { color: var(--muted); }
+.property-records .muted { color: var(--muted); }
+.property-archive-action { margin-top: 22px; color: var(--danger); }
+@media (max-width: 650px) {
+  .property-section-actions .button { width: 100%; justify-content: center; }
+  .property-overview-actions button { flex: 1 1 100%; }
+}

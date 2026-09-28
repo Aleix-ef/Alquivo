@@ -1,4 +1,5 @@
 import { guides } from "./content/guides.js";
+import { legalPages } from "./content/legal.js";
 
 // One allowlist for the browser and the static renderer. No private routes here.
 export const publicRoutes = [
@@ -13,8 +14,8 @@ export const publicRoutes = [
     component: () => import("./views/GuidesView.vue"),
     meta: { public: true },
   })),
-  ...["terms", "privacy"].map((name) => ({
-    path: `/${name}`,
+  ...legalPages.map(({ name, path }) => ({
+    path,
     name,
     component: () => import("./views/LegalView.vue"),
     meta: { public: true },

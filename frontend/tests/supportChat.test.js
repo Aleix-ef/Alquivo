@@ -3,7 +3,9 @@ import assert from "node:assert/strict";
 import {
   mergeSupportMessages,
   supportEndpoint,
+  supportStatusLabel,
   supportStatuses,
+  ticketReference,
 } from "../src/supportChat.js";
 
 test("chat endpoints are fixed internal paths and never accept arbitrary URLs", () => {
@@ -34,5 +36,14 @@ test("polling merges messages without duplicates and preserves older loaded hist
 test("chat statuses distinguish pending support, a reply and a resolved query", () => {
   assert.equal(supportStatuses.waiting_support, "Pendiente de soporte");
   assert.equal(supportStatuses.waiting_customer, "Respuesta del equipo");
-  assert.equal(supportStatuses.closed, "Resuelta");
+  assert.equal(supportStatuses.closed, "Resuelto");
+  assert.equal(supportStatusLabel("waiting_support", true), "Por responder");
+  assert.equal(
+    supportStatusLabel("waiting_customer", false),
+    "Tienes respuesta",
+  );
+  assert.equal(
+    ticketReference("12345678-aaaa-bbbb-cccc-dddddddddddd"),
+    "12345678",
+  );
 });

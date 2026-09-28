@@ -2,6 +2,7 @@
 import { computed } from "vue";
 import { useRoute } from "vue-router";
 import BrandLogo from "../components/BrandLogo.vue";
+import LegalLinks from "../components/LegalLinks.vue";
 import { guides } from "../content/guides.js";
 const route = useRoute();
 const guide = computed(() => guides.find((item) => item.path === route.path));
@@ -126,10 +127,9 @@ const guide = computed(() => guides.find((item) => item.path === route.path));
       <BrandLogo compact />
       <div>
         <RouterLink to="/">Alquivo</RouterLink
-        ><RouterLink to="/guias">Guías</RouterLink
-        ><RouterLink to="/privacy">Privacidad</RouterLink
-        ><RouterLink to="/terms">Condiciones</RouterLink>
+        ><RouterLink to="/guias">Guías</RouterLink>
       </div>
+      <LegalLinks />
     </footer>
   </div>
 </template>

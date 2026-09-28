@@ -9,9 +9,19 @@ use PragmaRX\Google2FA\Google2FA;
 
 final class TwoFactor
 {
+    public function emailDeliveryAvailable(): bool
+    {
+        return in_array(config('mail.default'), ['smtp', 'mailgun', 'ses', 'ses-v2', 'postmark', 'resend', 'sendmail'], true);
+    }
+
     public function binding(User $user): string
     {
-        return hash_hmac('sha256', $user->getAuthPassword().'|'.$user->two_factor_secret, config('app.key'));
+        return hash_hmac('sha256', implode('|', [
+            $user->getAuthPassword(),
+            $user->two_factor_secret ?? '',
+            $user->two_factor_method ?: 'authenticator',
+            $user->email,
+        ]), config('app.key'));
     }
 
     /** Call before the transaction so failed attempts survive database-cache rollbacks. */
@@ -23,14 +33,14 @@ final class TwoFactor
     }
 
     /** Caller MUST hold the user row lock until the surrounding transaction commits. */
-    public function consume(User $user, string $code): void
+    public function consume(User $user, string $code): string
     {
         $step = preg_match('/^\d{6}$/D', $code)
             ? (new Google2FA)->verifyKeyNewer($user->two_factor_secret, $code, $user->two_factor_last_step ?? 0, 1, intdiv(now()->timestamp, 30)) : false;
         if ($step !== false) {
             $user->forceFill(['two_factor_last_step' => $step])->save();
 
-            return;
+            return 'authenticator';
         }
         $codes = $user->two_factor_recovery_codes ?? [];
         $hashed = hash('sha256', $code);
@@ -39,9 +49,9 @@ final class TwoFactor
                 unset($codes[$index]);
                 $user->forceFill(['two_factor_recovery_codes' => array_values($codes)])->save();
 
-                return;
+                return 'recovery';
             }
         }
-        throw ValidationException::withMessages(['code' => ['El código no es válido o ya se ha usado. Espera al siguiente código o utiliza uno de recuperación.']]);
+        throw ValidationException::withMessages(['code' => ['El código no es válido o ya se ha usado. Si acabas de activar el autenticador, espera a que cambie el código (puede tardar hasta 30 segundos) y vuelve a intentarlo. También puedes usar un código de recuperación.']]);
     }
 }

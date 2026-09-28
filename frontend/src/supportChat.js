@@ -1,8 +1,23 @@
 export const supportStatuses = {
   waiting_support: "Pendiente de soporte",
   waiting_customer: "Respuesta del equipo",
-  closed: "Resuelta",
+  closed: "Resuelto",
 };
+
+export function supportStatusLabel(status, team = false) {
+  if (status === "waiting_support")
+    return team ? "Por responder" : "Esperando respuesta";
+  if (status === "waiting_customer")
+    return team ? "Esperando al cliente" : "Tienes respuesta";
+  return supportStatuses[status] || "Ticket abierto";
+}
+
+export function ticketReference(id) {
+  return String(id || "")
+    .replaceAll("-", "")
+    .slice(0, 8)
+    .toUpperCase();
+}
 
 export function supportEndpoint(mode) {
   if (mode === "team") return "/support/team/conversations";

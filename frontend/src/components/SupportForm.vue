@@ -5,6 +5,7 @@ import api, { csrf } from "../api";
 import { useSession } from "../session";
 import { useProduct } from "../stores/product";
 import { validateSupportFiles } from "../supportFiles";
+import PrivacyNotice from "./PrivacyNotice.vue";
 
 const props = defineProps({ public: Boolean });
 const emit = defineEmits(["busy-change"]);
@@ -226,6 +227,7 @@ async function submit() {
           No adjuntes contraseñas, datos bancarios ni documentos de identidad.
           Oculta los datos personales de terceros en tus capturas.
         </p>
+        <PrivacyNotice context="support" />
         <label class="support-consent"
           ><input
             v-model="form.privacy_acknowledged"

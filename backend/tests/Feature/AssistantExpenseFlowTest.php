@@ -153,14 +153,14 @@ class AssistantExpenseFlowTest extends TestCase
     public function test_configured_fallback_records_both_calls(): void
     {
         [$user, , $conversation] = $this->fixture();
-        config(['ai.fallback_profile' => 'fast']);
+        config(['ai.fallback_profile' => 'complex']);
         Http::fakeSequence()->push(['output' => [], 'usage' => ['input_tokens' => 10, 'output_tokens' => 3]])->push($this->reply());
         $result = $this->actingAs($user)->postJson($this->url($conversation), ['message' => 'Hola'])->assertOk();
         $run = AiRun::findOrFail($result->json('run.id'));
         $this->assertSame(2, $run->steps()->where('kind', 'provider')->count());
         $this->assertSame(30, $run->input_tokens);
         $this->assertSame(1, $result->json('usage.used'));
-        Http::assertSent(fn ($request) => $request['model'] === 'gpt-5.6-luna');
+        Http::assertSent(fn ($request) => $request['model'] === 'gpt-6-sol');
     }
 
     public function test_failed_request_replay_does_not_spend_again(): void

@@ -1,0 +1,111 @@
+.guided-tour {
+  position: fixed;
+  z-index: 75;
+  right: 24px;
+  bottom: 24px;
+  width: min(410px, calc(100vw - 32px));
+  padding: 22px;
+  border: 1px solid color-mix(in srgb, var(--green) 35%, var(--line));
+  border-radius: 18px;
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: 0 24px 80px rgb(0 0 0 / 45%);
+}
+.guided-tour-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--green);
+  font-size: 13px;
+  font-weight: 700;
+}
+.guided-tour-top button {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+}
+.guided-tour-top button:hover {
+  background: var(--surface-soft);
+  color: var(--ink);
+}
+.guided-tour-progress {
+  height: 4px;
+  margin: 10px 0 19px;
+  border-radius: 10px;
+  background: var(--line);
+  overflow: hidden;
+}
+.guided-tour-progress span {
+  display: block;
+  height: 100%;
+  background: var(--green);
+  transition: width 180ms ease;
+}
+.guided-tour h2 {
+  margin: 0 0 10px;
+  font-size: 21px;
+  line-height: 1.3;
+}
+.guided-tour p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1.65;
+}
+.guided-tour .guided-tour-detail {
+  margin-top: 10px;
+}
+.guided-tour-link {
+  margin-top: 12px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--green);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: underline;
+}
+.guided-tour-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 20px;
+}
+.guided-tour-actions .button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.tour-highlight {
+  position: relative;
+  z-index: 2;
+  outline: 3px solid var(--green);
+  outline-offset: 6px;
+  border-radius: 8px;
+}
+@media (max-width: 520px) {
+  .guided-tour {
+    right: 16px;
+    bottom: 16px;
+    padding: 18px;
+    max-height: min(65dvh, 440px);
+    overflow-y: auto;
+  }
+  .guided-tour-actions .button {
+    padding-inline: 10px;
+    font-size: 13px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .guided-tour-progress span {
+    transition: none;
+  }
+}

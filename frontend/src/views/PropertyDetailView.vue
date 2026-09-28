@@ -48,6 +48,25 @@ const drawer = ref(null);
 const photoInput = ref(null);
 const selectedPhotoId = ref(null);
 const propertyActionBusy = ref(false);
+const sections = [
+  { id: "resumen", label: "Resumen" },
+  { id: "alquiler", label: "Alquiler" },
+  { id: "dinero", label: "Dinero" },
+  { id: "documentos", label: "Documentos" },
+  { id: "incidencias", label: "Incidencias" },
+  { id: "datos", label: "Datos y fotos" },
+];
+const activeTab = computed(() => sections.some((section) => section.id === route.query.tab) ? route.query.tab : "resumen");
+function selectTab(id) {
+  router.replace({ query: { ...route.query, tab: id } });
+}
+const readOnly = computed(() => property.value && planAccess.readOnly(property.value.id));
+const recentTransactions = computed(() => [...(property.value?.transactions || [])]
+  .sort((a, b) => String(b.transaction_date).localeCompare(String(a.transaction_date)))
+  .slice(0, 8));
+const pendingCharges = computed(() => (activeLease.value?.charges || [])
+  .filter((charge) => !["paid", "cancelled"].includes(charge.status)));
+
 const confirmation = useConfirmDialog();
 const types = {
   housing: "Vivienda",
@@ -346,11 +365,17 @@ function refreshProperty(event) {
 onMounted(() => {
   window.addEventListener("alquivo:properties-changed", refreshProperty);
   window.addEventListener("alquivo:leases-changed", refreshProperty);
+  window.addEventListener("alquivo:finance-changed", refreshProperty);
+  window.addEventListener("alquivo:documents-changed", refreshProperty);
+  window.addEventListener("alquivo:issues-changed", refreshProperty);
 });
 onBeforeUnmount(() => {
   loadController?.abort();
   window.removeEventListener("alquivo:properties-changed", refreshProperty);
   window.removeEventListener("alquivo:leases-changed", refreshProperty);
+  window.removeEventListener("alquivo:finance-changed", refreshProperty);
+  window.removeEventListener("alquivo:documents-changed", refreshProperty);
+  window.removeEventListener("alquivo:issues-changed", refreshProperty);
 });
 </script>
 
@@ -423,34 +448,8 @@ onBeforeUnmount(() => {
             </p>
           </div>
           <div class="hero-actions">
-            <RouterLink
-              class="button photo-button"
-              :to="`/fiscality?property=${property.id}`"
-              v-if="product.accountFeatures.fiscality"
-              ><FileText :size="16" />Fiscalidad</RouterLink
-            >
-            <button
-              class="button photo-button"
-              type="button"
-              @click="startEditing"
-              :disabled="planAccess.readOnly(property.id)"
-            >
-              <Pencil :size="16" />Editar</button
-            ><button
-              class="button photo-button"
-              type="button"
-              :disabled="uploading || planAccess.readOnly(property.id)"
-              @click="photoInput?.click()"
-            >
-              <Camera :size="16" />{{ uploading ? "Subiendo…" : "Añadir foto" }}
-            </button>
-            <button
-              class="button photo-button"
-              type="button"
-              :disabled="propertyActionBusy || planAccess.readOnly(property.id)"
-              @click="archiveProperty"
-            >
-              <Archive :size="16" />Archivar
+            <button class="button photo-button" type="button" :disabled="readOnly" @click="startEditing">
+              <Pencil :size="16" />Editar propiedad
             </button>
           </div>
         </div>
@@ -463,8 +462,19 @@ onBeforeUnmount(() => {
         :disabled="uploading"
         @change="upload"
       />
+      <nav class="property-section-nav" aria-label="Apartados de la propiedad">
+        <button v-for="section in sections" :key="section.id" type="button"
+          :class="{ active: activeTab === section.id }"
+          :aria-current="activeTab === section.id ? 'page' : undefined"
+          @click="selectTab(section.id)">{{ section.label }}</button>
+      </nav>
+      <div v-if="activeTab === 'resumen'" class="property-overview-actions">
+        <button type="button" @click="selectTab('alquiler')"><KeyRound :size="17" />{{ activeLease ? 'Ver alquiler' : 'Preparar alquiler' }}</button>
+        <button type="button" @click="selectTab('dinero')"><WalletCards :size="17" />Ver movimientos</button>
+        <button type="button" @click="selectTab('incidencias')"><Wrench :size="17" />{{ openIssues ? `${openIssues} incidencias abiertas` : 'Incidencias' }}</button>
+      </div>
       <div
-        v-if="property.photos?.length"
+        v-if="activeTab === 'datos' && property.photos?.length"
         class="property-gallery"
         aria-label="Fotografías de la propiedad"
       >
@@ -486,14 +496,14 @@ onBeforeUnmount(() => {
         <button
           type="button"
           class="property-gallery-add"
-          :disabled="uploading"
+          :disabled="uploading || readOnly"
           aria-label="Añadir otra fotografía"
           @click="photoInput?.click()"
         >
           <ImagePlus :size="22" />
         </button>
       </div>
-      <p class="property-photo-help">
+      <p v-if="activeTab === 'datos'" class="property-photo-help">
         {{
           property.photos?.length
             ? property.photos.length +
@@ -503,12 +513,12 @@ onBeforeUnmount(() => {
         }}
         JPG, PNG o WebP, entre otros · máximo 6 MB.
       </p>
-      <div v-if="selectedPhoto" class="property-photo-actions">
+      <div v-if="activeTab === 'datos' && selectedPhoto" class="property-photo-actions">
         <button
           v-if="!selectedPhoto.is_cover"
           class="button secondary"
           type="button"
-          :disabled="propertyActionBusy"
+          :disabled="propertyActionBusy || readOnly"
           @click="makeCover"
         >
           <Star :size="15" />Usar como portada
@@ -517,14 +527,14 @@ onBeforeUnmount(() => {
         <button
           class="button secondary"
           type="button"
-          :disabled="propertyActionBusy"
+          :disabled="propertyActionBusy || readOnly"
           @click="removePhoto"
         >
           <Trash2 :size="15" />Eliminar foto
         </button>
       </div>
 
-      <section class="asset-metrics" aria-label="Resumen de la propiedad">
+      <section v-if="activeTab === 'resumen'" class="asset-metrics" aria-label="Resumen de la propiedad">
         <article>
           <span>Valor estimado</span
           ><strong>{{
@@ -556,8 +566,8 @@ onBeforeUnmount(() => {
           ><small>Ingresos cobrados − gastos pagados</small>
         </article>
       </section>
-      <section class="detail-grid property-detail-grid">
-        <article class="panel detail-panel">
+      <section v-if="activeTab !== 'resumen'" class="detail-grid property-detail-grid">
+        <article v-if="activeTab === 'datos'" class="panel detail-panel">
           <header>
             <span class="property-panel-icon"><Home :size="20" /></span>
             <div>
@@ -623,15 +633,14 @@ onBeforeUnmount(() => {
           >
             {{ property.notes }}
           </p>
-          <button
-            type="button"
-            class="property-text-button"
-            @click="startEditing"
-          >
-            Completar información<ArrowUpRight :size="15" />
-          </button>
+          <div class="property-section-actions">
+            <button class="button secondary" type="button" :disabled="readOnly" @click="startEditing">Editar datos</button>
+            <button class="button secondary" type="button" :disabled="readOnly || uploading" @click="photoInput?.click()"><Camera :size="16" />Añadir foto</button>
+            <RouterLink v-if="product.accountFeatures.fiscality" class="button secondary" :to="`/fiscality?property=${property.id}`">Fiscalidad</RouterLink>
+          </div>
+          <button class="property-text-button property-archive-action" type="button" :disabled="readOnly || propertyActionBusy" @click="archiveProperty"><Archive :size="15" />Archivar propiedad</button>
         </article>
-        <article class="panel detail-panel">
+        <article v-if="activeTab === 'alquiler'" class="panel detail-panel">
           <header>
             <span class="property-panel-icon"><KeyRound :size="20" /></span>
             <div>
@@ -655,10 +664,10 @@ onBeforeUnmount(() => {
               {{ date(activeLease.start_date) }} ·
               {{ date(activeLease.end_date) }}
             </p>
-            <RouterLink
-              class="property-panel-link"
-              :to="'/leases/' + activeLease.id"
-              >Ver contrato<ArrowUpRight :size="15" /></RouterLink></template
+            <div class="property-section-actions">
+              <RouterLink class="button secondary" :to="'/leases/' + activeLease.id">Ver contrato</RouterLink>
+              <RouterLink v-if="!readOnly" class="button secondary" :to="`/leases/${activeLease.id}?action=edit`">Añadir inquilino</RouterLink>
+            </div></template
           ><template v-else
             ><p class="property-panel-description">
               Asocia un inquilino y un contrato para empezar a controlar la
@@ -666,11 +675,19 @@ onBeforeUnmount(() => {
             </p>
             <RouterLink
               class="button secondary"
-              :to="`/leases?new=1&property=${property.id}`"
+              v-if="!readOnly"
+              :to="`/leases?new=1&property=${property.id}&from=property`"
               >Crear alquiler<ArrowUpRight :size="15" /></RouterLink
           ></template>
+          <div v-if="property.leases?.length > 1" class="property-records">
+            <h3>Otros contratos</h3>
+            <RouterLink v-for="lease in property.leases.filter((item) => item.id !== activeLease?.id)" :key="lease.id" :to="`/leases/${lease.id}`">
+              <span>{{ lease.participants?.map((person) => person.name).join(', ') || 'Contrato' }}</span>
+              <small>{{ date(lease.start_date) }}</small>
+            </RouterLink>
+          </div>
         </article>
-        <article class="panel detail-panel">
+        <article v-if="activeTab === 'dinero'" class="panel detail-panel">
           <header>
             <span class="property-panel-icon"><WalletCards :size="20" /></span>
             <div>
@@ -688,14 +705,27 @@ onBeforeUnmount(() => {
               <dd>{{ money(expenses) }}</dd>
             </div>
           </dl>
-          <p class="property-panel-description">
-            Todos los movimientos registrados, sin límite de fecha.
-          </p>
-          <RouterLink class="property-panel-link" to="/finance"
-            >Ver movimientos<ArrowUpRight :size="15"
-          /></RouterLink>
+          <div v-if="pendingCharges.length" class="property-records">
+            <h3>Alquiler por cobrar</h3>
+            <div v-for="charge in pendingCharges" :key="charge.id" class="property-record">
+              <span>{{ charge.period }} · {{ money(Number(charge.amount) - Number(charge.paid_amount)) }}</span>
+              <RouterLink :to="`/finance?charge=${charge.id}&property=${property.id}&from=property`">Registrar cobro</RouterLink>
+            </div>
+          </div>
+          <div class="property-section-actions" v-if="!readOnly">
+            <RouterLink class="button secondary" :to="`/finance?new=1&property=${property.id}&direction=expense&from=property`">Añadir gasto</RouterLink>
+            <RouterLink class="button secondary" :to="`/finance?new=1&property=${property.id}&direction=income&from=property`">Otro ingreso</RouterLink>
+          </div>
+          <div class="property-records">
+            <h3>Últimos movimientos</h3>
+            <p v-if="!recentTransactions.length" class="muted">Aún no hay movimientos.</p>
+            <div v-for="transaction in recentTransactions" :key="transaction.id" class="property-record">
+              <span>{{ transaction.description }}</span>
+              <strong :class="{ 'is-negative': transaction.direction === 'expense' }">{{ transaction.direction === 'expense' ? '−' : '+' }}{{ money(transaction.amount) }}</strong>
+            </div>
+          </div>
         </article>
-        <article class="panel detail-panel">
+        <article v-if="activeTab === 'incidencias'" class="panel detail-panel">
           <header>
             <span
               class="property-panel-icon"
@@ -716,20 +746,17 @@ onBeforeUnmount(() => {
               </h2>
             </div>
           </header>
-          <p class="property-panel-description">
-            {{
-              openIssues
-                ? "Consulta los detalles y sigue la evolución de cada incidencia."
-                : "Aquí tendrás a mano cualquier reparación o asunto pendiente."
-            }}
-          </p>
-          <RouterLink
-            class="property-panel-link"
-            :to="'/issues?property=' + property.id"
-            >Gestionar incidencias<ArrowUpRight :size="15"
-          /></RouterLink>
+          <div class="property-section-actions" v-if="!readOnly">
+            <RouterLink class="button secondary" :to="`/issues?new=1&property=${property.id}&from=property`">Nueva incidencia</RouterLink>
+          </div>
+          <div class="property-records">
+            <p v-if="!property.issues?.length" class="muted">No hay incidencias registradas.</p>
+            <RouterLink v-for="issue in property.issues" :key="issue.id" :to="`/issues?property=${property.id}&issue=${issue.id}`">
+              <span>{{ issue.title }}</span><small>{{ issue.status }}</small>
+            </RouterLink>
+          </div>
         </article>
-        <article class="panel detail-panel property-documents-panel">
+        <article v-if="activeTab === 'documentos'" class="panel detail-panel property-documents-panel">
           <header>
             <span class="property-panel-icon"><FileText :size="20" /></span>
             <div>
@@ -744,14 +771,15 @@ onBeforeUnmount(() => {
               </h2>
             </div>
           </header>
-          <p class="property-panel-description">
-            Contratos, facturas y documentos del inmueble, juntos y accesibles.
-          </p>
-          <RouterLink
-            class="property-panel-link"
-            :to="'/documents?property=' + property.id"
-            >Abrir documentos<ArrowUpRight :size="15"
-          /></RouterLink>
+          <div class="property-section-actions" v-if="!readOnly">
+            <RouterLink class="button secondary" :to="`/documents?new=1&property=${property.id}&from=property`">Subir documento</RouterLink>
+          </div>
+          <div class="property-records">
+            <p v-if="!property.documents?.length" class="muted">Todavía no hay documentos.</p>
+            <RouterLink v-for="document in property.documents" :key="document.id" :to="`/documents?property=${property.id}&document=${document.id}`">
+              <span>{{ document.name }}</span><small>{{ document.category }}</small>
+            </RouterLink>
+          </div>
         </article>
       </section>
     </template>

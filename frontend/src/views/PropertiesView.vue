@@ -136,7 +136,7 @@ async function save() {
   fieldErrors.value = {};
   try {
     const { data } = await api.post("/properties", form.value);
-    await router.push("/properties/" + data.id);
+    await router.push(`/properties/${data.id}?tab=alquiler`);
   } catch (exception) {
     fieldErrors.value = exception.response?.data?.errors || {};
     error.value =
@@ -152,7 +152,7 @@ onBeforeUnmount(() => loadController?.abort());
 
 <template>
   <main class="page properties-page">
-    <header class="heading">
+    <header class="heading" data-tour="properties">
       <div>
         <p class="eyebrow">Tu patrimonio, en perspectiva</p>
         <h1>Propiedades</h1>

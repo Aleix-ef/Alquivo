@@ -1,11 +1,12 @@
 import { guides } from "./content/guides.js";
+import { legalPages } from "./content/legal.js";
 
 export const publicPages = [
   {
     path: "/",
-    title: "Alquivo | Gestión de alquileres para propietarios",
+    title: "Alquivo | Gestión inmobiliaria y asistente IA para propietarios",
     description:
-      "Organiza inmuebles, contratos, cobros, gastos y documentos con Alquivo. Software de gestión de alquileres para propietarios y pequeños inversores.",
+      "Organiza inmuebles, alquileres, cobros y contratos con Alquivo. Beta gratuita para propietarios; el asistente de IA está en preparación.",
   },
   {
     path: "/guias",
@@ -55,6 +56,7 @@ export function seoSettings(env = {}) {
 export function pageSeo(path, settings) {
   // Intentionally do not canonicalize private URLs, token links or unknown pages.
   const page = publicPages.find((candidate) => candidate.path === path);
+  const legalPage = legalPages.find((candidate) => candidate.path === path);
   const privateTitles = {
     "/404": "Página no encontrada",
     "/login": "Entrar",
@@ -65,9 +67,12 @@ export function pageSeo(path, settings) {
     "/reset-password": "Restablecer contraseña",
   };
   return {
-    title: page?.title || `${privateTitles[path] || "Tu espacio"} | Alquivo`,
+    title:
+      page?.title ||
+      `${legalPage?.title || privateTitles[path] || "Tu espacio"} | Alquivo`,
     description:
       page?.description ||
+      legalPage?.summary ||
       "Accede a tu espacio de gestión de alquileres en Alquivo.",
     robots:
       page && settings.indexable

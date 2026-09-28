@@ -78,8 +78,12 @@ async function save() {
       });
       await api.post("/documents", data);
     }
-    router.replace("/documents");
-    await load();
+    if (route.query.from === "property" && route.query.property) {
+      await router.replace(`/properties/${route.query.property}?tab=documentos`);
+    } else {
+      await router.replace("/documents");
+      await load();
+    }
   } catch (e) {
     error.value =
       e.response?.data?.message || "No se pudo guardar el documento.";
@@ -254,7 +258,7 @@ onMounted(load);
     <div
       v-if="show"
       class="drawer-bg"
-      @click.self="router.replace('/documents')"
+      @click.self="router.replace(route.query.from === 'property' && route.query.property ? `/properties/${route.query.property}?tab=documentos` : '/documents')"
     >
       <form class="drawer" @submit.prevent="save">
         <p class="eyebrow">

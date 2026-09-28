@@ -228,8 +228,8 @@ onMounted(async () => {
         </div>
         <template v-if="!session.user?.email_verified_at"
           ><p class="muted">
-            Verifica tu correo para acceder a tus inmuebles, documentos y al
-            asistente. Revisa tu bandeja de entrada y la carpeta de spam.
+            Confirma tu correo para proteger tu cuenta y recibir avisos de
+            seguridad. Puedes seguir utilizando Alquivo mientras tanto.
           </p>
           <button
             class="button secondary"

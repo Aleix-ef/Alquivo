@@ -27,7 +27,7 @@ class AiInfrastructureTest extends TestCase
         config(['assistant.model' => 'gpt-5.4-mini', 'ai.routing.chat' => 'legacy']);
         $router = app(AIModelRouter::class);
         $this->assertSame('gpt-5.4-mini', $router->route()['model']);
-        $this->assertSame('gpt-5.6-luna', $router->route('fast')['model']);
+        $this->assertSame('gpt-6-luna', $router->route('fast')['model']);
         $this->expectException(RuntimeException::class);
         $router->route('exceptional');
     }
@@ -49,16 +49,16 @@ class AiInfrastructureTest extends TestCase
     {
         [$user, $portfolio, $run, $step] = $this->reservedCall();
         $ledger = app(AiRunLedger::class);
-        $response = $this->response(['model' => 'gpt-5.6-luna-2099-01-01']);
+        $response = $this->response(['model' => 'gpt-6-luna-2099-01-01']);
         $ledger->completeCall($step, $response, 25, $portfolio, $user);
         $ledger->completeCall($step, $response, 25, $portfolio, $user);
         $run->refresh();
         $this->assertSame(100, $run->input_tokens);
         $this->assertSame(10, $run->output_tokens);
-        $this->assertSame(32000, $run->estimated_cost_nano_usd);
+        $this->assertSame(15000, $run->estimated_cost_nano_usd);
         $this->assertSame(0, $run->reserved_cost_nano_usd);
         $this->assertFalse($run->cost_incomplete);
-        $this->assertSame('gpt-5.6-luna-2099-01-01', $step->fresh()->metadata['reported_model']);
+        $this->assertSame('gpt-6-luna-2099-01-01', $step->fresh()->metadata['reported_model']);
         $this->assertSame(100, DB::table('ai_monthly_usage')->where('portfolio_id', $portfolio->id)->value('input_tokens'));
     }
 
@@ -90,11 +90,11 @@ class AiInfrastructureTest extends TestCase
     {
         [$user, $portfolio, $run, $step] = $this->reservedCall();
         $models = config('ai.models');
-        $models['gpt-5.6-luna']['input'] = 20000;
-        $models['gpt-5.6-luna']['output'] = 120000;
+        $models['gpt-6-luna']['input'] = 20000;
+        $models['gpt-6-luna']['output'] = 120000;
         config(['ai.models' => $models, 'ai.pricing_version' => 'a-later-price-version']);
         app(AiRunLedger::class)->completeCall($step, $this->response(), 25, $portfolio, $user);
-        $this->assertSame(32000, $run->fresh()->estimated_cost_nano_usd);
+        $this->assertSame(15000, $run->fresh()->estimated_cost_nano_usd);
         $this->assertNotSame('a-later-price-version', $step->fresh()->pricing_version);
     }
 
@@ -205,13 +205,13 @@ class AiInfrastructureTest extends TestCase
 
     private function request(): array
     {
-        return ['model' => 'gpt-5.6-luna', 'input' => [['role' => 'user', 'content' => 'Synthetic only']], 'max_output_tokens' => 500];
+        return ['model' => 'gpt-6-luna', 'input' => [['role' => 'user', 'content' => 'Synthetic only']], 'max_output_tokens' => 500];
     }
 
     private function response(array $overrides = []): array
     {
         return [...[
-            'id' => 'synthetic_response', 'status' => 'completed', 'model' => 'gpt-5.6-luna', 'output' => [],
+            'id' => 'synthetic_response', 'status' => 'completed', 'model' => 'gpt-6-luna', 'output' => [],
             'usage' => ['input_tokens' => 100, 'output_tokens' => 10],
         ], ...$overrides];
     }

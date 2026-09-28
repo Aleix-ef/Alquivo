@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref, watch, onBeforeUnmount } from "vue";
+import { computed, ref, watch, onBeforeUnmount, provide } from "vue";
 import {
   LayoutDashboard,
   Building2,
@@ -8,7 +8,6 @@ import {
   Wrench,
   CalendarDays,
   Files,
-  Plus,
   LogOut,
   Settings,
   UsersRound,
@@ -16,23 +15,28 @@ import {
   Menu,
   X,
   ChevronRight,
-  ArrowUpRight,
   Layers,
   Sparkles,
   LifeBuoy,
+  BookOpen,
 } from "@lucide/vue";
 import { useRoute, useRouter } from "vue-router";
 import { useSession } from "../session";
+import api from "../api";
 import { useProduct } from "../stores/product";
 import { usePlanAccess } from "../stores/planAccess";
 const planAccess = usePlanAccess();
 const product = useProduct();
 import BrandLogo from "../components/BrandLogo.vue";
 import AssistantWidget from "../components/AssistantWidget.vue";
+import OnboardingTour from "../components/OnboardingTour.vue";
 import { useDialog } from "../composables/useDialog";
 const route = useRoute();
 const assistant = ref(null);
+const tour = ref(null);
 const assistantOpen = ref(false);
+provide("open-assistant", () => assistant.value?.toggle());
+provide("start-tour", () => tour.value?.start());
 const mobileOpen = ref(false);
 const mobileQuery = window.matchMedia("(max-width: 850px)");
 const isMobile = ref(mobileQuery.matches);
@@ -50,6 +54,25 @@ useDialog(mobileOpen, sidebarElement, () => {
 });
 const signingOut = ref(false);
 const logoutError = ref("");
+const verificationMessage = ref("");
+const sendingVerification = ref(false);
+async function resendVerification() {
+  if (sendingVerification.value) return;
+  sendingVerification.value = true;
+  verificationMessage.value = "";
+  try {
+    verificationMessage.value = (
+      await api.post("/auth/email/resend")
+    ).data.message;
+  } catch (error) {
+    verificationMessage.value =
+      error.response?.status === 429
+        ? "Espera un minuto antes de volver a solicitar el enlace."
+        : "No se pudo solicitar el enlace. Inténtalo de nuevo más tarde.";
+  } finally {
+    sendingVerification.value = false;
+  }
+}
 const s = useSession(),
   router = useRouter(),
   nav = [
@@ -64,18 +87,50 @@ const s = useSession(),
     ["Calendario", "/calendar", CalendarDays],
     ["Documentos", "/documents", Files],
   ];
-const navGroups = computed(() => [
-  { label: "Tu patrimonio", items: nav.slice(0, 4) },
-  {
-    label: "Gestión",
-    items: nav
-      .slice(4)
-      .filter(
-        ([, path]) =>
-          path !== "/fiscality" || product.accountFeatures.fiscality,
-      ),
+const reminderDismissed = ref(false);
+const reminderKey = computed(
+  () => `alquivo:email-reminder:v1:${s.user?.id || ""}`,
+);
+watch(
+  reminderKey,
+  (key) => {
+    try {
+      reminderDismissed.value = localStorage.getItem(key) === "dismissed";
+    } catch {
+      reminderDismissed.value = false;
+    }
   },
-]);
+  { immediate: true },
+);
+function dismissReminder() {
+  reminderDismissed.value = true;
+  try {
+    localStorage.setItem(reminderKey.value, "dismissed");
+  } catch {
+    /* La elección vale para esta sesión. */
+  }
+}
+const primaryPaths = ["/dashboard", "/properties", "/leases", "/finance"];
+const primaryNav = computed(() =>
+  nav.filter(([, path]) => primaryPaths.includes(path)),
+);
+const secondaryNav = computed(() =>
+  nav.filter(
+    ([, path]) =>
+      !primaryPaths.includes(path) &&
+      (path !== "/fiscality" || product.accountFeatures.fiscality),
+  ),
+);
+const moreOpen = ref(false);
+watch(
+  () => route.path,
+  (path) => {
+    moreOpen.value = secondaryNav.value.some(
+      ([, to]) => path === to || path.startsWith(`${to}/`),
+    );
+  },
+  { immediate: true },
+);
 const currentSection = computed(
   () =>
     [
@@ -165,10 +220,20 @@ async function logout() {
         </div>
       </div>
       <nav aria-label="Navegación principal">
-        <div v-for="group in navGroups" :key="group.label" class="nav-group">
-          <p class="nav-label">{{ group.label }}</p>
+        <button
+          v-if="product.accountFeatures.assistant"
+          class="nav-assistant-entry"
+          type="button"
+          @click="assistant?.toggle()"
+        >
+          <Sparkles :size="18" :stroke-width="1.7" aria-hidden="true" />
+          <span>Alquivo AI</span>
+          <span class="nav-assistant-badge">Beta</span>
+        </button>
+        <div class="nav-group">
+          <p class="nav-label">Tu patrimonio</p>
           <RouterLink
-            v-for="[label, to, icon] in group.items"
+            v-for="[label, to, icon] in primaryNav"
             :key="to"
             :to="to"
             :title="label"
@@ -181,6 +246,35 @@ async function logout() {
             /><span>{{ label }}</span>
           </RouterLink>
         </div>
+        <details
+          class="nav-more"
+          :open="moreOpen"
+          @toggle="moreOpen = $event.target.open"
+        >
+          <summary>
+            <Layers :size="18" aria-hidden="true" /><span>Más herramientas</span
+            ><ChevronRight
+              class="nav-more-chevron"
+              :size="16"
+              aria-hidden="true"
+            />
+          </summary>
+          <div class="nav-group">
+            <RouterLink
+              v-for="[label, to, icon] in secondaryNav"
+              :key="to"
+              :to="to"
+              :title="label"
+            >
+              <component
+                :is="icon"
+                :size="18"
+                :stroke-width="1.7"
+                aria-hidden="true"
+              /><span>{{ label }}</span>
+            </RouterLink>
+          </div>
+        </details>
       </nav>
       <div class="sidebar-bottom">
         <RouterLink
@@ -189,13 +283,19 @@ async function logout() {
           class="sidebar-settings"
           ><LifeBuoy :size="20" /><span>Bandeja del equipo</span></RouterLink
         >
+        <button
+          class="sidebar-settings tour-menu-entry"
+          type="button"
+          @click="
+            mobileOpen = false;
+            tour?.start();
+          "
+        >
+          <BookOpen :size="19" /><span>Ver recorrido</span>
+        </button>
         <RouterLink to="/support" class="sidebar-settings support-entry"
           ><LifeBuoy :size="20" /><span>Ayuda y soporte</span></RouterLink
         >
-        <RouterLink to="/plans" class="sidebar-plan"
-          ><span><span class="plan-spark">✦</span> Un espacio para crecer</span
-          ><ArrowUpRight :size="16"
-        /></RouterLink>
         <RouterLink to="/settings" class="sidebar-settings"
           ><Settings :size="18" /><span>Configuración</span></RouterLink
         >
@@ -241,28 +341,35 @@ async function logout() {
             currentSection
           }}</strong>
         </div>
-        <div class="topbar-actions">
-          <button
-            v-if="
-              s.user?.email_verified_at && product.accountFeatures.assistant
-            "
-            class="button secondary assistant-entry"
-            aria-haspopup="dialog"
-            aria-controls="alquivo-assistant-panel"
-            :aria-expanded="assistantOpen"
-            @click="assistant?.toggle()"
-          >
-            <Sparkles :size="18" /><span>Asistente IA</span>
-          </button>
-          <RouterLink
-            class="button primary quick-add"
-            to="/properties?new=1"
-            aria-label="Añadir propiedad"
-            ><Plus :size="17" /><span>Añadir propiedad</span></RouterLink
-          >
-        </div>
       </header>
       <div id="main-content" tabindex="-1">
+        <section
+          v-if="!s.user?.email_verified_at && !reminderDismissed"
+          class="verification-banner"
+          role="status"
+        >
+          <div>
+            <strong>Confirma tu correo para proteger tu cuenta.</strong>
+            <small v-if="verificationMessage">{{ verificationMessage }}</small>
+          </div>
+          <div class="verification-actions">
+            <button
+              class="button secondary"
+              type="button"
+              :disabled="sendingVerification"
+              @click="resendVerification"
+            >
+              {{ sendingVerification ? "Enviando…" : "Reenviar" }}
+            </button>
+            <button
+              class="verification-dismiss"
+              type="button"
+              @click="dismissReminder"
+            >
+              Ahora no
+            </button>
+          </div>
+        </section>
         <p v-if="s.user?.local_admin" class="plan-access-notice" role="status">
           Administrador local · Funciones en pruebas visibles solo para esta
           cuenta. Los pagos siguen sujetos al bloqueo de la beta y la IA
@@ -283,10 +390,16 @@ async function logout() {
       </div>
       <footer class="workspace-footer">
         <span>Alquivo</span><span>Tu patrimonio, con claridad.</span>
+        <RouterLink to="/legal">Información legal</RouterLink>
       </footer>
     </section>
+    <OnboardingTour
+      ref="tour"
+      :assistant-available="product.accountFeatures.assistant"
+      @open-assistant="assistant?.toggle()"
+    />
     <AssistantWidget
-      v-if="s.user?.email_verified_at && product.accountFeatures.assistant"
+      v-if="product.accountFeatures.assistant"
       ref="assistant"
       @open-change="assistantOpen = $event"
     />

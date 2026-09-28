@@ -7,8 +7,9 @@ import {
   MessageCircle,
   RefreshCw,
 } from "@lucide/vue";
-import { supportStatuses } from "../supportChat.js";
+import { supportStatusLabel, ticketReference } from "../supportChat.js";
 import { useSupportChat } from "../composables/useSupportChat.js";
+import PrivacyNotice from "./PrivacyNotice.vue";
 const props = defineProps({
   mode: { type: String, default: "account" },
   active: { type: Boolean, default: true },
@@ -28,6 +29,7 @@ const {
   notice,
   connected,
   canManage,
+  mailNotificationsAvailable,
   hasOlder,
   page,
   lastPage,
@@ -54,13 +56,11 @@ const {
   <section
     class="support-chat"
     :class="{ 'support-chat-team': team }"
-    aria-label="Conversaciones de soporte"
+    aria-label="Tickets de soporte"
   >
     <div class="support-chat-toolbar">
       <p>
-        {{
-          team ? "Bandeja del equipo" : "Te responderemos en este mismo chat"
-        }}
+        {{ team ? "Bandeja de tickets" : "Tus tickets de soporte" }}
       </p>
       <button
         class="button secondary"
@@ -72,8 +72,16 @@ const {
       </button>
     </div>
     <p v-if="!team" class="support-chat-note">
-      No es atención inmediata. Tu consulta queda guardada para que el equipo
-      pueda responderte.
+      Puedes abrir varios tickets y consultar cada respuesta aquí. No es
+      atención inmediata; tu mensaje queda guardado hasta que podamos verlo.
+    </p>
+    <p
+      v-if="team && mailNotificationsAvailable === false"
+      class="support-chat-note"
+      role="status"
+    >
+      Los avisos por correo todavía no están activos. Revisa esta bandeja para
+      ver los tickets nuevos.
     </p>
     <p v-if="mode === 'public'" class="support-chat-note">
       Sin iniciar sesión, el chat solo está disponible mientras siga activa la
@@ -93,16 +101,17 @@ const {
       mantengas esta ventana abierta.
     </p>
     <div v-if="!selected" class="support-chat-list">
-      <label v-if="team" :for="`${id}-filter`"
+      <label :for="`${id}-filter`"
         >Mostrar<select :id="`${id}-filter`" v-model="filter">
-          <option value="">Todas las consultas</option>
-          <option
-            v-for="(label, status) in supportStatuses"
-            :key="status"
-            :value="status"
-          >
-            {{ label }}
+          <option value="open">Tickets abiertos</option>
+          <option value="waiting_support">
+            {{ supportStatusLabel("waiting_support", team) }}
           </option>
+          <option value="waiting_customer">
+            {{ supportStatusLabel("waiting_customer", team) }}
+          </option>
+          <option value="closed">Resueltos</option>
+          <option value="">Todos</option>
         </select></label
       >
       <button
@@ -114,6 +123,7 @@ const {
       >
         <span
           ><strong>{{ conversation.subject }}</strong
+          ><small>Ticket #{{ ticketReference(conversation.id) }}</small
           ><small v-if="team"
             >{{ conversation.name }} ·
             {{
@@ -124,14 +134,16 @@ const {
         <span
           ><span v-if="conversation.unread" class="support-unread"
             >Sin leer</span
-          ><small>{{ supportStatuses[conversation.status] }}</small></span
+          ><small>{{
+            supportStatusLabel(conversation.status, team)
+          }}</small></span
         >
       </button>
       <p v-if="!conversations.length && !loading">
         {{
           team
-            ? "No hay consultas en esta vista."
-            : "Todavía no tienes conversaciones. Puedes escribirnos abajo."
+            ? "No hay tickets en esta vista."
+            : "Todavía no tienes tickets en esta vista. Puedes abrir uno abajo."
         }}
       </p>
       <div v-if="lastPage > 1" class="support-chat-toolbar">
@@ -158,12 +170,12 @@ const {
           :disabled="busy"
           @click="newConversation"
         >
-          <ArrowLeft :size="16" /> Conversaciones
+          <ArrowLeft :size="16" /> Volver a los tickets
         </button>
         <h3>{{ selected.subject }}</h3>
         <p>
-          {{ supportStatuses[selected.status] }} · Referencia
-          {{ selected.id.slice(0, 8) }}
+          Ticket #{{ ticketReference(selected.id) }} ·
+          {{ supportStatusLabel(selected.status, team) }}
         </p>
         <p v-if="team">
           {{ selected.name }} · {{ selected.email || "Sin correo indicado"
@@ -235,7 +247,7 @@ const {
         </article>
       </div>
       <p v-if="selected.status === 'closed'" class="support-chat-note">
-        Si escribes de nuevo, la consulta se reabrirá.
+        Si escribes de nuevo, el ticket se reabrirá.
       </p>
     </template>
     <form
@@ -245,7 +257,7 @@ const {
     >
       <fieldset :disabled="busy || loading">
         <template v-if="!selected">
-          <h3><MessageCircle :size="20" /> Nueva consulta</h3>
+          <h3><MessageCircle :size="20" /> Nuevo ticket</h3>
           <template v-if="mode === 'public'">
             <label :for="`${id}-name`"
               >Nombre<input
@@ -323,6 +335,7 @@ const {
             </button>
           </li>
         </ul>
+        <PrivacyNotice v-if="!selected && !team" context="support" />
         <label v-if="!selected" class="support-consent"
           ><input
             v-model="form.privacy_acknowledged"

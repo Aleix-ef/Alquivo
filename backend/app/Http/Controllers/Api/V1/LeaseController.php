@@ -43,7 +43,11 @@ class LeaseController extends Controller
         $portfolio = $request->user()->portfolio();
         $this->ensureOwned($request, $lease);
         $data = $request->validate([
-            'contact_ids' => ['sometimes', 'array', 'min:1'], 'contact_ids.*' => ['integer', 'distinct'],
+            'contact_ids' => ['sometimes', 'array', 'max:20'], 'contact_ids.*' => ['integer', 'distinct'],
+            'new_contacts' => ['sometimes', 'array', 'max:20'],
+            'new_contacts.*.name' => ['required', 'string', 'max:120'],
+            'new_contacts.*.email' => ['nullable', 'email', 'max:255'],
+            'new_contacts.*.phone' => ['nullable', 'string', 'max:30'],
             'status' => ['sometimes', Rule::in(['draft', 'active', 'ended', 'cancelled'])],
             'start_date' => ['sometimes', 'date'],
             'end_date' => ['sometimes', 'nullable', 'date', 'after_or_equal:'.($request->input('start_date') ?: $lease->start_date->toDateString())],
@@ -60,17 +64,34 @@ class LeaseController extends Controller
             $data['end_date'] = today();
         }
         $contacts = $data['contact_ids'] ?? null;
-        unset($data['contact_ids']);
-        if ($contacts) {
-            $validContacts = Contact::where('portfolio_id', $portfolio->id)->whereIn('id', $contacts)->count();
-            if ($validContacts !== count($contacts)) {
-                throw ValidationException::withMessages(['contact_ids' => ['Algún inquilino no pertenece a esta cartera.']]);
-            }
+        $newContacts = $data['new_contacts'] ?? [];
+        unset($data['contact_ids'], $data['new_contacts']);
+        if ($contacts !== null && (count($contacts) + count($newContacts) < 1 || count($contacts) + count($newContacts) > 20)) {
+            throw ValidationException::withMessages(['contact_ids' => ['Selecciona entre 1 y 20 inquilinos.']]);
         }
-        DB::transaction(function () use ($lease, $data, $contacts) {
+        if ($contacts === null && count($newContacts) + $lease->participants()->count() > 20) {
+            throw ValidationException::withMessages(['new_contacts' => ['Un contrato admite hasta 20 inquilinos.']]);
+        }
+        DB::transaction(function () use ($lease, $portfolio, $data, $contacts, $newContacts) {
+            $ids = $contacts ?? ($newContacts ? $lease->participants()->pluck('contacts.id')->all() : null);
+            if ($ids !== null) {
+                $validContacts = Contact::where('portfolio_id', $portfolio->id)->whereIn('id', $ids)->lockForUpdate()->count();
+                if ($validContacts !== count($ids)) {
+                    throw ValidationException::withMessages(['contact_ids' => ['Algún inquilino no pertenece a esta cartera.']]);
+                }
+            }
+            foreach ($newContacts as $contact) {
+                $ids[] = Contact::create([
+                    'portfolio_id' => $portfolio->id,
+                    'kind' => 'person',
+                    'name' => $contact['name'],
+                    'email' => $contact['email'] ?? null,
+                    'phone' => $contact['phone'] ?? null,
+                ])->id;
+            }
             $lease->update($data);
-            if ($contacts) {
-                $lease->participants()->sync(collect($contacts)->mapWithKeys(
+            if ($ids !== null) {
+                $lease->participants()->sync(collect($ids)->mapWithKeys(
                     fn ($id, $index) => [$id => ['role' => 'tenant', 'is_primary' => $index === 0]],
                 ));
             }

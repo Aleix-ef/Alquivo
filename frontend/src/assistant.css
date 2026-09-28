@@ -242,6 +242,33 @@
   font-size: 16px;
   line-height: 1.65;
 }
+.assistant-empty .assistant-consent-summary {
+  margin: 10px 0 0;
+  line-height: 1.5;
+}
+.assistant-privacy-details {
+  width: min(100%, 440px);
+  margin: 16px 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  text-align: left;
+  background: var(--surface-soft);
+}
+.assistant-privacy-details summary {
+  padding: 13px 15px;
+  color: var(--ink);
+  font-size: 15px;
+  font-weight: 650;
+  cursor: pointer;
+}
+.assistant-privacy-details > div {
+  padding: 0 15px 13px;
+}
+.assistant-privacy-details p {
+  margin: 10px 0;
+  font-size: 14px;
+  line-height: 1.55;
+}
 .assistant-suggestions {
   width: 100%;
   display: grid;

@@ -22,6 +22,7 @@ class PlanApiTest extends TestCase
         $this->actingAs($user)->getJson('/api/v1/plans')->assertOk()
             ->assertJsonPath('current.code', 'free')->assertJsonPath('current.properties.limit', 1)
             ->assertJsonPath('plans.founder.property_limit', 20)
+            ->assertJsonPath('plans.free.property_limit', 1)
             ->assertJsonPath('plans.founder.price_monthly', 6.99)
             ->assertJsonMissingPath('plans.investor');
     }
@@ -53,7 +54,7 @@ class PlanApiTest extends TestCase
             ->assertJsonPath('current.on_trial', true)
             ->assertJsonPath('current.properties.limit', 20)
             ->assertJsonPath('current.storage.limit', 2147483648)
-            ->assertJsonMissingPath('plans.free');
+            ->assertJsonPath('plans.free.property_limit', 1);
     }
 
     public function test_expired_product_trial_falls_back_to_free_plan(): void

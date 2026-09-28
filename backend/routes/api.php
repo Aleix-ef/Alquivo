@@ -33,6 +33,7 @@ Route::middleware('throttle:20,1')->group(function () {
     Route::post('/auth/register', [AuthController::class, 'register'])->middleware('throttle:registration');
     Route::post('/auth/login', [AuthController::class, 'login'])->middleware('throttle:auth-login');
     Route::post('/auth/two-factor', [TwoFactorController::class, 'challenge'])->middleware('throttle:two-factor-challenge');
+    Route::post('/auth/two-factor/resend', [TwoFactorController::class, 'resend'])->middleware('throttle:two-factor-challenge');
     Route::post('/auth/forgot-password', [AuthController::class, 'forgotPassword'])->middleware('throttle:auth-recovery');
     Route::post('/auth/reset-password', [AuthController::class, 'resetPassword']);
 });
@@ -70,6 +71,10 @@ Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
     }
     Route::get('/auth/me', [AuthController::class, 'me']);
     Route::get('/account/two-factor', [TwoFactorController::class, 'status']);
+    Route::put('/account/two-factor/method', [TwoFactorController::class, 'updateMethod'])->middleware('throttle:two-factor-settings');
+    Route::get('/account/two-factor/devices', [TwoFactorController::class, 'devices']);
+    Route::delete('/account/two-factor/devices', [TwoFactorController::class, 'revokeDevices']);
+    Route::delete('/account/two-factor/devices/{device}', [TwoFactorController::class, 'revokeDevice'])->whereNumber('device');
     Route::post('/account/two-factor/setup', [TwoFactorController::class, 'setup'])->middleware('throttle:two-factor-settings');
     Route::post('/account/two-factor/confirm', [TwoFactorController::class, 'confirm'])->middleware('throttle:two-factor-settings');
     Route::delete('/account/two-factor', [TwoFactorController::class, 'disable'])->middleware('throttle:two-factor-settings');
@@ -81,7 +86,8 @@ Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
     Route::get('/account/usage', [AccountController::class, 'usage']);
     Route::get('/plans', PlanController::class);
     Route::delete('/account', [AccountController::class, 'destroy'])->middleware('throttle:6,1');
-    Route::middleware('verified')->group(function () {
+    Route::get('/dashboard', DashboardController::class);
+    Route::group([], function () {
         Route::prefix('document-ai')->controller(DocumentAiController::class)->group(function () {
             Route::get('/', 'index');
             Route::post('/consent', 'consent');
@@ -94,7 +100,6 @@ Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
         });
         Route::post('/billing/checkout', [BillingController::class, 'checkout']);
         Route::post('/billing/portal', [BillingController::class, 'portal']);
-        Route::get('/dashboard', DashboardController::class);
         Route::get('/assistant/conversations', [AssistantController::class, 'index']);
         Route::get('/assistant/runs/{run}', [AssistantController::class, 'run'])->whereUuid('run');
         Route::get('/assistant/proposals/{proposal}', [AssistantProposalController::class, 'show'])->whereUuid('proposal');

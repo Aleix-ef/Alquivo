@@ -7,6 +7,7 @@ use App\Domain\Support\Models\SupportAttachment;
 use App\Domain\Support\Models\SupportConversation;
 use App\Domain\Support\Services\SupportAccess;
 use App\Domain\Support\Services\SupportChat;
+use App\Domain\Support\Services\SupportTicketNotifier;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\SupportChatRequest;
 use App\Support\SecurityAudit;
@@ -20,9 +21,11 @@ final class SupportChatController extends Controller
 
     public function index(Request $request)
     {
-        $data = $request->validate(['status' => ['nullable', Rule::in(['waiting_support', 'waiting_customer', 'closed'])], 'page' => ['nullable', 'integer', 'min:1', 'max:10000']]);
+        $data = $request->validate(['status' => ['nullable', Rule::in(['open', 'waiting_support', 'waiting_customer', 'closed'])], 'page' => ['nullable', 'integer', 'min:1', 'max:10000']]);
         $query = $this->access->query($request);
-        if (! empty($data['status'])) {
+        if (($data['status'] ?? null) === 'open') {
+            $query->whereIn('status', ['waiting_support', 'waiting_customer']);
+        } elseif (! empty($data['status'])) {
             $query->where('status', $data['status']);
         }
         $result = $query->orderByDesc('updated_at')->orderBy('id')->paginate(20);
@@ -32,6 +35,7 @@ final class SupportChatController extends Controller
             'current_page' => $result->currentPage(), 'last_page' => $result->lastPage(),
             'can_manage' => ! $this->access->isPublic($request) && $this->access->canManage($request->user()),
             'retention_days' => (int) config('support.chat_retention_days', 180),
+            ...($this->access->isTeam($request) ? ['email_notifications_available' => app(SupportTicketNotifier::class)->available()] : []),
         ])->header('Cache-Control', 'private, no-store');
     }
 

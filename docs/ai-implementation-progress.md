@@ -1,6 +1,14 @@
 # Alquivo AI — progreso de implementación
 
-Última actualización: 2026-09-24. Documento de reanudación; distingue código implementado, comprobaciones realizadas y tareas pendientes. No representa una validación de calidad de modelos reales ni autorización de lanzamiento.
+Última actualización: 2026-09-25. Documento de reanudación; distingue código implementado, comprobaciones realizadas y tareas pendientes. No representa una validación de calidad de modelos reales ni autorización de lanzamiento.
+## Activación de IA para pruebas de la beta local (2026-09-25)
+
+Autorización del propietario: habilitar el chat ahora para que pueda probarse antes de publicar y destacar la IA como parte principal del producto. Solo se han activado `ASSISTANT_ENABLED=true` y `ASSISTANT_VALIDATED=true` en el `backend/.env` local, ignorado por Git; las plantillas mantienen la función apagada por defecto. No es un despliegue público.
+
+Chat primario GPT-6 Luna; GPT-6 Sol como fallback ante fallos reintentables o respuestas estructuradas inválidas. El router actual **no** eleva a Sol por complejidad semántica, y ambas llamadas siguen sujetas al límite de presupuesto por turno. GPT-6 Astra permanece desactivado. Precios estándar, coste por tokens y versión guardados en `config/ai.php`; basados en [modelos](https://developers.openai.com/api/docs/models) y [precios](https://developers.openai.com/api/docs/pricing) oficiales consultados el 25-09-2026. El techo global local se baja a 5 USD/mes; se conserva el máximo de 0,10 USD por turno y el de 3 USD por cartera.
+
+Dashboard ahora destaca el asistente con CTA, y la navegación lateral/titular permiten abrirlo. Se conservan consentimiento informado individual, posibilidad de revocarlo y límites de cuota/tokens/coste. El consentimiento avisa que los prompts y datos de cartera usados por herramientas se envían a OpenAI, que puede mantener registros de seguridad hasta 30 días. No se realizó ninguna inferencia durante esta configuración ni se enviaron datos a OpenAI. Document AI continúa en simulación y no se conecta a GPT-6.
+
 
 ## Prioridad 5 implementada y comprobada — Qué necesita mi atención (2026-09-24)
 

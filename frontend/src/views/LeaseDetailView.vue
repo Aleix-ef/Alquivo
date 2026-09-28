@@ -11,6 +11,7 @@ import {
 import { useRoute, useRouter } from "vue-router";
 import api from "../api";
 import { fetchAllPages } from "../pagination";
+import TenantSelector from "../components/TenantSelector.vue";
 
 const route = useRoute();
 const router = useRouter();
@@ -32,6 +33,7 @@ const statusLabel = {
   cancelled: "Cancelado",
 };
 const editForm = ref({});
+const newContacts = ref([]);
 const renewalForm = ref({});
 
 let loadGeneration = 0;
@@ -47,6 +49,7 @@ async function load() {
     if (generation !== loadGeneration) return;
     lease.value = leaseResponse.data;
     contacts.value = contactsResponse;
+    if (action.value === "edit") prepareEdit();
   } catch (exception) {
     if (generation !== loadGeneration) return;
     loadError.value =
@@ -64,7 +67,8 @@ function tomorrowAfter(date) {
   return next.toISOString().slice(0, 10);
 }
 
-function openEdit() {
+function prepareEdit() {
+  newContacts.value = [];
   editForm.value = {
     contact_ids: lease.value.participants.map((contact) => contact.id),
     status: lease.value.status,
@@ -76,6 +80,10 @@ function openEdit() {
     notes: lease.value.notes || "",
   };
   error.value = "";
+}
+
+function openEdit() {
+  prepareEdit();
   router.push({ query: { action: "edit" } });
 }
 
@@ -96,8 +104,17 @@ async function saveEdit() {
   saving.value = true;
   error.value = "";
   try {
+    if (!editForm.value.contact_ids.length && !newContacts.value.length) {
+      error.value = "Añade al menos un inquilino.";
+      return;
+    }
     await api.put(`/leases/${lease.value.id}`, {
       ...editForm.value,
+      new_contacts: newContacts.value.map((contact) => ({
+        name: contact.name.trim(),
+        email: contact.email.trim() || null,
+        phone: contact.phone.trim() || null,
+      })),
       end_date: editForm.value.end_date || null,
       monthly_rent: Number(editForm.value.monthly_rent),
       deposit_amount: Number(editForm.value.deposit_amount || 0),
@@ -294,17 +311,13 @@ onBeforeUnmount(() => {
             <option value="ended">Finalizado</option>
             <option value="cancelled">Cancelado</option>
           </select></label
-        ><label
-          >Inquilinos<select v-model="editForm.contact_ids" multiple required>
-            <option
-              v-for="contact in contacts"
-              :key="contact.id"
-              :value="contact.id"
-            >
-              {{ contact.name }}
-            </option>
-          </select></label
-        ><label
+        >
+        <TenantSelector
+          :contacts="contacts"
+          v-model:selected-ids="editForm.contact_ids"
+          v-model:new-contacts="newContacts"
+        />
+        <label
           >Inicio<input
             v-model="editForm.start_date"
             type="date"

@@ -24,7 +24,11 @@ final class CreateLease
             $money = ['regex:/^\d{1,10}(?:\.\d{1,2})?$/D', 'numeric', 'max:9999999999.99'];
             $data = Validator::make($input, [
                 'property_id' => ['required', 'integer'],
-                'contact_ids' => ['required', 'array', 'min:1', 'max:20'], 'contact_ids.*' => ['integer', 'distinct'],
+                'contact_ids' => ['sometimes', 'array', 'max:20'], 'contact_ids.*' => ['integer', 'distinct'],
+                'new_contacts' => ['sometimes', 'array', 'max:20'],
+                'new_contacts.*.name' => ['required', 'string', 'max:120'],
+                'new_contacts.*.email' => ['nullable', 'email', 'max:255'],
+                'new_contacts.*.phone' => ['nullable', 'string', 'max:30'],
                 'status' => ['required', Rule::in(['draft', 'active'])],
                 'start_date' => ['required', 'date_format:Y-m-d'],
                 'end_date' => ['nullable', 'date_format:Y-m-d', 'after_or_equal:start_date'],
@@ -35,15 +39,28 @@ final class CreateLease
             ])->validate();
             app(PropertyAccess::class)->assertWritable($portfolio, (int) $data['property_id']);
             $property = $portfolio->properties()->whereKey($data['property_id'])->lockForUpdate()->firstOrFail();
-            $contacts = Contact::where('portfolio_id', $portfolio->id)->whereIn('id', $data['contact_ids'])->lockForUpdate()->get();
-            if ($contacts->count() !== count($data['contact_ids'])) {
+            $ids = $data['contact_ids'] ?? [];
+            $newContacts = $data['new_contacts'] ?? [];
+            if (count($ids) + count($newContacts) < 1 || count($ids) + count($newContacts) > 20) {
+                throw ValidationException::withMessages(['contact_ids' => 'Selecciona entre 1 y 20 inquilinos.']);
+            }
+            $contacts = Contact::where('portfolio_id', $portfolio->id)->whereIn('id', $ids)->lockForUpdate()->get();
+            if ($contacts->count() !== count($ids)) {
                 throw ValidationException::withMessages(['contact_ids' => 'Selecciona inquilinos de esta cartera.']);
             }
             if ($data['status'] === 'active' && $property->leases()->where('status', 'active')->exists()) {
                 throw ValidationException::withMessages(['property_id' => 'La propiedad ya tiene un arrendamiento activo.']);
             }
-            $ids = $data['contact_ids'];
-            unset($data['contact_ids']);
+            foreach ($newContacts as $contact) {
+                $ids[] = Contact::create([
+                    'portfolio_id' => $portfolio->id,
+                    'kind' => 'person',
+                    'name' => $contact['name'],
+                    'email' => $contact['email'] ?? null,
+                    'phone' => $contact['phone'] ?? null,
+                ])->id;
+            }
+            unset($data['contact_ids'], $data['new_contacts']);
             $data['deposit_amount'] ??= '0.00';
             $lease = Lease::create([...$data, 'portfolio_id' => $portfolio->id]);
             $lease->participants()->attach(collect($ids)->mapWithKeys(fn ($id, $i) => [$id => ['role' => 'tenant', 'is_primary' => $i === 0]]));

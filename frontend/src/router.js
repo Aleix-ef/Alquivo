@@ -109,14 +109,6 @@ router.beforeEach(async (to) => {
   if (!to.meta.public && !s.ready) {
     return { name: "login", query: { redirect: to.fullPath } };
   }
-  if (
-    !to.meta.public &&
-    s.ready &&
-    !s.user.email_verified_at &&
-    !["/settings", "/plans", "/support", "/verify-email"].includes(to.path)
-  ) {
-    return "/settings";
-  }
   if (to.meta.guestOnly && s.ready) return safeReturnPath(to.query.redirect);
   if (to.path === "/fiscality" && !product.accountFeatures.fiscality)
     return "/reports";

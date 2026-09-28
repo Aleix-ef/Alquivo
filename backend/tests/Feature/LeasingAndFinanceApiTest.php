@@ -155,4 +155,55 @@ class LeasingAndFinanceApiTest extends TestCase
 
         $this->assertDatabaseHas('lease_participants', ['lease_id' => $response->json('id'), 'contact_id' => $contact->id]);
     }
+
+    public function test_lease_can_combine_existing_and_new_tenants_without_orphan_contacts(): void
+    {
+        [$user, $portfolio, $property] = $this->owner();
+        $existing = Contact::create(['portfolio_id' => $portfolio->id, 'name' => 'María', 'kind' => 'person']);
+        $payload = [
+            'property_id' => $property->id, 'contact_ids' => [$existing->id],
+            'new_contacts' => [['name' => 'Luis', 'email' => 'luis@example.com']],
+            'status' => 'active', 'start_date' => today()->toDateString(),
+            'monthly_rent' => 800, 'payment_day' => 5,
+        ];
+        $response = $this->actingAs($user)->postJson('/api/v1/leases', $payload)
+            ->assertCreated()->assertJsonCount(2, 'participants');
+        $this->assertDatabaseHas('contacts', ['portfolio_id' => $portfolio->id, 'name' => 'Luis']);
+        $this->assertDatabaseHas('lease_participants', ['lease_id' => $response->json('id'), 'contact_id' => $existing->id, 'is_primary' => true]);
+
+        $this->postJson('/api/v1/leases', [
+            ...$payload, 'new_contacts' => [['name' => 'No debe crearse']],
+        ])->assertUnprocessable();
+        $this->assertDatabaseMissing('contacts', ['name' => 'No debe crearse']);
+    }
+
+    public function test_lease_can_start_with_only_a_new_tenant(): void
+    {
+        [$user, $portfolio, $property] = $this->owner();
+        $response = $this->actingAs($user)->postJson('/api/v1/leases', [
+            'property_id' => $property->id,
+            'new_contacts' => [['name' => 'Inquilino nuevo', 'phone' => '600123123']],
+            'status' => 'active', 'start_date' => today()->toDateString(),
+            'monthly_rent' => 650, 'payment_day' => 5,
+        ])->assertCreated()->assertJsonCount(1, 'participants');
+        $this->assertDatabaseHas('contacts', ['portfolio_id' => $portfolio->id, 'name' => 'Inquilino nuevo']);
+        $this->assertDatabaseHas('lease_participants', ['lease_id' => $response->json('id'), 'is_primary' => true]);
+    }
+
+    public function test_existing_lease_can_add_a_new_tenant_inline(): void
+    {
+        [$user, $portfolio, $property] = $this->owner();
+        $existing = Contact::create(['portfolio_id' => $portfolio->id, 'name' => 'María', 'kind' => 'person']);
+        $lease = Lease::create([
+            'portfolio_id' => $portfolio->id, 'property_id' => $property->id,
+            'status' => 'active', 'start_date' => today(), 'monthly_rent' => 800, 'payment_day' => 5,
+        ]);
+        $lease->participants()->attach($existing, ['role' => 'tenant', 'is_primary' => true]);
+
+        $this->actingAs($user)->putJson("/api/v1/leases/{$lease->id}", [
+            'contact_ids' => [$existing->id], 'new_contacts' => [['name' => 'Ana', 'phone' => '600123123']],
+        ])->assertOk()->assertJsonCount(2, 'participants');
+        $new = Contact::where('portfolio_id', $portfolio->id)->where('name', 'Ana')->firstOrFail();
+        $this->assertDatabaseHas('lease_participants', ['lease_id' => $lease->id, 'contact_id' => $new->id]);
+    }
 }
