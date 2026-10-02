@@ -34,7 +34,8 @@ final class PortfolioAttention
         $charges = $balances->charges($portfolio, $propertyId)->where('status', '!=', 'cancelled')
             ->whereHas('lease', fn ($q) => $q->whereIn('status', ['active', 'ended']))
             ->whereDate('due_date', '<=', $cutoff('rent'))->where('amount', '>', clone $paid)
-            ->select('rent_charges.*')->selectSub($paid, 'recorded_paid')->with('lease.property')->get();
+            ->select('rent_charges.*')->selectSub($paid, 'recorded_paid')
+            ->with(['lease.property', 'lease.participants' => fn ($q) => $q->where('contacts.portfolio_id', $portfolio->id)])->get();
         $rentTotal = '0.00';
         foreach ($charges as $charge) {
             // Ended leases retain historical debt, never future-period charges.
@@ -49,13 +50,16 @@ final class PortfolioAttention
             }
             $date = $charge->due_date->toDateString();
             $partial = bccomp($received, '0', 2) > 0;
+            $tenants = $charge->lease->participants->filter(fn ($person) => $person->pivot->role === 'tenant');
             $type = $date < $today ? 'rent_overdue' : ($partial ? 'rent_partial' : 'rent_pending');
             $items[] = $this->item('rents', $type, 'rent_charge', $charge->id, $charge->lease->property,
                 $type === 'rent_overdue' ? 'Alquiler con saldo atrasado' : ($partial ? 'Alquiler cobrado parcialmente' : 'Alquiler pendiente'),
                 $date, $today, $remaining, '/leases/'.$charge->lease_id, 'Ver mensualidad',
                 ['rule' => 'recorded_rent_balance', 'lease_id' => $charge->lease_id, 'period' => $charge->period,
                     'amount' => $charge->amount, 'recorded_paid' => $received, 'remaining' => $remaining,
-                    'payment_state' => $partial ? 'partial' : 'pending', 'due_date' => $date, 'window_days' => $windows['rent']],
+                    'payment_state' => $partial ? 'partial' : 'pending', 'due_date' => $date, 'window_days' => $windows['rent'],
+                    'tenants' => $tenants->take(10)->map(fn ($person) => ['id' => $person->id, 'name' => $person->name])->values()->all(),
+                    'tenant_count' => $tenants->count(), 'tenants_truncated' => $tenants->count() > 10],
                 'Saldo de la mensualidad '.$charge->period.' según los cobros registrados.');
             $rentTotal = bcadd($rentTotal, $remaining, 2);
         }

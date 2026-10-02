@@ -30,7 +30,7 @@ class TransactionController extends Controller
             'category' => ['required', 'string', 'max:50'], 'description' => ['required', 'string', 'max:180'],
             'amount' => ['required', 'numeric', 'gt:0'], 'transaction_date' => ['required', 'date'],
             'due_date' => ['nullable', 'date'], 'status' => ['required', Rule::in(['pending', 'paid', 'cancelled'])],
-            'payment_method' => ['nullable', 'string', 'max:40'], 'notes' => ['nullable', 'string'],
+            'payment_method' => ['nullable', 'string', 'max:40'], 'notes' => ['nullable', 'string', 'max:10000'],
         ]);
         if ($data['direction'] === 'expense') {
             return response()->json(app(CreateExpense::class)->execute($portfolio, $request->user(), $data), 201);
@@ -56,7 +56,7 @@ class TransactionController extends Controller
             'transaction_date' => ['sometimes', 'nullable', 'date'],
             'due_date' => ['sometimes', 'nullable', 'date'],
             'payment_method' => ['sometimes', 'nullable', 'string', 'max:40'],
-            'notes' => ['sometimes', 'nullable', 'string'],
+            'notes' => ['sometimes', 'nullable', 'string', 'max:10000'],
         ]);
         if (array_key_exists('property_id', $data) && $data['property_id']) {
             Property::where('portfolio_id', $request->user()->portfolio()->id)->findOrFail($data['property_id']);

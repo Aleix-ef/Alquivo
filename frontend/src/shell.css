@@ -41,9 +41,8 @@
 .sidebar .alquivo-brand {
   color: var(--ink);
 }
-.alquivo-wordmark {
-  font-size: 19px;
-  letter-spacing: 0.18em;
+.sidebar .alquivo-wordmark {
+  width: 168px;
 }
 .portfolio {
   display: flex;

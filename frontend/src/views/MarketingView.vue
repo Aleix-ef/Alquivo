@@ -1,5 +1,6 @@
 <script setup>
 import { computed, onMounted, ref } from "vue";
+import { useI18n } from "vue-i18n";
 import {
   ArrowRight,
   BarChart3,
@@ -21,6 +22,12 @@ import LegalLinks from "../components/LegalLinks.vue";
 import { useProduct } from "../stores/product";
 import { guides } from "../content/guides.js";
 
+// The static prelaunch build reuses this page, without exposing app navigation.
+const props = defineProps({ waitlistMode: { type: Boolean, default: false } });
+const signupTarget = computed(() =>
+  props.waitlistMode ? "/#solicitud" : "/register",
+);
+const { t } = useI18n({ useScope: "global" });
 const plans = ref([]);
 const product = useProduct();
 
@@ -48,13 +55,24 @@ const visiblePlans = computed(() =>
       : [],
 );
 const money = (value) =>
-  new Intl.NumberFormat("es-ES", {
+  new Intl.NumberFormat(t("language.numberLocale"), {
     style: "currency",
     currency: "EUR",
     maximumFractionDigits: value % 1 ? 2 : 0,
   }).format(value);
 
+const featureLabels = {
+  "Dashboard, alquileres y finanzas": "dashboardFeature",
+  "Hasta 10 inmuebles": "tenFeature",
+  "1 GB de documentos y fotos": "storageFeature",
+  "Informes y exportación de datos": "reportsFeature",
+};
+const featureLabel = (value) =>
+  featureLabels[value] ? t(`marketing.${featureLabels[value]}`) : value;
+const planName = (plan) =>
+  plan.code === "beta" ? t("marketing.betaName") : plan.name;
 onMounted(async () => {
+  if (props.waitlistMode) return;
   try {
     const { data } = await api.get("/public/plans");
     if (Array.isArray(data.plans)) plans.value = data.plans;
@@ -65,25 +83,34 @@ onMounted(async () => {
 </script>
 
 <template>
-  <main class="marketing-page">
+  <main
+    id="contenido"
+    class="marketing-page"
+    :class="{ 'waitlist-page': waitlistMode }"
+  >
     <header class="marketing-header">
       <RouterLink class="marketing-logo" to="/" aria-label="Alquivo, inicio">
         <BrandLogo />
       </RouterLink>
-      <nav aria-label="Navegación principal">
-        <a href="#como-funciona">Cómo funciona</a>
-        <a href="#asistente">Asistente IA</a>
-        <a href="#funciones">Funciones</a>
-        <a href="#planes">Planes</a>
-        <RouterLink to="/guias">Guías</RouterLink>
+      <nav :aria-label="$t('marketing.mainNav')">
+        <a href="#como-funciona">{{ $t("marketing.how") }}</a>
+        <a href="#asistente">{{ $t("marketing.assistant") }}</a>
+        <a href="#funciones">{{ $t("marketing.features") }}</a>
+        <a href="#planes">{{ $t("marketing.plans") }}</a>
+        <RouterLink v-if="!waitlistMode" to="/guias">{{
+          $t("marketing.guides")
+        }}</RouterLink>
       </nav>
       <div class="marketing-header-actions">
-        <RouterLink class="button button-quiet marketing-login" to="/login"
-          >Entrar</RouterLink
+        <RouterLink
+          v-if="!waitlistMode"
+          class="button button-quiet marketing-login"
+          to="/login"
+          >{{ $t("common.login") }}</RouterLink
         >
-        <RouterLink class="button button-small" to="/register"
-          >Empieza gratis</RouterLink
-        >
+        <RouterLink class="button button-small" :to="signupTarget">{{
+          $t("common.startFree")
+        }}</RouterLink>
       </div>
     </header>
 
@@ -92,62 +119,69 @@ onMounted(async () => {
         <p class="marketing-eyebrow">
           <span></span>
           {{
-            product.features.beta_program ? "Beta gratuita" : "Plan gratuito"
+            product.features.beta_program
+              ? $t("marketing.freeBeta")
+              : $t("marketing.freePlan")
           }}
           ·
           {{
             product.features.assistant
-              ? "Asistente IA disponible"
-              : "Asistente IA en preparación"
+              ? $t("marketing.assistantAvailable")
+              : $t("marketing.assistantSoon")
           }}
         </p>
-        <h1>Gestiona tu cartera hoy. <em>Entiéndela mejor con IA.</em></h1>
+        <h1>
+          {{ $t("marketing.heroFirst") }}
+          <em>{{ $t("marketing.heroSecond") }}</em>
+        </h1>
         <p class="hero-lead">
           {{
             product.features.assistant
-              ? "Organiza inmuebles, cobros y contratos desde un mismo lugar. Pregunta al asistente por la información que hayas registrado y decide si quieres activarlo tras leer su aviso de privacidad."
-              : "Organiza inmuebles, cobros y contratos desde un mismo lugar. Estamos preparando un asistente para consultar los datos que registres en Alquivo."
+              ? $t("marketing.heroWithAI")
+              : $t("marketing.heroWithoutAI")
           }}
         </p>
         <div class="hero-actions">
-          <RouterLink class="button button-large" to="/register">
+          <RouterLink class="button button-large" :to="signupTarget">
             {{
               product.features.beta_program
-                ? "Probar la beta gratis"
-                : "Crear cuenta gratis"
+                ? $t("marketing.tryBeta")
+                : $t("marketing.createFree")
             }}
             <ArrowRight :size="18" aria-hidden="true" />
           </RouterLink>
           <a class="text-action" href="#asistente"
-            >Conocer el asistente <ChevronRight :size="17"
+            >{{ $t("marketing.learnAssistant") }} <ChevronRight :size="17"
           /></a>
         </div>
-        <div class="hero-reassurance" aria-label="Condiciones de acceso">
-          <span
-            ><CircleCheck :size="16" />
-            {{
-              product.features.beta_program ? "Beta gratuita" : "Plan gratuito"
-            }}</span
-          >
-          <span><CircleCheck :size="16" /> Sin tarjeta</span>
+        <div
+          class="hero-reassurance"
+          :aria-label="$t('marketing.accessConditions')"
+        >
           <span
             ><CircleCheck :size="16" />
             {{
               product.features.beta_program
-                ? "Hasta 10 inmuebles"
-                : "Sin renovación automática"
+                ? $t("marketing.freeBeta")
+                : $t("marketing.freePlan")
+            }}</span
+          >
+          <span><CircleCheck :size="16" /> {{ $t("marketing.noCard") }}</span>
+          <span
+            ><CircleCheck :size="16" />
+            {{
+              product.features.beta_program
+                ? $t("marketing.upToTen")
+                : $t("marketing.noAutoRenew")
             }}</span
           >
         </div>
       </div>
 
-      <div
-        class="product-preview"
-        aria-label="Vista previa del panel de Alquivo"
-      >
+      <div class="product-preview" :aria-label="$t('marketing.productPreview')">
         <div class="preview-window">
           <div class="preview-sidebar">
-            <div class="preview-mini-logo"><i></i><b></b></div>
+            <div class="preview-mini-logo"><BrandLogo compact /></div>
             <span class="preview-nav active"></span
             ><span class="preview-nav"></span> <span class="preview-nav"></span
             ><span class="preview-nav"></span>
@@ -155,42 +189,45 @@ onMounted(async () => {
           </div>
           <div class="preview-main">
             <div class="preview-top"><span></span><i></i></div>
-            <p>Tu patrimonio</p>
+            <p>{{ $t("marketing.previewPortfolio") }}</p>
             <div class="preview-value">
-              248.500 € <small>+ 4,2% este año</small>
+              248.500 € <small>{{ $t("marketing.thisYear") }}</small>
             </div>
             <div class="preview-cards">
               <div>
-                <small>Ingresos del mes</small><strong>1.940 €</strong
-                ><span class="up">+ 3,1%</span>
+                <small>{{ $t("marketing.monthlyIncome") }}</small
+                ><strong>1.940 €</strong><span class="up">+ 3,1%</span>
               </div>
               <div>
-                <small>Gastos previstos</small><strong>382 €</strong
-                ><span>Este mes</span>
+                <small>{{ $t("marketing.plannedExpenses") }}</small
+                ><strong>382 €</strong
+                ><span>{{ $t("marketing.thisMonth") }}</span>
               </div>
               <div>
-                <small>Rentabilidad neta</small><strong>5,8%</strong
-                ><span class="up">Estable</span>
+                <small>{{ $t("marketing.netYield") }}</small
+                ><strong>5,8%</strong
+                ><span class="up">{{ $t("marketing.stable") }}</span>
               </div>
             </div>
             <div class="preview-lower">
               <div class="preview-chart">
                 <div class="chart-heading">
-                  <strong>Evolución de ingresos</strong><span>2026</span>
+                  <strong>{{ $t("marketing.incomeTrend") }}</strong
+                  ><span>2026</span>
                 </div>
                 <div class="chart-bars">
                   <i></i><i></i><i></i><i></i><i></i><i></i><i></i>
                 </div>
               </div>
               <div class="preview-events">
-                <strong>Próximamente</strong>
-                <p><i></i> Cobro alquiler · 3 sep.</p>
-                <p><i></i> Renovación contrato · 12 sep.</p>
+                <strong>{{ $t("marketing.comingUp") }}</strong>
+                <p><i></i> {{ $t("marketing.rentPayment") }}</p>
+                <p><i></i> {{ $t("marketing.contractRenewal") }}</p>
               </div>
             </div>
           </div>
         </div>
-        <div class="preview-note">Ejemplo ilustrativo con datos ficticios.</div>
+        <div class="preview-note">{{ $t("marketing.sampleDisclaimer") }}</div>
       </div>
     </section>
 
@@ -203,61 +240,64 @@ onMounted(async () => {
         <div class="ai-preview-copy">
           <p class="marketing-eyebrow">
             <Sparkles :size="17" />Alquivo AI ·
-            {{ product.features.assistant ? "Disponible" : "En preparación" }}
+            {{
+              product.features.assistant
+                ? $t("marketing.available")
+                : $t("marketing.inPreparation")
+            }}
           </p>
           <h2 id="ai-preview-title">
-            Una pregunta sencilla.<br />Una respuesta con contexto.
+            {{ $t("marketing.simpleQuestion") }}<br />{{
+              $t("marketing.contextualAnswer")
+            }}
           </h2>
           <p>
             {{
               product.features.assistant
-                ? "Consulta con el asistente la información que tengas registrada: alquileres, cobros, contratos y avisos. Si falta un dato, te lo dirá. Tú decides si lo activas antes de usarlo."
-                : "Estamos preparando un asistente que consultará la información que registres: alquileres, cobros, contratos y avisos. Te avisaremos cuando esté disponible."
+                ? $t("marketing.assistantDetailOn")
+                : $t("marketing.assistantDetailOff")
             }}
           </p>
           <ul class="ai-preview-points">
-            <li><Check :size="18" />Respuestas basadas en tus registros</li>
-            <li><Check :size="18" />Importes y fechas fáciles de revisar</li>
-            <li><Check :size="18" />Sin inventar información que falta</li>
+            <li><Check :size="18" />{{ $t("marketing.basedOnRecords") }}</li>
+            <li><Check :size="18" />{{ $t("marketing.clearAmounts") }}</li>
+            <li><Check :size="18" />{{ $t("marketing.noInventing") }}</li>
           </ul>
-          <RouterLink class="button button-large" to="/register">
+          <RouterLink class="button button-large" :to="signupTarget">
             {{
               product.features.beta_program
-                ? "Empezar con la beta gratuita"
-                : "Empezar gratis"
+                ? $t("marketing.startBeta")
+                : $t("marketing.startFree")
             }}
             <ArrowRight :size="18" aria-hidden="true" />
           </RouterLink>
         </div>
         <div
           class="ai-preview-card"
-          aria-label="Ejemplo ilustrativo de una conversación futura con Alquivo AI"
+          :aria-label="$t('marketing.futureConversation')"
         >
           <header class="ai-preview-card-header">
             <span class="ai-preview-brand"
               ><Sparkles :size="19" />Alquivo AI</span
             >
-            <span class="ai-preview-status">Vista previa</span>
+            <span class="ai-preview-status">{{ $t("marketing.preview") }}</span>
           </header>
           <p class="ai-preview-caption">
-            Ejemplo ilustrativo · Sin datos reales
+            {{ $t("marketing.fictionalExample") }}
           </p>
           <div class="ai-question">
-            ¿Qué alquileres y contratos debería revisar?
+            {{ $t("marketing.exampleQuestion") }}
           </div>
           <div class="ai-answer">
-            <strong>Así responderá Alquivo</strong>
+            <strong>{{ $t("marketing.exampleAnswerTitle") }}</strong>
             <p>
-              Consultaré los cobros y las fechas que hayas registrado. Te
-              mostraré los datos y de dónde salen; si falta información, te lo
-              indicaré.
+              {{ $t("marketing.exampleAnswer") }}
             </p>
           </div>
-          <div
-            class="ai-preview-topics"
-            aria-label="Temas de consulta previstos"
-          >
-            <span>Cobros</span><span>Contratos</span><span>Avisos</span>
+          <div class="ai-preview-topics" :aria-label="$t('marketing.topics')">
+            <span>{{ $t("marketing.payments") }}</span
+            ><span>{{ $t("marketing.contracts") }}</span
+            ><span>{{ $t("marketing.alerts") }}</span>
           </div>
         </div>
       </div>
@@ -266,37 +306,33 @@ onMounted(async () => {
     <section id="como-funciona" class="simple-section process-section">
       <div class="section-heading">
         <p class="marketing-eyebrow">
-          Menos hojas de cálculo. Más perspectiva.
+          {{ $t("marketing.lessSpreadsheets") }}
         </p>
-        <h2>Lo esencial, donde debe estar.</h2>
+        <h2>{{ $t("marketing.essentials") }}</h2>
         <p>
-          No necesitas aprender un ERP. Añade tu cartera y deja que Alquivo
-          ordene el día a día.
+          {{ $t("marketing.notERP") }}
         </p>
       </div>
       <div class="process-grid">
         <article>
           <span>01</span><Building2 :size="25" />
-          <h3>Añade tu cartera</h3>
+          <h3>{{ $t("marketing.addPortfolio") }}</h3>
           <p>
-            Registra cada inmueble y su información clave sin formularios
-            interminables.
+            {{ $t("marketing.addPortfolioBody") }}
           </p>
         </article>
         <article>
           <span>02</span><WalletCards :size="25" />
-          <h3>Ordena tus movimientos</h3>
+          <h3>{{ $t("marketing.organiseMovements") }}</h3>
           <p>
-            Ten a mano cobros, gastos y vencimientos para saber qué ocurre este
-            mes.
+            {{ $t("marketing.organiseMovementsBody") }}
           </p>
         </article>
         <article>
           <span>03</span><BarChart3 :size="25" />
-          <h3>Decide con claridad</h3>
+          <h3>{{ $t("marketing.decideClearly") }}</h3>
           <p>
-            Consulta el valor, el resultado y la rentabilidad de tu patrimonio
-            de un vistazo.
+            {{ $t("marketing.decideClearlyBody") }}
           </p>
         </article>
       </div>
@@ -304,51 +340,48 @@ onMounted(async () => {
 
     <section id="funciones" class="feature-section">
       <div class="section-heading">
-        <p class="marketing-eyebrow">Una visión completa, sin ruido.</p>
-        <h2>Hecho para quien invierte.</h2>
+        <p class="marketing-eyebrow">{{ $t("marketing.fullView") }}</p>
+        <h2>{{ $t("marketing.madeForInvestors") }}</h2>
       </div>
       <div class="feature-grid">
         <article class="feature-card feature-card-large">
           <div class="feature-icon"><BarChart3 /></div>
-          <h3>Tu patrimonio, en una sola vista</h3>
+          <h3>{{ $t("marketing.oneView") }}</h3>
           <p>
-            Valor estimado, ingresos, gastos y rentabilidad en un resumen que
-            puedes entender en segundos.
+            {{ $t("marketing.oneViewBody") }}
           </p>
           <div class="feature-stat">
-            <span>Resultado neto anual</span><strong>+ 14.860 €</strong
-            ><small>Ejemplo ilustrativo, no una previsión de resultados</small>
+            <span>{{ $t("marketing.annualNet") }}</span
+            ><strong>+ 14.860 €</strong
+            ><small>{{ $t("marketing.exampleNotForecast") }}</small>
           </div>
         </article>
         <article class="feature-card">
           <div class="feature-icon"><ReceiptText /></div>
-          <h3>Cobros bajo control</h3>
+          <h3>{{ $t("marketing.paymentsControl") }}</h3>
           <p>
-            Registra alquileres e incidencias de pago y detecta rápidamente lo
-            pendiente.
+            {{ $t("marketing.paymentsControlBody") }}
           </p>
         </article>
         <article class="feature-card">
           <div class="feature-icon"><CalendarDays /></div>
-          <h3>Nada se te pasa</h3>
+          <h3>{{ $t("marketing.nothingMissed") }}</h3>
           <p>
-            Contratos, renovaciones y recordatorios en una agenda pensada para
-            propietarios.
+            {{ $t("marketing.nothingMissedBody") }}
           </p>
         </article>
         <article class="feature-card">
           <div class="feature-icon"><FolderLock /></div>
-          <h3>Documentos, en su sitio</h3>
+          <h3>{{ $t("marketing.documentsPlace") }}</h3>
           <p>
-            Guarda contratos y facturas junto al inmueble al que pertenecen.
+            {{ $t("marketing.documentsPlaceBody") }}
           </p>
         </article>
         <article class="feature-card">
           <div class="feature-icon"><BellRing /></div>
-          <h3>Atiende lo importante</h3>
+          <h3>{{ $t("marketing.attendImportant") }}</h3>
           <p>
-            Centraliza incidencias para no depender de mensajes y notas
-            dispersas.
+            {{ $t("marketing.attendImportantBody") }}
           </p>
         </article>
       </div>
@@ -356,41 +389,38 @@ onMounted(async () => {
 
     <section class="calm-section">
       <div>
-        <p class="marketing-eyebrow">Pensado para tu tranquilidad.</p>
-        <h2>La información de tus inmuebles es tuya.</h2>
+        <p class="marketing-eyebrow">{{ $t("marketing.peaceOfMind") }}</p>
+        <h2>{{ $t("marketing.yourData") }}</h2>
       </div>
       <div class="calm-points">
-        <p><Check :size="18" /> Cada cartera opera de forma aislada.</p>
-        <p><Check :size="18" /> Tus documentos se guardan de forma privada.</p>
-        <p><Check :size="18" /> Puedes empezar sin compartir una tarjeta.</p>
+        <p><Check :size="18" /> {{ $t("marketing.isolatedPortfolio") }}</p>
+        <p><Check :size="18" /> {{ $t("marketing.privateDocuments") }}</p>
+        <p><Check :size="18" /> {{ $t("marketing.noCardToStart") }}</p>
       </div>
     </section>
 
     <section id="planes" class="plans-section">
       <div class="section-heading centered">
-        <p class="marketing-eyebrow">Empieza con calma.</p>
+        <p class="marketing-eyebrow">{{ $t("marketing.startGently") }}</p>
         <h2>
           {{
             product.features.beta_program
-              ? "La beta es gratis. Tu opinión nos ayuda a crecer."
-              : "Un plan que acompaña tu cartera."
+              ? $t("marketing.betaFree")
+              : $t("marketing.planGrows")
           }}
         </h2>
         <p v-if="product.features.beta_program">
-          Gestiona hasta 10 inmuebles durante toda la beta, sin tarjeta ni
-          pagos. No es una prueba de 14 días.
+          {{ $t("marketing.betaDetails") }}
         </p>
         <p v-else>
-          Empieza con el plan gratuito y amplía cuando lo necesites. Sin tarjeta
-          ni pagos automáticos.
+          {{ $t("marketing.freeDetails") }}
         </p>
         <p
           v-if="
             !product.features.beta_program && !product.features.billing_enabled
           "
         >
-          Estamos validando Alquivo: puedes probarlo gratis. Los precios son
-          informativos; todavía no aceptamos pagos.
+          {{ $t("marketing.priceInformative") }}
         </p>
       </div>
       <div
@@ -403,115 +433,101 @@ onMounted(async () => {
           class="marketing-plan"
           :class="{ featured: plan.code === 'founder' || plan.code === 'beta' }"
         >
-          <span v-if="plan.code === 'beta'" class="plan-label"
-            >Acceso durante toda la beta</span
-          >
-          <span v-else-if="plan.code === 'founder'" class="plan-label"
-            >Precio fundador</span
-          >
-          <p class="plan-name">{{ plan.name }}</p>
+          <span v-if="plan.code === 'beta'" class="plan-label">{{
+            $t("marketing.betaAccess")
+          }}</span>
+          <span v-else-if="plan.code === 'founder'" class="plan-label">{{
+            $t("marketing.founderPrice")
+          }}</span>
+          <p class="plan-name">{{ planName(plan) }}</p>
           <div class="plan-price">
             <template v-if="plan.price_monthly"
               ><strong>{{ money(plan.price_monthly) }}</strong
-              ><span>/ mes</span></template
-            ><strong v-else>Gratis</strong>
+              ><span>{{ $t("marketing.perMonth") }}</span></template
+            ><strong v-else>{{ $t("marketing.free") }}</strong>
           </div>
           <p class="plan-description">
             {{
               plan.property_limit === 1
-                ? "Para empezar con un inmueble."
-                : `Para gestionar hasta ${plan.property_limit} inmuebles.`
+                ? $t("marketing.forOne")
+                : $t("marketing.forUpTo", { count: plan.property_limit })
             }}
           </p>
           <RouterLink
             class="button"
             :class="{ 'button-quiet': plan.code === 'free' }"
-            to="/register"
-            >Empezar gratis</RouterLink
+            :to="signupTarget"
+            >{{ $t("marketing.startFree") }}</RouterLink
           >
           <ul>
             <li v-for="feature in plan.features" :key="feature">
-              <Check :size="16" />{{ feature }}
+              <Check :size="16" />{{ featureLabel(feature) }}
             </li>
           </ul>
-          <small v-if="plan.price_yearly"
-            >{{ money(plan.price_yearly) }} al año si prefieres pagar
-            anualmente.</small
-          >
+          <small v-if="plan.price_yearly">{{
+            $t("marketing.yearlyPrice", { price: money(plan.price_yearly) })
+          }}</small>
         </article>
       </div>
     </section>
 
     <section class="faq-section">
       <div class="section-heading">
-        <p class="marketing-eyebrow">Dudas habituales.</p>
-        <h2>Claro desde el principio.</h2>
+        <p class="marketing-eyebrow">{{ $t("marketing.faqEyebrow") }}</p>
+        <h2>{{ $t("marketing.faqTitle") }}</h2>
       </div>
       <div class="faq-list">
         <details>
           <summary>
-            ¿Necesito tarjeta para probar Alquivo?<ChevronRight :size="19" />
+            {{ $t("marketing.faqCard") }}<ChevronRight :size="19" />
           </summary>
           <p v-if="product.features.beta_program">
-            No. La Beta es gratuita y no te pediremos datos de pago.
+            {{ $t("marketing.faqCardBeta") }}
           </p>
           <p v-else>
-            No. Puedes empezar con el plan gratuito sin tarjeta. Solo pagarás si
-            decides contratar un plan.
+            {{ $t("marketing.faqCardFree") }}
           </p>
         </details>
         <details>
           <summary>
             {{
               product.features.beta_program
-                ? "¿Qué pasará al terminar la beta?"
-                : "¿Puedo seguir en el plan gratuito?"
+                ? $t("marketing.faqAfterBeta")
+                : $t("marketing.faqFreePlan")
             }}<ChevronRight :size="19" />
           </summary>
           <p v-if="product.features.beta_program">
-            Te avisaremos con antelación y te ofreceremos condiciones especiales
-            de agradecimiento por haber participado. Tú decidirás si quieres
-            continuar: no habrá ningún cobro automático. Podrás exportar tus
-            datos antes del cambio.
+            {{ $t("marketing.faqAfterBetaAnswer") }}
           </p>
           <p v-else>
-            Sí. Puedes gestionar un inmueble con el plan gratuito y decidir
-            cuándo quieres ampliar. No se realiza ningún cobro automático.
+            {{ $t("marketing.faqFreePlanAnswer") }}
           </p>
         </details>
         <details>
           <summary>
-            ¿Ya puedo usar el asistente de IA?<ChevronRight :size="19" />
+            {{ $t("marketing.faqAI") }}<ChevronRight :size="19" />
           </summary>
           <p v-if="product.features.assistant">
-            Sí. Si tu plan incluye consultas, puedes activar el asistente tras
-            revisar el aviso de privacidad. Responde usando los datos que hayas
-            registrado.
+            {{ $t("marketing.faqAIYes") }}
           </p>
           <p v-else>
-            Aún estamos revisando sus respuestas. Te avisaremos cuando esté
-            disponible; ya puedes organizar tus inmuebles, alquileres y
-            finanzas.
+            {{ $t("marketing.faqAINo") }}
           </p>
         </details>
         <details>
           <summary>
-            ¿Puedo gestionar distintos tipos de inmueble?<ChevronRight
-              :size="19"
-            />
+            {{ $t("marketing.faqTypes") }}<ChevronRight :size="19" />
           </summary>
           <p>
-            Sí. Alquivo está preparado para viviendas, locales, oficinas,
-            garajes, trasteros, terrenos y edificios.
+            {{ $t("marketing.faqTypesAnswer") }}
           </p>
         </details>
         <details>
           <summary>
-            ¿Alquivo sustituye a mi asesor?<ChevronRight :size="19" />
+            {{ $t("marketing.faqAdvisor") }}<ChevronRight :size="19" />
           </summary>
           <p>
-            No. Es tu espacio para organizar el patrimonio y tener una visión
-            clara. No ofrece asesoramiento fiscal, legal ni financiero.
+            {{ $t("marketing.faqAdvisorAnswer") }}
           </p>
         </details>
       </div>
@@ -524,37 +540,42 @@ onMounted(async () => {
       itemtype="https://schema.org/SoftwareApplication"
     >
       <div class="section-heading">
-        <p class="marketing-eyebrow">Qué es Alquivo</p>
+        <p class="marketing-eyebrow">{{ $t("marketing.whatIs") }}</p>
         <h2 id="about-alquivo">
-          <span itemprop="name">Alquivo</span>: gestión de alquileres para
-          propietarios.
+          <span itemprop="name">Alquivo</span>:
+          {{ $t("marketing.whatIsTitle") }}
         </h2>
         <p itemprop="description">
-          Alquivo es una aplicación web para organizar inmuebles, inquilinos,
-          contratos, cobros, gastos, documentos e incidencias. Está pensada para
-          propietarios particulares y pequeños inversores que quieren tener una
-          visión clara de su cartera.
+          {{ $t("marketing.whatIsBody") }}
         </p>
         <p>
-          <span itemprop="applicationCategory"
-            >Software de gestión inmobiliaria</span
-          >
-          · <span itemprop="operatingSystem">Navegador web</span>
+          <span itemprop="applicationCategory">{{
+            $t("marketing.softwareCategory")
+          }}</span>
+          ·
+          <span itemprop="operatingSystem">{{
+            $t("marketing.webBrowser")
+          }}</span>
         </p>
         <p>
-          No es una inmobiliaria, no cobra automáticamente a tus inquilinos y no
-          sustituye a tu asesor. Los resúmenes dependen de los datos que
-          registres.
+          {{ $t("marketing.notAgency") }}
         </p>
       </div>
     </section>
 
-    <section class="simple-section" aria-labelledby="guides-heading">
+    <section
+      v-if="!waitlistMode"
+      class="simple-section"
+      aria-labelledby="guides-heading"
+    >
       <div class="section-heading">
-        <p class="marketing-eyebrow">Recursos para propietarios</p>
-        <h2 id="guides-heading">Empieza por tenerlo claro.</h2>
+        <p class="marketing-eyebrow">{{ $t("marketing.resources") }}</p>
+        <h2 id="guides-heading">{{ $t("marketing.resourcesTitle") }}</h2>
       </div>
-      <div class="guide-grid">
+      <p v-if="$i18n.locale === 'en'" class="guide-summary">
+        {{ $t("marketing.guidesSpanish") }}
+      </p>
+      <div v-else class="guide-grid">
         <article v-for="guide in guides" :key="guide.path" class="guide-card">
           <h3>
             <RouterLink :to="guide.path">{{ guide.title }}</RouterLink>
@@ -564,23 +585,31 @@ onMounted(async () => {
       </div>
     </section>
 
-    <section class="closing-section">
-      <p class="marketing-eyebrow"><span></span> Empieza hoy</p>
-      <h2>Deja de buscar tus números.<br />Empieza a entenderlos.</h2>
-      <p>Tu cartera merece un espacio propio.</p>
-      <RouterLink class="button button-large" to="/register"
-        >Crear mi cuenta gratis <ArrowRight :size="18"
-      /></RouterLink>
-    </section>
+    <slot name="closing">
+      <section class="closing-section">
+        <p class="marketing-eyebrow">
+          <span></span> {{ $t("marketing.startToday") }}
+        </p>
+        <h2>
+          {{ $t("marketing.closingFirst") }}<br />{{
+            $t("marketing.closingSecond")
+          }}
+        </h2>
+        <p>{{ $t("marketing.ownSpace") }}</p>
+        <RouterLink class="button button-large" :to="signupTarget"
+          >{{ $t("marketing.createAccount") }} <ArrowRight :size="18"
+        /></RouterLink>
+      </section>
+    </slot>
 
     <footer class="marketing-footer">
-      <BrandLogo compact />
-      <p>Gestiona tus alquileres sin complicaciones.</p>
-      <div>
-        <RouterLink to="/guias">Guías para propietarios</RouterLink
-        ><RouterLink to="/login">Entrar</RouterLink>
+      <BrandLogo />
+      <p>{{ $t("marketing.footer") }}</p>
+      <div v-if="!waitlistMode">
+        <RouterLink to="/guias">{{ $t("marketing.ownerGuides") }}</RouterLink
+        ><RouterLink to="/login">{{ $t("common.login") }}</RouterLink>
       </div>
-      <LegalLinks />
+      <slot name="legal"><LegalLinks /></slot>
     </footer>
   </main>
 </template>

@@ -18,7 +18,9 @@ const guide = computed(() => guides.find((item) => item.path === route.path));
         <RouterLink to="/login" class="button button-quiet marketing-login"
           >Entrar</RouterLink
         >
-        <RouterLink to="/register" class="button">Empieza gratis</RouterLink>
+        <RouterLink to="/register" class="button button-small"
+          >Empieza gratis</RouterLink
+        >
       </div>
     </header>
     <main class="guide-page">
@@ -124,7 +126,7 @@ const guide = computed(() => guides.find((item) => item.path === route.path));
       </section>
     </main>
     <footer class="marketing-footer">
-      <BrandLogo compact />
+      <BrandLogo />
       <div>
         <RouterLink to="/">Alquivo</RouterLink
         ><RouterLink to="/guias">Guías</RouterLink>

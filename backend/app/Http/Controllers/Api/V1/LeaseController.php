@@ -54,7 +54,7 @@ class LeaseController extends Controller
             'monthly_rent' => ['sometimes', 'numeric', 'gt:0'],
             'deposit_amount' => ['sometimes', 'nullable', 'numeric', 'min:0'],
             'payment_day' => ['sometimes', 'integer', 'between:1,28'],
-            'notes' => ['sometimes', 'nullable', 'string'],
+            'notes' => ['sometimes', 'nullable', 'string', 'max:10000'],
         ]);
         if (($data['status'] ?? $lease->status) === 'active' && Lease::where('property_id', $lease->property_id)
             ->where('status', 'active')->whereKeyNot($lease->id)->exists()) {
@@ -75,8 +75,9 @@ class LeaseController extends Controller
         DB::transaction(function () use ($lease, $portfolio, $data, $contacts, $newContacts) {
             $ids = $contacts ?? ($newContacts ? $lease->participants()->pluck('contacts.id')->all() : null);
             if ($ids !== null) {
-                $validContacts = Contact::where('portfolio_id', $portfolio->id)->whereIn('id', $ids)->lockForUpdate()->count();
-                if ($validContacts !== count($ids)) {
+                // Lock contact rows, not an aggregate (unsupported by PostgreSQL).
+                $validContacts = Contact::where('portfolio_id', $portfolio->id)->whereIn('id', $ids)->lockForUpdate()->get(['id']);
+                if ($validContacts->count() !== count($ids)) {
                     throw ValidationException::withMessages(['contact_ids' => ['Algún inquilino no pertenece a esta cartera.']]);
                 }
             }
@@ -111,7 +112,7 @@ class LeaseController extends Controller
             'monthly_rent' => ['required', 'numeric', 'gt:0'],
             'deposit_amount' => ['nullable', 'numeric', 'min:0'],
             'payment_day' => ['required', 'integer', 'between:1,28'],
-            'notes' => ['nullable', 'string'],
+            'notes' => ['nullable', 'string', 'max:10000'],
         ]);
         $renewal = DB::transaction(function () use ($lease, $data) {
             $renewal = Lease::create([

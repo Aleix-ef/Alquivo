@@ -1,13 +1,15 @@
 import { legalOperator } from "./legalOperator.js";
 
 // Keep in sync with backend/config/legal.php. Archive each published revision.
-export const legalVersion = "2026-09-24";
+export const legalVersion = "2026-10-01-r2";
+export const legalUpdatedAt = "2026-10-01";
 export const operator = legalOperator;
 export const pendingValue = "Pendiente de completar antes de publicar la beta";
 export const legalDraft =
   !operator.reviewedForPublication ||
   [
     operator.name,
+    operator.legalForm,
     operator.taxId,
     operator.address,
     operator.backupRetention,
@@ -214,7 +216,7 @@ export const legalPages = [
             ],
             [
               "Cumplir obligaciones y atender reclamaciones",
-              "La información estrictamente necesaria para cada obligación o reclamación.",
+              "La información estrictamente necesaria para cada obligación o reclamación, incluida la evidencia mínima de aceptación y retirada de permisos.",
               "Obligación legal (art. 6.1.c RGPD) e interés legítimo en la defensa de derechos.",
             ],
           ],
@@ -271,6 +273,10 @@ export const legalPages = [
             [
               "Métricas de uso y coste de IA",
               "12 meses completos más el mes en curso, sin el contenido de los mensajes.",
+            ],
+            [
+              "Evidencia de aceptación de condiciones y permisos de IA",
+              "Correo de la cuenta cifrado, ámbito, versión, aceptación o retirada y fecha. Mientras la aceptación esté vigente y hasta 1.095 días desde su sustitución, retirada o eliminación de la cuenta. No incluye conversaciones ni documentos y solo se utiliza con acceso restringido para acreditar el tratamiento y atender responsabilidades.",
             ],
             [
               "Registro de auditoría de seguridad de la aplicación",
@@ -375,6 +381,16 @@ export const legalPages = [
               "alquivo_user y alquivo_portfolio (almacenamiento local)",
               "Mostrar datos básicos de la cuenta y cartera. No sustituyen las cookies de autenticación ni dan acceso por sí solos.",
               "Hasta cerrar sesión, limpiar los datos del sitio o sustituirlos por una actualización. El navegador también puede eliminarlos.",
+            ],
+            [
+              "alquivo:locale (almacenamiento local)",
+              "Recordar el idioma seleccionado cuando esa opción esté disponible.",
+              "Hasta cambiar la preferencia o borrar los datos del sitio.",
+            ],
+            [
+              "alquivo:email-reminder:v1:<cuenta> (almacenamiento local)",
+              "Recordar que has ocultado el aviso de verificación de correo. No verifica la cuenta ni modifica tus permisos.",
+              "Hasta borrar los datos del sitio. Puede quedar conservado tras cerrar sesión.",
             ],
           ],
         },

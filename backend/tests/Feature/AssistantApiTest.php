@@ -89,6 +89,35 @@ class AssistantApiTest extends TestCase
         Http::assertSent(fn ($request) => collect($request['input'])->contains(fn ($item) => ($item['type'] ?? null) === 'function_call_output' && str_contains($item['output'], '180000')));
     }
 
+    public function test_paid_movement_tool_cannot_support_a_false_no_pending_rent_claim(): void
+    {
+        config(['services.openai.key' => 'test-key', 'assistant.model' => 'test-model']);
+        [$user, $portfolio] = $this->userWithPortfolio();
+        $property = $portfolio->properties()->create(['name' => 'Centro', 'type' => 'housing', 'address_line' => 'Ficticia']);
+        $lease = $property->leases()->create(['portfolio_id' => $portfolio->id, 'status' => 'active',
+            'start_date' => '2025-01-01', 'monthly_rent' => '550.00']);
+        $lease->charges()->create(['portfolio_id' => $portfolio->id, 'period' => today()->format('Y-m'),
+            'due_date' => today(), 'amount' => '550.00', 'status' => 'pending']);
+        $conversation = AiConversation::create(['portfolio_id' => $portfolio->id, 'user_id' => $user->id]);
+        Http::fakeSequence()
+            ->push(['model' => 'test-model', 'output' => [[
+                'type' => 'function_call', 'call_id' => 'financial_1', 'name' => 'get_financial_summary',
+                'arguments' => json_encode(['from' => null, 'to' => null, 'property_id' => null]),
+            ]], 'usage' => ['input_tokens' => 30, 'output_tokens' => 10]])
+            ->push(['model' => 'test-model', 'output' => [[
+                'type' => 'message', 'content' => [['type' => 'output_text', 'text' => json_encode([
+                    'kind' => 'answer', 'basis' => 'portfolio_data',
+                    'content' => 'No hay ingresos ni gastos pendientes registrados.',
+                ])]],
+            ]], 'usage' => ['input_tokens' => 40, 'output_tokens' => 15]]);
+        $response = $this->actingAs($user)->postJson('/api/v1/assistant/conversations/'.$conversation->id.'/messages',
+            ['message' => '¿Qué tal voy de pasta este mes?'])->assertOk();
+        $content = $response->json('assistant_message.content');
+        $this->assertStringContainsString('550,00 EUR pendientes', $content);
+        $this->assertStringNotContainsString('No hay ingresos ni gastos pendientes registrados', $content);
+        $this->assertDatabaseCount('transactions', 0);
+    }
+
     public function test_monthly_limit_is_enforced_before_calling_openai(): void
     {
         config(['services.openai.key' => 'test-key', 'assistant.limits.founder' => 0]);

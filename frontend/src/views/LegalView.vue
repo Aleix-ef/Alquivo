@@ -6,6 +6,7 @@ import LegalLinks from "../components/LegalLinks.vue";
 import {
   legalPages,
   legalVersion,
+  legalUpdatedAt,
   legalDraft,
   operator,
   pendingValue,
@@ -25,12 +26,19 @@ function printPage() {
       <RouterLink class="brand" to="/" aria-label="Alquivo, volver al inicio"
         ><BrandLogo
       /></RouterLink>
-      <RouterLink class="button secondary" to="/login">Entrar</RouterLink>
+      <div class="marketing-header-actions">
+        <RouterLink class="button secondary" to="/login">{{
+          $t("common.login")
+        }}</RouterLink>
+      </div>
     </header>
     <main v-if="page" class="legal-content">
+      <p v-if="$i18n.locale === 'en'" class="legal-note" role="note">
+        {{ $t("legal.spanishOnly") }}
+      </p>
       <p class="eyebrow">
         Información legal · Versión
-        <time :datetime="legalVersion">{{ legalVersion }}</time>
+        <time :datetime="legalUpdatedAt">{{ legalVersion }}</time>
       </p>
       <h1>{{ page.title }}</h1>
       <p class="legal-summary">{{ page.summary }}</p>
@@ -67,7 +75,11 @@ function printPage() {
               <dd>{{ operator.name || pendingValue }}</dd>
             </div>
             <div>
-              <dt>NIF / CIF</dt>
+              <dt>Forma jurídica</dt>
+              <dd>{{ operator.legalForm || pendingValue }}</dd>
+            </div>
+            <div>
+              <dt>NIF</dt>
               <dd>{{ operator.taxId || pendingValue }}</dd>
             </div>
             <div>

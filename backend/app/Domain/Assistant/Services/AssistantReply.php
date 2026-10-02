@@ -26,6 +26,18 @@ final class AssistantReply
         'support' => 'En [Ayuda y soporte](/support) encontrarás guías y el canal de contacto disponible. Describe qué estabas haciendo y el mensaje de error, sin incluir contraseñas ni datos bancarios. Este chat no abre solicitudes de soporte.',
     ];
 
+    private const CLARIFICATIONS = [
+        'missing_period' => '¿De qué mensualidad se trata? Indícame el mes y el año del alquiler.',
+        'missing_amount' => '¿Qué importe debo apuntar? Indícame la cantidad exacta.',
+        'missing_phone' => '¿Cuál es el número de teléfono nuevo? Escríbelo para preparar el cambio.',
+        'ambiguous_contact' => 'Hay más de un contacto posible. Indícame el nombre completo y, si ayuda, el inmueble asociado.',
+        'ambiguous_property_or_lease' => 'Necesito saber a qué inmueble y contrato te refieres. Indica el nombre y la ciudad del inmueble o abre su ficha.',
+        'missing_contract_end' => 'No consta una fecha de fin registrada para ese contrato. Puedes revisarlo en Alquileres.',
+        'missing_valuation' => 'Ese inmueble no tiene una valoración actual registrada. Puedes revisarlo en Inmuebles.',
+        'document_unavailable' => 'No puedo leer el contenido de ese documento desde este chat. Revísalo en Documentos.',
+        'missing_contact' => 'No encuentro ese contacto en Personas. Indícame el nombre con el que lo guardaste.',
+    ];
+
     public const FALLBACKS = [
         'out_of_scope' => 'No estoy autorizado para responder sobre temas ajenos a Alquivo. Puedo ayudarte a entender los datos de tu patrimonio registrados en la aplicación.',
         'insufficient_data' => 'Ahora mismo no sabría responder con los datos disponibles en Alquivo. Comprueba que la información esté registrada o concreta el inmueble y el periodo que quieres consultar.',
@@ -66,6 +78,15 @@ final class AssistantReply
             throw new RuntimeException('Formato de respuesta no válido.');
         }
         if ($reply['kind'] !== 'answer') {
+            if ($reply['kind'] === 'insufficient_data' && isset(self::CLARIFICATIONS[trim($reply['content'])])) {
+                $code = trim($reply['content']);
+                if (in_array($code, ['missing_contract_end', 'missing_valuation', 'missing_contact'], true) && ! $hasEvidence) {
+                    return self::fallback('insufficient_data');
+                }
+
+                return ['content' => self::CLARIFICATIONS[$code], 'metadata' => ['kind' => 'insufficient_data']];
+            }
+
             return self::fallback($reply['kind']);
         }
         if ($reply['basis'] === 'none' || ($reply['basis'] === 'portfolio_data' && ! $hasEvidence)) {

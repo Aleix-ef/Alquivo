@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 656 128" color="#fff">
+  <title>Alquivo</title>
+  <!-- The wordmark is shared by the app and exported brand assets. No fonts required. -->
+  <g id="wordmark" fill="currentColor">
+    <path d="M0 108 47 18h15l47 90H87L54.5 48 22 108Z" />
+    <path d="M121 18h19v72h46v18h-65Z" />
+    <path fill-rule="evenodd" d="M241 16c-31 0-50 20-50 47s19 47 50 47 50-20 50-47-19-47-50-47Zm0 19c19 0 30 11 30 28s-11 28-30 28-30-11-30-28 11-28 30-28Z" />
+    <path d="m246 94 15-15 43 34c-5 7-12 11-20 10Z" />
+    <path d="M309 18h19v49c0 18 7 25 20 25s20-7 20-25V18h19v49c0 29-14 43-39 43s-39-14-39-43Z" />
+    <path d="M405 18h19v90h-19Z" />
+    <path d="M438 18h23l27 65 27-65h23l-42 90h-16Z" />
+    <path fill-rule="evenodd" d="M606 16c-31 0-50 20-50 47s19 47 50 47 50-20 50-47-19-47-50-47Zm0 19c19 0 30 11 30 28s-11 28-30 28-30-11-30-28 11-28 30-28Z" />
+  </g>
+</svg>

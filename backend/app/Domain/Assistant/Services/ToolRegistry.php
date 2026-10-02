@@ -17,7 +17,7 @@ final class ToolRegistry
     public function definitions(Portfolio $portfolio, User $user): array
     {
         $tools = [...$this->reads->definitions(), ...app(AssistantLeasingQueries::class)->definitions()];
-        $tools[] = $this->definition('search_properties', 'Busca inmuebles por nombre. Obligatorio antes de proponer un gasto; varias coincidencias requieren aclaración.', [
+        $tools[] = $this->definition('search_properties', 'Busca inmuebles por nombre y ciudad; acepta «de»/«en» como conectores. Obligatorio antes de proponer gasto o nota; varias coincidencias requieren aclaración.', [
             'query' => ['type' => 'string', 'maxLength' => 120],
         ]);
         if ($this->capabilities->allowsActions($portfolio, $user)) {
@@ -63,12 +63,15 @@ final class ToolRegistry
                 throw new InvalidArgumentException('Indica el nombre del inmueble.');
             }
             // Small portfolios: consistent accent normalization without a DB-specific extension.
-            $words = preg_split('/\s+/', $needle);
+            $words = array_values(array_filter(preg_split('/[^a-z0-9]+/i', $needle), fn ($word) => $word !== '' && ! in_array($word, ['de', 'en'], true)));
+            if ($words === []) {
+                throw new InvalidArgumentException('Indica el nombre del inmueble.');
+            }
             $candidates = $portfolio->properties()->orderBy('id')->get(['id', 'name', 'city'])
                 ->filter(function ($property) use ($words) {
-                    $label = mb_strtolower(Str::ascii($property->name.' '.$property->city));
+                    $labelWords = preg_split('/[^a-z0-9]+/i', mb_strtolower(Str::ascii($property->name.' '.$property->city)));
 
-                    return collect($words)->every(fn ($word) => str_contains($label, $word));
+                    return collect($words)->every(fn ($word) => in_array($word, $labelWords, true));
                 })->values();
             $exact = $candidates->filter(fn ($property) => mb_strtolower(Str::ascii($property->name)) === $needle)->values();
             if ($exact->count() === 1) {
@@ -81,7 +84,15 @@ final class ToolRegistry
             $ids = $candidates->pluck('id')->all();
             $run->steps()->create(['kind' => 'resolution', 'tool' => $name, 'status' => 'completed', 'metadata' => ['property_ids' => $ids]]);
 
-            return ['properties' => $candidates->take(20)->toArray(), 'count' => count($ids), 'needs_clarification' => count($ids) !== 1];
+            // A reference such as «piso de Juan» is not a property name. Find possible people only to ask for clarification.
+            $contactQuery = preg_match('/^(?:el\\s+)?(?:piso|casa|inmueble)\\s+de\\s+(.+)$/u', $needle, $personMatch)
+                ? trim($personMatch[1]) : $data['query'];
+            $relatedContacts = $candidates->isEmpty() && mb_strlen($contactQuery) >= 2
+                ? app(AssistantLeasingQueries::class)->execute($portfolio, 'search_contacts', ['query' => $contactQuery, 'property_id' => null])['contacts']
+                : [];
+
+            return ['properties' => $candidates->take(20)->toArray(), 'count' => count($ids),
+                'needs_clarification' => count($ids) !== 1, 'related_contacts' => $relatedContacts];
         }
         if (in_array($name, array_column(app(AssistantLeasingQueries::class)->definitions(), 'name'), true)) {
             $result = app(AssistantLeasingQueries::class)->execute($portfolio, $name, $arguments);

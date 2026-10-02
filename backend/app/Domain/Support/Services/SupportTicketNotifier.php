@@ -3,6 +3,7 @@
 namespace App\Domain\Support\Services;
 
 use App\Notifications\SupportTicketNotification;
+use App\Support\OutboundMail;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 
@@ -10,10 +11,8 @@ final class SupportTicketNotifier
 {
     public function available(): bool
     {
-        $transport = config('mail.mailers.'.config('mail.default').'.transport');
-
         return filter_var(config('support.email'), FILTER_VALIDATE_EMAIL)
-            && in_array($transport, ['smtp', 'ses', 'ses-v2', 'postmark', 'resend', 'mailgun', 'sendmail'], true);
+            && app(OutboundMail::class)->available();
     }
 
     public function notify(string $ticketId, bool $newTicket): void

@@ -4,6 +4,7 @@ import { createPinia } from "pinia";
 import { createMemoryHistory, createRouter, RouterView } from "vue-router";
 import { publicRoutes } from "./publicRoutes.js";
 import { pageSeo, renderHead, seoSettings } from "./seo.js";
+import { i18n } from "./i18n.js";
 import NotFoundView from "./views/NotFoundView.vue";
 
 export const settings = seoSettings(import.meta.env);
@@ -18,6 +19,7 @@ export async function render(path) {
   const router = createRouter({ history: createMemoryHistory(), routes });
   const app = createSSRApp({ render: () => h(RouterView) })
     .use(createPinia())
+    .use(i18n)
     .use(router);
   await router.push(path);
   await router.isReady();

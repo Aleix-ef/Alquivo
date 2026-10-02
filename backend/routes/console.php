@@ -6,6 +6,7 @@ use App\Domain\Assistant\Models\AiDocumentExtraction;
 use App\Domain\Assistant\Models\AiMessage;
 use App\Domain\Assistant\Models\AiRun;
 use App\Domain\Documents\Services\PrivateFileDeletion;
+use App\Domain\Identity\Models\LegalAcceptance;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
@@ -34,6 +35,12 @@ Artisan::command('assistant:prune', function () {
 })->purpose('Eliminar el historial de IA tras 30 días');
 Schedule::command('assistant:prune')->dailyAt('02:30')->withoutOverlapping();
 Schedule::command('support:prune')->dailyAt('02:45')->withoutOverlapping();
+
+Artisan::command('legal:prune', function () {
+    $deleted = LegalAcceptance::where('expires_at', '<=', now())->delete();
+    $this->info('Evidencias legales caducadas eliminadas: '.$deleted);
+})->purpose('Eliminar evidencias de aceptación cuyo plazo de conservación ha finalizado');
+Schedule::command('legal:prune')->dailyAt('03:00')->withoutOverlapping();
 
 Artisan::command('storage:prune-private', function () {
     $failed = 0;

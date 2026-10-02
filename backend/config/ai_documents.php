@@ -3,7 +3,7 @@
 return [
     // Intentionally no live mode. Removing this boundary requires real evaluations and a privacy review.
     'enabled' => true,
-    'notice_version' => 'documents-simulation-2026-09-23',
+    'notice_version' => 'documents-simulation-2026-10-01',
     'schema_version' => 1,
     'max_bytes' => 5 * 1024 * 1024,
     'max_pages' => 10,

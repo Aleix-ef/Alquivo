@@ -66,6 +66,29 @@ class AssistantExpenseFlowTest extends TestCase
         Http::assertSentCount(2);
     }
 
+    public function test_chat_yes_after_pending_proposal_never_confirms_it(): void
+    {
+        [$user, , $conversation, $property] = $this->fixture();
+        Http::fakeSequence()
+            ->push($this->tool('search_properties', ['query' => 'San Nicolás']))
+            ->push($this->tool('propose_expense', $this->expense($property->id)))
+            ->push($this->reply());
+        $this->actingAs($user)->postJson($this->url($conversation), [
+            'message' => 'Registra 84 € de fontanería en San Nicolás.',
+            'client_request_id' => (string) Str::uuid(),
+        ])->assertOk()->assertJsonPath('assistant_message.metadata.kind', 'action_proposal');
+        $this->postJson($this->url($conversation), [
+            'message' => 'Sí, confirma ese gasto ahora.',
+            'client_request_id' => (string) Str::uuid(),
+        ])->assertOk();
+
+        $this->assertDatabaseCount('transactions', 0);
+        $this->assertDatabaseHas('ai_action_proposals', ['status' => 'pending']);
+        Http::assertSent(fn ($request) => ! collect($request['tools'])->contains(
+            fn ($tool) => str_contains($tool['name'], 'confirm'),
+        ));
+    }
+
     public function test_ambiguous_property_asks_without_preparing_or_writing(): void
     {
         [$user, $portfolio, $conversation, $property] = $this->fixture();
@@ -133,6 +156,21 @@ class AssistantExpenseFlowTest extends TestCase
         $this->actingAs($other)->getJson('/api/v1/assistant/runs/'.$result->json('run.id'))->assertNotFound();
         $this->getJson("/api/v1/assistant/proposals/{$id}")->assertNotFound();
         $this->postJson("/api/v1/assistant/proposals/{$id}/confirm", ['revision' => 1])->assertNotFound();
+    }
+
+    public function test_user_without_portfolio_gets_not_found_for_every_proposal_route(): void
+    {
+        [$owner, , $conversation, $property] = $this->fixture();
+        $this->fakeExpense($property->id);
+        $response = $this->actingAs($owner)->postJson($this->url($conversation), ['message' => 'Registra 84 €'])->assertOk();
+        $proposal = $response->json('assistant_message.metadata.proposals.0.id');
+        $this->actingAs(User::factory()->create());
+        $url = '/api/v1/assistant/proposals/'.$proposal;
+        $this->getJson($url)->assertNotFound();
+        $this->postJson($url.'/revise', ['revision' => 1])->assertNotFound();
+        $this->postJson($url.'/confirm', ['revision' => 1])->assertNotFound();
+        $this->postJson($url.'/cancel', ['revision' => 1])->assertNotFound();
+        $this->assertDatabaseCount('transactions', 0);
     }
 
     public function test_disabling_deletes_sensitive_drafts_not_metrics_or_confirmed_expenses(): void

@@ -2,7 +2,9 @@ import { createApp } from "vue";
 import { createPinia } from "pinia";
 import App from "./App.vue";
 import router from "./router";
+import { i18n } from "./i18n.js";
 import "./theme.css";
+import "./language-switcher.css";
 import "./style.css";
 import "./finance.css";
 import "./attention.css";
@@ -16,6 +18,7 @@ import "./support.css";
 import "./support-chat.css";
 const pinia = createPinia();
 const app = createApp(App).use(pinia);
+app.use(i18n);
 app.use(router);
 // Keep the public HTML readable while the first route/configuration loads.
 await router.isReady();

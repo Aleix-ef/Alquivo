@@ -7,6 +7,7 @@ use App\Domain\Assistant\Documents\DocumentDemoFixtures;
 use App\Domain\Assistant\Documents\DocumentExtractionService;
 use App\Domain\Assistant\Models\AiDocumentExtraction;
 use App\Domain\Documents\Models\Document;
+use App\Domain\Identity\Services\LegalEvidence;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -34,7 +35,14 @@ class DocumentAiController extends Controller
         $user = $request->user();
         app(DocumentAiAccess::class)->assertAvailable($user, $user->portfolio(), false);
         $request->validate(['accepted' => 'accepted', 'notice_version' => ['required', Rule::in([config('ai_documents.notice_version')])]]);
-        $user->forceFill(['document_ai_accepted_at' => now(), 'document_ai_notice_version' => config('ai_documents.notice_version')])->save();
+        DB::transaction(function () use ($user) {
+            $user = User::whereKey($user->id)->lockForUpdate()->firstOrFail();
+            app(LegalEvidence::class)->accept($user, 'document_ai', config('ai_documents.notice_version'));
+            $alreadyAccepted = $user->document_ai_accepted_at && $user->document_ai_notice_version === config('ai_documents.notice_version');
+            $user->forceFill(['document_ai_accepted_at' => $alreadyAccepted ? $user->document_ai_accepted_at : now(),
+                'document_ai_notice_version' => config('ai_documents.notice_version')])->save();
+        });
+        $request->user()->refresh();
 
         return ['accepted' => true];
     }
@@ -45,11 +53,13 @@ class DocumentAiController extends Controller
         app(DocumentAiAccess::class)->assertAvailable($user, $user->portfolio(), false);
         DB::transaction(function () use ($user) {
             $user = User::whereKey($user->id)->lockForUpdate()->firstOrFail();
+            app(LegalEvidence::class)->withdraw($user, 'document_ai', $user->document_ai_notice_version);
             $user->forceFill(['document_ai_accepted_at' => null, 'document_ai_notice_version' => null])->save();
             AiDocumentExtraction::where('user_id', $user->id)->where('status', '!=', 'confirmed')
                 ->update(['status' => 'cancelled', 'draft' => null]);
             AiDocumentExtraction::where('user_id', $user->id)->where('status', 'confirmed')->update(['draft' => null]);
         });
+        $request->user()->refresh();
 
         return response()->noContent();
     }

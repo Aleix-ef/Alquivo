@@ -1,5 +1,6 @@
 import { defineStore } from "pinia";
 import api, { csrf } from "./api";
+import { forceSpanish, syncLocaleForSession } from "./i18n.js";
 import {
   clearSessionStorage,
   persistSession,
@@ -11,6 +12,7 @@ export const useSession = defineStore("session", {
     user: readSessionValue(sessionKeys.user),
     portfolio: readSessionValue(sessionKeys.portfolio),
     initialized: false,
+    serverConfirmedAdmin: false,
     twoFactorMethods: [],
     twoFactorEmailHint: null,
     twoFactorEmailUnavailable: false,
@@ -21,16 +23,20 @@ export const useSession = defineStore("session", {
       this.user = d.user;
       this.portfolio = d.portfolio;
       this.initialized = true;
+      this.serverConfirmedAdmin = Boolean(d.user?.local_admin);
+      syncLocaleForSession(this.serverConfirmedAdmin);
       persistSession(d);
     },
     clear() {
       this.user = null;
       this.portfolio = null;
       this.initialized = true;
+      this.serverConfirmedAdmin = false;
       this.twoFactorMethods = [];
       this.twoFactorEmailHint = null;
       this.twoFactorEmailUnavailable = false;
       clearSessionStorage();
+      forceSpanish();
     },
     async login(p) {
       await csrf();
@@ -76,6 +82,8 @@ export const useSession = defineStore("session", {
       } catch (error) {
         if ([401, 419].includes(error.response?.status)) this.clear();
         this.initialized = true;
+        this.serverConfirmedAdmin = false;
+        forceSpanish();
         return false;
       }
     },

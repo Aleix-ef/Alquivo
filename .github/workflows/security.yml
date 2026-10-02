@@ -37,3 +37,4 @@ jobs:
         working-directory: frontend
       - run: npm test && npm run build
         working-directory: frontend
+      - run: node tools/archive-legal.mjs --check

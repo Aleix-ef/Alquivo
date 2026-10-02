@@ -4,6 +4,7 @@ import { useProduct } from "./stores/product";
 import { safeReturnPath } from "./authNavigation";
 import { publicRoutes } from "./publicRoutes.js";
 import { updateHead } from "./seo.js";
+import { forceSpanish, syncLocaleForSession } from "./i18n.js";
 const publicPage = (n) => ({
   name: n,
   component: () => import("./views/RecoveryView.vue"),
@@ -106,6 +107,8 @@ router.beforeEach(async (to) => {
   const s = useSession();
   if (!s.initialized && (!to.meta.public || to.meta.guestOnly))
     await s.restore();
+  if (to.meta.public) forceSpanish();
+  else syncLocaleForSession(s.serverConfirmedAdmin);
   if (!to.meta.public && !s.ready) {
     return { name: "login", query: { redirect: to.fullPath } };
   }

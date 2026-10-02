@@ -6,6 +6,7 @@ use App\Domain\Finance\Models\Transaction;
 use App\Domain\Leasing\Models\Lease;
 use App\Domain\Properties\Models\Property;
 use App\Http\Controllers\Controller;
+use App\Support\CsvCell;
 use Illuminate\Http\Request;
 
 class ReportController extends Controller
@@ -68,17 +69,9 @@ class ReportController extends Controller
             $output = fopen('php://output', 'w');
             fwrite($output, "\xEF\xBB\xBF");
             fputcsv($output, $headers);
-            $rows->each(fn (array $row) => fputcsv($output, array_map($this->sanitizeCsvCell(...), $row)));
+            $rows->each(fn (array $row) => fputcsv($output, array_map(CsvCell::sanitize(...), $row), ',', '"', ''));
             fclose($output);
         }, 'alquivo-'.$resource.'-'.today()->format('Y-m-d').'.csv', ['Content-Type' => 'text/csv; charset=UTF-8']);
     }
 
-    private function sanitizeCsvCell(mixed $value): mixed
-    {
-        if (is_string($value) && preg_match('/^[=+\-@]/', $value)) {
-            return "'".$value;
-        }
-
-        return $value;
-    }
 }

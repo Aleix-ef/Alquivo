@@ -23,7 +23,7 @@ final class AssistantLeasingQueries
             $this->definition('search_contacts', 'Busca contactos por nombre e inmueble. No devuelve teléfonos guardados, correos ni DNI. Una coincidencia única es obligatoria antes de proponer un cambio de teléfono.', [
                 'query' => ['type' => 'string', 'minLength' => 2, 'maxLength' => 120], ...$property,
             ]),
-            $this->definition('list_rent_charges', 'Consulta mensualidades existentes y su saldo registrado. No crea cargos. Antes de proponer un cobro, filtra hasta obtener una única mensualidad pendiente. No sumes la muestra: usa summary.', [
+            $this->definition('list_rent_charges', 'Consulta mensualidades y saldos reales de todos los periodos; cada fila incluye nombres de inquilinos autorizados del contrato para responder quién debe. No crea cargos. Antes de proponer un cobro, filtra hasta una única mensualidad pendiente. No sumes la muestra: usa summary.', [
                 ...$property, 'lease_id' => ['type' => ['integer', 'null']],
                 'period' => ['type' => ['string', 'null'], 'description' => 'Mes YYYY-MM o null para todos. No inventes el periodo si hay varias mensualidades.'],
                 'status' => ['type' => 'string', 'enum' => ['pending', 'paid', 'all']],
@@ -156,12 +156,17 @@ final class AssistantLeasingQueries
         }
         $totals = DB::query()->fromSub((clone $query)->select(['amount', 'due_date'])->selectSub(clone $paid, 'recorded_paid'), 'matched')
             ->selectRaw('COUNT(*) AS total_count, COALESCE(SUM(amount), 0) AS total_amount, COALESCE(SUM(recorded_paid), 0) AS paid_amount, COALESCE(SUM(CASE WHEN amount > recorded_paid THEN amount - recorded_paid ELSE 0 END), 0) AS remaining_amount, COALESCE(SUM(CASE WHEN amount > recorded_paid AND due_date < ? THEN 1 ELSE 0 END), 0) AS overdue_count', [today()->toDateString()])->first();
-        $charges = $query->select('rent_charges.*')->selectSub($paid, 'recorded_paid')->with('lease.property')->orderBy('due_date')->orderBy('id')->limit(20)->get();
+        $charges = $query->select('rent_charges.*')->selectSub($paid, 'recorded_paid')
+            ->with(['lease.property', 'lease.participants' => fn ($q) => $q->where('contacts.portfolio_id', $portfolio->id)])
+            ->orderBy('due_date')->orderBy('id')->limit(20)->get();
 
         return ['charges' => $charges->map(function ($charge) {
             $remaining = bcsub($charge->amount, (string) $charge->recorded_paid, 2);
+            $tenants = $charge->lease->participants->filter(fn ($person) => $person->pivot->role === 'tenant');
 
             return ['id' => $charge->id, 'lease_id' => $charge->lease_id, 'property' => ['id' => $charge->lease->property_id, 'name' => $charge->lease->property->name],
+                'tenants' => $tenants->take(10)->map(fn ($person) => ['id' => $person->id, 'name' => $person->name])->values()->all(),
+                'tenant_count' => $tenants->count(), 'tenants_truncated' => $tenants->count() > 10,
                 'period' => $charge->period, 'due_date' => $charge->due_date->toDateString(), 'amount' => $charge->amount,
                 'paid_amount' => bcadd((string) $charge->recorded_paid, '0', 2), 'remaining_amount' => bccomp($remaining, '0', 2) > 0 ? $remaining : '0.00',
                 'status' => bccomp($remaining, '0', 2) <= 0 ? 'paid' : ($charge->due_date->lt(today()) ? 'overdue' : (bccomp((string) $charge->recorded_paid, '0', 2) > 0 ? 'partial' : 'pending'))];

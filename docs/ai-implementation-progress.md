@@ -1,6 +1,39 @@
 # Alquivo AI — progreso de implementación
 
-Última actualización: 2026-09-25. Documento de reanudación; distingue código implementado, comprobaciones realizadas y tareas pendientes. No representa una validación de calidad de modelos reales ni autorización de lanzamiento.
+Última actualización: 2026-10-02. Documento de reanudación; distingue código implementado, comprobaciones realizadas y tareas pendientes. No representa autorización de lanzamiento.
+
+## Checkpoint de consultas históricas (2026-10-02)
+
+Corregida la confusión entre consultar el total cobrado/neto de un inmueble y preparar un cobro de una mensualidad. `get_financial_summary` incorpora un alcance explícito `period|all_time`: histórico hasta hoy, fechas obtenidas de registros de la cartera, agregación SQL por estado/dirección/categoría, sin cargar todos los movimientos ni mezclar pendientes con dinero recibido. Los intervalos normales mantienen su límite de tres años y sus defaults. El historial permite recuperar el inmueble de la conversación, pero las cifras se consultan de nuevo en cada turno; «en total» cambia el alcance mensual anterior. `missing_period` se reserva en el prompt para preparar cobros sin mensualidad identificada.
+
+Regresiones cubren histórico de más de tres años, importes decimales, pendientes/cancelados/futuros, separación por inmueble/cartera, fechas incompatibles, histórico vacío y continuación de la conversación anterior sin propuestas ni escrituras. **425 pruebas ordinarias correctas, 2.757 aserciones, dos skips opt-in**; PostgreSQL temporal: **33 correctas y 161 aserciones**, un skip live. Cinco ejecuciones reales sintéticas de Luna (15 llamadas), con tres repeticiones de la continuación: **5 PASS en grader y revisión Codex**, sin revisión humana independiente. Coste conservador adicional **0,0068277 USD**, techo persistente **0,02 USD**. Detalles y artefacto en [evaluaciones](ai-evaluations.md).
+
+Sin cambios en modelos/routing, cuatro rondas, flags globales, consentimientos, MFA, aislamiento, confirmación, idempotencia ni Document AI. No se envían datos reales de usuarios ni se modifica su cartera para probar. Esta corrección no declara la IA lista para beta; conservar pendientes de revisión/despliegue de los checkpoints anteriores.
+
+Corrección aplicada a backend/worker/scheduler locales; web reiniciada para resolver el backend nuevo. PostgreSQL de usuarios y almacenamiento privado conservados, sin reset ni seeders. Base temporal de las regresiones retirada. La comprobación del flujo real de Luna usa autenticación de testing (`actingAs`), no suplanta un login/MFA de navegador.
+
+## Checkpoint de seguridad y privacidad (2026-10-01, posterior a evaluaciones)
+
+Corregidos los cinco hallazgos de código de [revisión previa a beta](beta-readiness-review.md): dependencias, límites de texto, CSV, contexto sin cartera y evidencia mínima de aceptación/retirada. El registro/chat/simulación documental conservan prueba cifrada y versionada separada del contenido, con caducidad y limpieza. Revocar sigue borrando chats/borradores sin reiniciar cuotas ni borrar operaciones confirmadas; confirmación separada, cifrado y aislamiento no cambian. No se fabrica evidencia de aceptaciones antiguas.
+
+Aviso de chat nuevo `2026-10-01`; aviso de simulación documental `documents-simulation-2026-10-01`; revisión legal `2026-10-01-r2`. Requieren nueva aceptación expresa cuando se utilicen, no autorización automática. Revisión legal/retención provisional pendientes antes de publicar; archivo de contenido y guardia de sobrescritura documentados en [legal-beta](legal-beta.md).
+
+Suite ordinaria: **411 pruebas, 410 correctas, 2.674 aserciones y un skip live previsto**. Frontend: 11 archivos correctos, build y 10 páginas/HTTP correctos. Migración de evidencia aplicada en PostgreSQL local sin reset/seed. MFA de demo se conserva; el recorrido autenticado completo de esa cuenta se omite. Las pruebas PostgreSQL sintéticas adicionales y un nuevo ensayo de restauración quedaron pendientes por bloqueo de la API de Docker Desktop; no contarlas como PASS. Ver checkpoint de seguridad para reanudar/limpiar solo recursos temporales.
+
+**Cero inferencias/coste adicional**, sin nuevas capacidades ni modificación de routing/modelos/rondas. No se han cambiado flags globales ni `.env`: la disponibilidad local sigue la autorización/configuración anterior del 25 de septiembre; no supone apertura pública. No se repiten evaluaciones semánticas por estos cambios administrativos. Resultados de calidad siguen siendo los del checkpoint dirigido de abajo, con revisión humana independiente pendiente. Document AI real sigue bloqueada; no abrir beta por estas pruebas solamente.
+
+## Checkpoint de corrección y reevaluación dirigida (2026-10-01)
+
+Corregidos los contratos de datos financieros (movimientos pagados frente a saldos de mensualidades), búsqueda de inmueble+ciudad, contexto de inquilinos en cobros, HTTP 404 sin cartera y aclaraciones cerradas. Guarda determinista impide mostrar la antigua negación de cobros pendientes. No se añadieron módulos ni se tocaron límites de rondas, routing, flags globales o Document AI.
+
+Resultado: 23 prompts sintéticos, 51 ejecuciones/99 llamadas Luna, 0,0400958 USD conservadores adicionales (<0,25 USD). El historial guarda un fallo peligroso intermedio detectado y corregido; con el código final, 47 ejecuciones revisadas por Codex: 45 PASS, 2 SAFE FAILURE, 0 DANGEROUS FAILURE. Revisión humana independiente pendiente. Suite backend: 325 pass, 2.014 aserciones, 1 skip live. **No abrir aún beta por este resultado solamente**; detalles en [evaluaciones](ai-evaluations.md).
+
+## Checkpoint de evaluación real sintética (2026-09-30)
+
+El chat/actions de producción se ha evaluado con 84 casos ficticios y 100 ejecuciones HTTP controladas (196 llamadas Luna; coste conservador adicional 0,0737453 USD, debajo del techo de 1 USD). Se ha usado el orquestador, prompt, tools, schemas, parsing, routing, validaciones y límites reales; la autenticación HTTP de test no sustituye una prueba browser/MFA. Las cuatro acciones propuestas pasaron preview, confirmación separada, idempotencia y separación de carteras; un «sí» en chat no confirmó. No hay Document AI real ni cambio de flags globales.
+
+La revisión semántica de Codex identifica 79 PASS, 20 SAFE FAILURE y **1 DANGEROUS FAILURE de lectura** (afirmación de ausencia de pendientes con 2.150 EUR de mensualidades pendientes). Revisión humana independiente: pendiente. Otros hallazgos: resolución de «San Nicolás de Valencia», agotamiento de rondas/502 y HTTP 500 para usuario sin cartera. No declarar lista para beta hasta corregir/investigar, repetir casos afectados y revisar manualmente el informe. Detalle y artefactos: [evaluaciones](ai-evaluations.md).
+
 ## Activación de IA para pruebas de la beta local (2026-09-25)
 
 Autorización del propietario: habilitar el chat ahora para que pueda probarse antes de publicar y destacar la IA como parte principal del producto. Solo se han activado `ASSISTANT_ENABLED=true` y `ASSISTANT_VALIDATED=true` en el `backend/.env` local, ignorado por Git; las plantillas mantienen la función apagada por defecto. No es un despliegue público.

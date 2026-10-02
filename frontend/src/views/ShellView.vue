@@ -21,6 +21,7 @@ import {
   BookOpen,
 } from "@lucide/vue";
 import { useRoute, useRouter } from "vue-router";
+import { useI18n } from "vue-i18n";
 import { useSession } from "../session";
 import api from "../api";
 import { useProduct } from "../stores/product";
@@ -28,9 +29,11 @@ import { usePlanAccess } from "../stores/planAccess";
 const planAccess = usePlanAccess();
 const product = useProduct();
 import BrandLogo from "../components/BrandLogo.vue";
+import LanguageSwitcher from "../components/LanguageSwitcher.vue";
 import AssistantWidget from "../components/AssistantWidget.vue";
 import OnboardingTour from "../components/OnboardingTour.vue";
 import { useDialog } from "../composables/useDialog";
+const { t } = useI18n({ useScope: "global" });
 const route = useRoute();
 const assistant = ref(null);
 const tour = ref(null);
@@ -67,8 +70,8 @@ async function resendVerification() {
   } catch (error) {
     verificationMessage.value =
       error.response?.status === 429
-        ? "Espera un minuto antes de volver a solicitar el enlace."
-        : "No se pudo solicitar el enlace. Inténtalo de nuevo más tarde.";
+        ? t("nav.resendWait")
+        : t("nav.resendError");
   } finally {
     sendingVerification.value = false;
   }
@@ -76,16 +79,16 @@ async function resendVerification() {
 const s = useSession(),
   router = useRouter(),
   nav = [
-    ["Resumen", "/dashboard", LayoutDashboard],
-    ["Propiedades", "/properties", Building2],
-    ["Alquileres", "/leases", KeyRound],
-    ["Personas", "/contacts", UsersRound],
-    ["Finanzas", "/finance", WalletCards],
-    ["Informes", "/reports", BarChart3],
-    ["Fiscalidad", "/fiscality", Files],
-    ["Incidencias", "/issues", Wrench],
-    ["Calendario", "/calendar", CalendarDays],
-    ["Documentos", "/documents", Files],
+    ["nav.dashboard", "/dashboard", LayoutDashboard],
+    ["nav.properties", "/properties", Building2],
+    ["nav.leases", "/leases", KeyRound],
+    ["nav.people", "/contacts", UsersRound],
+    ["nav.finance", "/finance", WalletCards],
+    ["nav.reports", "/reports", BarChart3],
+    ["nav.tax", "/fiscality", Files],
+    ["nav.issues", "/issues", Wrench],
+    ["nav.calendar", "/calendar", CalendarDays],
+    ["nav.documents", "/documents", Files],
   ];
 const reminderDismissed = ref(false);
 const reminderKey = computed(
@@ -135,12 +138,12 @@ const currentSection = computed(
   () =>
     [
       ...nav,
-      ["Configuración", "/settings"],
-      ["Planes", "/plans"],
-      ["Ayuda y soporte", "/support"],
+      ["nav.settings", "/settings"],
+      ["nav.plans", "/plans"],
+      ["nav.support", "/support"],
     ].find(
       ([, path]) => route.path === path || route.path.startsWith(`${path}/`),
-    )?.[0] || "Tu cartera",
+    )?.[0] || "nav.portfolio",
 );
 const initials = computed(() =>
   (s.user?.name || "Mi cuenta")
@@ -170,7 +173,7 @@ async function logout() {
     await s.logout();
     await router.push("/login");
   } catch {
-    logoutError.value = "No se pudo cerrar la sesión. Inténtalo de nuevo.";
+    logoutError.value = t("nav.logoutError");
   } finally {
     signingOut.value = false;
   }
@@ -178,11 +181,11 @@ async function logout() {
 </script>
 <template>
   <div class="shell" :class="{ 'navigation-open': mobileOpen }">
-    <a class="skip-link" href="#main-content">Saltar al contenido</a>
+    <a class="skip-link" href="#main-content">{{ $t("nav.skip") }}</a>
     <button
       v-if="mobileOpen"
       class="navigation-backdrop"
-      aria-label="Cerrar navegación"
+      :aria-label="$t('nav.closeNav')"
       @click="mobileOpen = false"
     ></button>
     <aside
@@ -206,7 +209,7 @@ async function logout() {
         /></RouterLink>
         <button
           class="icon-button mobile-close"
-          aria-label="Cerrar navegación"
+          :aria-label="$t('nav.closeNav')"
           @click="mobileOpen = false"
         >
           <X :size="19" />
@@ -215,8 +218,8 @@ async function logout() {
       <div class="portfolio">
         <span class="portfolio-icon"><Layers :size="20" /></span>
         <div>
-          <small>Espacio personal</small
-          ><strong>{{ s.portfolio?.name || "Mi patrimonio" }}</strong>
+          <small>{{ $t("nav.personalSpace") }}</small
+          ><strong>{{ s.portfolio?.name || $t("nav.portfolio") }}</strong>
         </div>
       </div>
       <nav aria-label="Navegación principal">
@@ -231,19 +234,19 @@ async function logout() {
           <span class="nav-assistant-badge">Beta</span>
         </button>
         <div class="nav-group">
-          <p class="nav-label">Tu patrimonio</p>
+          <p class="nav-label">{{ $t("nav.portfolio") }}</p>
           <RouterLink
             v-for="[label, to, icon] in primaryNav"
             :key="to"
             :to="to"
-            :title="label"
+            :title="$t(label)"
           >
             <component
               :is="icon"
               :size="18"
               :stroke-width="1.7"
               aria-hidden="true"
-            /><span>{{ label }}</span>
+            /><span>{{ $t(label) }}</span>
           </RouterLink>
         </div>
         <details
@@ -252,7 +255,9 @@ async function logout() {
           @toggle="moreOpen = $event.target.open"
         >
           <summary>
-            <Layers :size="18" aria-hidden="true" /><span>Más herramientas</span
+            <Layers :size="18" aria-hidden="true" /><span>{{
+              $t("nav.more")
+            }}</span
             ><ChevronRight
               class="nav-more-chevron"
               :size="16"
@@ -264,24 +269,26 @@ async function logout() {
               v-for="[label, to, icon] in secondaryNav"
               :key="to"
               :to="to"
-              :title="label"
+              :title="$t(label)"
             >
               <component
                 :is="icon"
                 :size="18"
                 :stroke-width="1.7"
                 aria-hidden="true"
-              /><span>{{ label }}</span>
+              /><span>{{ $t(label) }}</span>
             </RouterLink>
           </div>
         </details>
       </nav>
       <div class="sidebar-bottom">
         <RouterLink
-          v-if="s.user?.local_admin"
+          v-if="s.serverConfirmedAdmin"
           to="/support/inbox"
           class="sidebar-settings"
-          ><LifeBuoy :size="20" /><span>Bandeja del equipo</span></RouterLink
+          ><LifeBuoy :size="20" /><span>{{
+            $t("nav.teamInbox")
+          }}</span></RouterLink
         >
         <button
           class="sidebar-settings tour-menu-entry"
@@ -291,31 +298,35 @@ async function logout() {
             tour?.start();
           "
         >
-          <BookOpen :size="19" /><span>Ver recorrido</span>
+          <BookOpen :size="19" /><span>{{ $t("nav.tour") }}</span>
         </button>
         <RouterLink to="/support" class="sidebar-settings support-entry"
-          ><LifeBuoy :size="20" /><span>Ayuda y soporte</span></RouterLink
+          ><LifeBuoy :size="20" /><span>{{
+            $t("nav.support")
+          }}</span></RouterLink
         >
         <RouterLink to="/settings" class="sidebar-settings"
-          ><Settings :size="18" /><span>Configuración</span></RouterLink
+          ><Settings :size="18" /><span>{{
+            $t("nav.settings")
+          }}</span></RouterLink
         >
         <div class="user">
           <RouterLink
             to="/settings"
             class="user-profile"
-            aria-label="Ver mi cuenta"
+            :aria-label="$t('nav.account')"
           >
             <span class="avatar">{{ initials }}</span>
             <div>
               <strong>{{ s.user?.name }}</strong
-              ><small>Mi cuenta personal</small>
+              ><small>{{ $t("nav.account") }}</small>
             </div>
           </RouterLink>
           <button
             class="icon-button"
             :disabled="signingOut"
-            aria-label="Cerrar sesión"
-            title="Cerrar sesión"
+            :aria-label="$t('nav.signOut')"
+            :title="$t('nav.signOut')"
             @click="logout"
           >
             <LogOut :size="17" />
@@ -331,25 +342,35 @@ async function logout() {
             class="icon-button mobile-menu"
             :aria-expanded="mobileOpen"
             aria-controls="main-navigation"
-            aria-label="Abrir navegación"
+            :aria-label="$t('nav.openNav')"
             @click="mobileOpen = !mobileOpen"
           >
             <Menu :size="21" />
           </button>
-          <span class="breadcrumb-root">Mi espacio</span
+          <span class="breadcrumb-root">{{ $t("nav.breadcrumb") }}</span
           ><ChevronRight class="breadcrumb-chevron" :size="14" /><strong>{{
-            currentSection
+            $t(currentSection)
           }}</strong>
+        </div>
+        <div v-if="s.serverConfirmedAdmin" class="topbar-actions">
+          <LanguageSwitcher />
         </div>
       </header>
       <div id="main-content" tabindex="-1">
+        <p
+          v-if="$i18n.locale === 'en'"
+          class="plan-access-notice"
+          role="status"
+        >
+          {{ $t("nav.englishPreview") }}
+        </p>
         <section
           v-if="!s.user?.email_verified_at && !reminderDismissed"
           class="verification-banner"
           role="status"
         >
           <div>
-            <strong>Confirma tu correo para proteger tu cuenta.</strong>
+            <strong>{{ $t("nav.verifyPrompt") }}</strong>
             <small v-if="verificationMessage">{{ verificationMessage }}</small>
           </div>
           <div class="verification-actions">
@@ -359,38 +380,42 @@ async function logout() {
               :disabled="sendingVerification"
               @click="resendVerification"
             >
-              {{ sendingVerification ? "Enviando…" : "Reenviar" }}
+              {{ sendingVerification ? $t("nav.sending") : $t("nav.resend") }}
             </button>
             <button
               class="verification-dismiss"
               type="button"
               @click="dismissReminder"
             >
-              Ahora no
+              {{ $t("nav.notNow") }}
             </button>
           </div>
         </section>
-        <p v-if="s.user?.local_admin" class="plan-access-notice" role="status">
-          Administrador local · Funciones en pruebas visibles solo para esta
-          cuenta. Los pagos siguen sujetos al bloqueo de la beta y la IA
-          mantiene sus límites de consumo.
+        <p
+          v-if="s.serverConfirmedAdmin"
+          class="plan-access-notice"
+          role="status"
+        >
+          {{ $t("nav.adminNotice") }}
         </p>
         <p
           v-if="planAccess.usage?.properties.read_only_count"
           class="plan-access-notice"
           role="status"
         >
-          Tu plan permite gestionar
-          {{ planAccess.usage.properties.limit }} inmueble(s). Los
-          {{ planAccess.usage.properties.read_only_count }} restantes están en
-          modo consulta, sin borrar ningún dato.
-          <RouterLink to="/plans">Ver mi plan</RouterLink>
+          {{
+            $t("nav.readOnlyNotice", {
+              limit: planAccess.usage.properties.limit,
+              count: planAccess.usage.properties.read_only_count,
+            })
+          }}
+          <RouterLink to="/plans">{{ $t("nav.viewPlan") }}</RouterLink>
         </p>
         <RouterView />
       </div>
       <footer class="workspace-footer">
-        <span>Alquivo</span><span>Tu patrimonio, con claridad.</span>
-        <RouterLink to="/legal">Información legal</RouterLink>
+        <span>Alquivo</span><span>{{ $t("auth.storyEyebrow") }}</span>
+        <RouterLink to="/legal">{{ $t("nav.legalInfo") }}</RouterLink>
       </footer>
     </section>
     <OnboardingTour

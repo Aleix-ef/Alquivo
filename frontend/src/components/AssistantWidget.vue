@@ -648,6 +648,11 @@ async function scrollToBottom() {
                   <summary>Cómo se usan y protegen mis datos</summary>
                   <div>
                     <p>
+                      Conservamos por separado evidencia mínima de tu permiso y
+                      su retirada, sin conversaciones ni documentos, con el
+                      plazo y finalidad indicados en la política de privacidad.
+                    </p>
+                    <p>
                       Se comparte el historial reciente y la información de
                       inmuebles y finanzas necesaria para cada respuesta. Para
                       localizar contactos puede compartirse su nombre, pero no

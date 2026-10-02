@@ -33,6 +33,7 @@ class ProductionReadiness
             'La caché y la cola deben ser persistentes y compartidas.' => in_array(config('cache.default'), ['database', 'redis'], true) && in_array(config('queue.default'), ['database', 'redis'], true),
             'Configura MySQL/PostgreSQL con una contraseña larga y propia.' => in_array(config('database.default'), ['mysql', 'pgsql'], true) && strlen((string) ($connection['password'] ?? '')) >= 20 && ! str_contains((string) ($connection['password'] ?? ''), 'change-me'),
             'Configura un proveedor de correo real.' => ! in_array(config('mail.default'), ['log', 'array', null], true),
+            'Configura la clave de Resend antes de habilitar sus correos.' => config('mail.default') !== 'resend' || app(OutboundMail::class)->available(),
             'Configura la dirección real de envío de correo.' => filter_var(config('mail.from.address'), FILTER_VALIDATE_EMAIL) && ! str_ends_with((string) config('mail.from.address'), '@example.com'),
             'Configura un correo de soporte válido.' => (bool) filter_var(config('support.email'), FILTER_VALIDATE_EMAIL),
             'CORS debe contener exclusivamente orígenes HTTPS concretos.' => count(config('cors.allowed_origins', [])) > 0 && collect(config('cors.allowed_origins'))->every($https) && config('cors.allowed_origins_patterns', []) === [],

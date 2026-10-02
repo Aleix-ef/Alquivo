@@ -1,8 +1,10 @@
 <script setup>
 import { computed, ref } from "vue";
 import { useRoute } from "vue-router";
+import { useI18n } from "vue-i18n";
 import api, { csrf } from "../api";
 import BrandLogo from "../components/BrandLogo.vue";
+const { t } = useI18n({ useScope: "global" });
 const route = useRoute(),
   reset = computed(() => route.name === "reset"),
   done = ref(false),
@@ -26,8 +28,7 @@ async function submit() {
     );
     done.value = true;
   } catch (e) {
-    error.value =
-      e.response?.data?.message || "No se pudo completar la solicitud.";
+    error.value = e.response?.data?.message || t("recovery.requestError");
   } finally {
     busy.value = false;
   }
@@ -36,15 +37,12 @@ async function submit() {
 <template>
   <main class="auth">
     <section class="story">
-      <RouterLink
-        class="brand"
-        to="/"
-        aria-label="Volver a la landing de Alquivo"
+      <RouterLink class="brand" to="/" :aria-label="$t('common.backToHome')"
         ><BrandLogo light
       /></RouterLink>
       <div>
-        <p class="eyebrow">Acceso seguro</p>
-        <h1>Recupera el control de tu cartera.</h1>
+        <p class="eyebrow">{{ $t("recovery.secureAccess") }}</p>
+        <h1>{{ $t("recovery.story") }}</h1>
       </div>
     </section>
     <section class="auth-side">
@@ -52,35 +50,40 @@ async function submit() {
         <RouterLink
           class="auth-mobile-brand"
           to="/"
-          aria-label="Volver a la landing de Alquivo"
+          :aria-label="$t('common.backToHome')"
           ><BrandLogo
         /></RouterLink>
-        <p class="eyebrow">Cuenta</p>
-        <h2>{{ reset ? "Nueva contraseña" : "Recuperar contraseña" }}</h2>
+        <p class="eyebrow">{{ $t("recovery.account") }}</p>
+        <h2>
+          {{
+            reset ? $t("recovery.newPassword") : $t("recovery.recoverPassword")
+          }}
+        </h2>
         <p v-if="done" class="success">
           {{
-            reset
-              ? "Contraseña actualizada. Ya puedes entrar."
-              : "Si existe la cuenta, recibirás un enlace por email."
+            reset ? $t("recovery.passwordUpdated") : $t("recovery.sentIfExists")
           }}
         </p>
         <template v-else
           ><p v-if="error" class="error" role="alert">{{ error }}</p>
           <label
-            >Email<input
+            >{{ $t("common.email")
+            }}<input
               v-model="form.email"
               type="email"
               autocomplete="email"
               required /></label
           ><label v-if="reset"
-            >Nueva contraseña<input
+            >{{ $t("recovery.newPassword")
+            }}<input
               v-model="form.password"
               type="password"
               autocomplete="new-password"
               minlength="8"
               required /></label
           ><label v-if="reset"
-            >Confirma la contraseña<input
+            >{{ $t("common.confirmPassword")
+            }}<input
               v-model="form.password_confirmation"
               type="password"
               autocomplete="new-password"
@@ -88,15 +91,15 @@ async function submit() {
           ><button class="button primary full" :disabled="busy">
             {{
               busy
-                ? "Un momento…"
+                ? $t("common.wait")
                 : reset
-                  ? "Guardar contraseña"
-                  : "Enviar enlace"
+                  ? $t("recovery.savePassword")
+                  : $t("recovery.sendLink")
             }}
           </button></template
         >
         <p class="switch">
-          <RouterLink to="/login">Volver al acceso</RouterLink>
+          <RouterLink to="/login">{{ $t("recovery.backToLogin") }}</RouterLink>
         </p>
       </form>
     </section>

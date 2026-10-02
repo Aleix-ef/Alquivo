@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Domain\Assistant\Services\PortfolioAssistantTools;
 use App\Domain\Finance\Models\Transaction;
+use App\Domain\Leasing\Models\Lease;
 use App\Domain\Portfolio\Models\Portfolio;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -118,7 +119,41 @@ class AssistantInsightsTest extends TestCase
         $this->assertSame(100.25, $result['income_by_category']['other']);
         $this->assertSame(20.1, $result['expenses_by_category']['other']);
         $this->assertSame(80.15, $result['net']);
-        $this->assertSame(50.0, $result['pending_expenses']);
+        $this->assertSame(50.0, $result['other_unpaid_transactions']['expenses']);
+        $this->assertArrayNotHasKey('pending_income', $result);
+        $this->assertSame('0.00', $result['rent_charges_pending_all_periods']['remaining_amount']);
+    }
+
+    public function test_financial_summary_never_confuses_unpaid_movements_with_rent_charges(): void
+    {
+        $this->travelTo(now()->setDate(2026, 9, 20)->startOfDay());
+        $portfolio = Portfolio::create(['name' => 'Cartera sintética']);
+        $property = $portfolio->properties()->create(['name' => 'Centro', 'type' => 'housing', 'address_line' => 'Ficticia']);
+        $lease = Lease::create(['portfolio_id' => $portfolio->id, 'property_id' => $property->id,
+            'status' => 'active', 'start_date' => '2025-01-01', 'monthly_rent' => '550.00']);
+        foreach ([550, 700, 650, 250] as $index => $amount) {
+            $month = sprintf('2026-%02d', $index + 6);
+            $lease->charges()->create(['portfolio_id' => $portfolio->id, 'period' => $month,
+                'due_date' => $month.'-05', 'amount' => $amount, 'paid_amount' => 0, 'status' => 'pending']);
+        }
+        $this->movement($portfolio, ['property_id' => $property->id, 'direction' => 'expense', 'amount' => 45]);
+        $other = Portfolio::create(['name' => 'Ajena']);
+        $otherProperty = $other->properties()->create(['name' => 'Ajeno', 'type' => 'housing', 'address_line' => 'Ficticia']);
+        $otherLease = Lease::create(['portfolio_id' => $other->id, 'property_id' => $otherProperty->id,
+            'status' => 'active', 'start_date' => '2025-01-01', 'monthly_rent' => '9999.00']);
+        $otherLease->charges()->create(['portfolio_id' => $other->id, 'period' => '2026-09',
+            'due_date' => '2026-09-05', 'amount' => '9999.00', 'status' => 'pending']);
+
+        $summary = app(PortfolioAssistantTools::class)->execute($portfolio, 'get_financial_summary', []);
+        $overview = app(PortfolioAssistantTools::class)->execute($portfolio, 'get_portfolio_overview', []);
+        $this->assertSame(0.0, $summary['income']);
+        $this->assertSame(45.0, $summary['expenses']);
+        $this->assertSame(0.0, $summary['other_unpaid_transactions']['income']);
+        $this->assertSame('2150.00', $summary['rent_charges_pending_all_periods']['remaining_amount']);
+        $this->assertSame($summary['rent_charges_pending_all_periods'], $overview['rent_charges_pending_all_periods']);
+        $this->assertStringContainsString('NO mensualidades pendientes', $summary['basis']);
+        $this->assertStringNotContainsString('9999', json_encode($summary));
+        $this->travelBack();
     }
 
     public function test_pending_rent_totals_are_not_limited_to_the_twenty_displayed_items(): void
@@ -127,7 +162,8 @@ class AssistantInsightsTest extends TestCase
         $property = $portfolio->properties()->create(['name' => 'Centro', 'type' => 'housing', 'address_line' => 'Calle 1']);
         $lease = $property->leases()->create(['portfolio_id' => $portfolio->id, 'status' => 'active', 'start_date' => '2020-01-01', 'monthly_rent' => 100]);
         for ($i = 1; $i <= 21; $i++) {
-            $charge = $lease->charges()->create(['portfolio_id' => $portfolio->id, 'period' => today()->subMonths($i)->format('Y-m'), 'due_date' => today()->subMonths($i), 'amount' => 100, 'paid_amount' => 40, 'status' => 'partial']);
+            $dueDate = today()->startOfMonth()->subMonthsNoOverflow($i);
+            $charge = $lease->charges()->create(['portfolio_id' => $portfolio->id, 'period' => $dueDate->format('Y-m'), 'due_date' => $dueDate, 'amount' => 100, 'paid_amount' => 40, 'status' => 'partial']);
             $this->movement($portfolio, ['property_id' => $property->id, 'lease_id' => $lease->id, 'rent_charge_id' => $charge->id, 'category' => 'rent', 'amount' => 40]);
         }
         $result = app(PortfolioAssistantTools::class)->execute($portfolio, 'get_pending_items', ['kind' => 'rents']);

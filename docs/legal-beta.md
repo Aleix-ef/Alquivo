@@ -1,6 +1,6 @@
 # Textos legales de la beta
 
-Revisión de trabajo: 24 de septiembre de 2026. **Redacción e integración implementadas; no es una certificación jurídica ni una autorización para abrir la beta con los campos incompletos.**
+Revisión de trabajo: 1 de octubre de 2026. **Redacción e integración implementadas; no es una certificación jurídica ni una autorización para abrir la beta con los campos incompletos.**
 
 ## Documentos y mantenimiento
 
@@ -18,24 +18,37 @@ Las cinco páginas se generan como HTML estático, son accesibles sin iniciar se
 
 ## Datos imprescindibles pendientes
 
-- Titular real, NIF/CIF y domicilio profesional/de contacto; datos registrales si corresponden. `Alquivo` y un correo no sustituyen la identificación del prestador.
-- Entidades contratadas para alojamiento, almacenamiento, copia externa, correo y, antes de habilitar IA, la entidad contractual del proveedor. Indicar ubicación del tratamiento y accesos remotos, no solo la región del servidor.
+- El titular ha comunicado su alta como autónomo y ha autorizado publicar su identidad, NIF, condición de persona física, domicilio y correo, ya incorporados. Confirmar que el domicilio facilitado es el de contacto que debe figurar públicamente y mantenerlo actualizado si cambia.
+- Resend está identificado como proveedor de envío y Cloudflare como reenvío al buzón Gmail gratuito. Falta confirmar la entidad y condiciones efectivas del buzón, así como el alojamiento, almacenamiento, copia externa y la entidad contractual del proveedor de IA antes de abrirla al público. Un proyecto creado en Hetzner no equivale a un servidor contratado. Indicar ubicación del tratamiento y accesos remotos, no solo la región del servidor.
 - Garantías concretas para transferencias internacionales, revisadas contra los acuerdos vigentes: no dar por supuesta residencia europea ni ausencia de transferencias.
 - Plazos y procedimientos reales de borrado de copias, buzón de soporte y registros de infraestructura. Deben coincidir con las tareas/proveedores contratados, y describir las excepciones justificadas de conservación.
 - Verificar en producción los nombres y duración de las cookies: el texto refleja `APP_NAME=Alquivo`, `SESSION_LIFETIME=120` y 90 días para dispositivos de confianza. Si cambia la configuración, actualizar el inventario.
 - Revisión final por un profesional de protección de datos/contratación ajustada a la identidad, actividad, público y proveedores reales. Aclarar el tratamiento aplicable a propietarios particulares y profesionales según sus circunstancias.
+- Revisar el uso de Gmail gratuito para consultas y adjuntos personales; no presentarlo como Google Workspace ni atribuirle su acuerdo empresarial de tratamiento. Valorar un buzón profesional antes de recibir documentos de clientes.
 
 `reviewedForPublication` permanece en `false`. El aviso visible de borrador solo desaparece cuando se completa la información exigida y se marca la revisión final. Este indicador **no bloquea por sí mismo el registro ni acredita cumplimiento**: no desplegar públicamente como servicio listo con los campos sin completar. Si la beta excluye IA, puede indicarse expresamente en su ficha de proveedor que está deshabilitada y no trata datos; antes de activarla hay que sustituirlo por la información contractual efectiva.
 
-No se han publicado nombres, NIF ni domicilios inventados. No se ha contratado servidor/correo ni realizado revisión jurídica externa.
+No se han inventado contratos ni datos de proveedores. La entrega de un correo de recuperación desde la aplicación fue confirmada por el destinatario; esto no verifica todos los tipos de correo. Aún no se ha contratado el servidor ni las copias externas y no se ha realizado revisión jurídica externa.
 
 ## Aceptación y versiones
 
-La versión `2026-09-24` se define en el contenido del frontend y en `backend/config/legal.php`. El registro envía `terms_version`; el servidor exige la versión vigente y `terms_accepted=true`. Rechaza formularios antiguos con un mensaje para recargar y revisar las condiciones. Guarda `terms_accepted_at` y `terms_version`. Backend y frontend deben desplegarse juntos. La privacidad se presenta como información leída, no como un consentimiento universal ni aceptación de publicidad. La IA mantiene su activación separada.
+La versión de borrador actual es `2026-10-01-r2`, definida en el frontend y en `backend/config/legal.php`. El registro envía `terms_version`; el servidor exige la versión vigente y `terms_accepted=true`. Rechaza formularios antiguos con un mensaje para recargar y revisar las condiciones. Guarda `terms_accepted_at` y `terms_version`, y evidencia mínima independiente de esa aceptación. Backend y frontend deben desplegarse juntos. La privacidad se presenta como información leída, no como un consentimiento universal ni aceptación de publicidad. La IA mantiene su activación separada.
 
 No se modifican las fechas/versiones de usuarios existentes ni se les atribuye una nueva aceptación. Antes de incorporar cuentas reales antiguas bajo estas condiciones, recabar su aceptación por un mecanismo documentado; todavía no se ha añadido un flujo de reaceptación para cuentas existentes. La demo y sus datos históricos no prueban aceptación contractual de un cliente.
 
 Antes de publicar una versión definitiva, guardar una copia inmutable del contenido y datos del titular/proveedores que se publicaron, junto con la fecha de entrada en vigor y el commit de lanzamiento. Incrementar la versión si cambia ese contenido: **no reutilizar la versión de este borrador para unas condiciones distintas**. Los cambios relevantes se comunicarán y, si hace falta, se recabará nueva aceptación; no sobrescribir el historial de aceptación anterior.
+
+`node tools/archive-legal.mjs` guarda el contenido público, datos del operador, avisos de activación y versiones en `docs/legal-revisions/<version>.json`, con SHA-256. Rechaza sobrescribir una revisión cuyo contenido ha cambiado. `node tools/archive-legal.mjs --check` verifica coincidencia frontend/backend y archivo, también en CI. El archivo actual está marcado **borrador**, no aprobación jurídica. Incluir la revisión final en el commit/artefacto de lanzamiento y conservarlo fuera del servidor; un archivo local y una huella no son un depósito notarial ni almacenamiento WORM. Al completar proveedores o revisar un texto, incrementar versiones y generar otro archivo.
+
+## Evidencia mínima de aceptación y retirada — 1 de octubre de 2026
+
+`legal_acceptances` registra únicamente cuenta de origen (FK anulable), correo cifrado con `APP_KEY`, ámbito (`terms`, `assistant`, `document_ai`), acción, versión, fecha y caducidad. No contiene chats, notas, documentos, IP ni prompts; no hay endpoint ni acceso para soporte/IA. Solo se consulta por personal autorizado para acreditar el tratamiento o atender derechos/responsabilidades. Aceptación y estado se guardan en una transacción con bloqueo de usuario; repetir una aceptación vigente no fabrica eventos ni cambia la primera fecha. No se reconstruyen aceptaciones históricas sin evidencia.
+
+Revocar chat/documentos sigue borrando sus contenidos/borradores y no borra operaciones confirmadas ni reinicia cuotas. La prueba mínima queda separada y caduca: política técnica provisional de **1.095 días** después de sustituir/retirar una aceptación o borrar la cuenta, configurable en código mediante `legal.evidence_retention_days`. La aceptación vigente se conserva mientras esté activa. No es un plazo legal universal ni una justificación para guardar carteras: debe revisarse con el asesor según bases, responsabilidades y minimización antes de publicar. El borrador de privacidad refleja ese plazo. `legal:prune` elimina evidencias caducadas cada día a las 03:00; requiere scheduler, alertas y caducidad coherente de copias.
+
+Avisos nuevos: chat `2026-10-01`; simulación documental `documents-simulation-2026-10-01`. Los permisos anteriores no autorizan nuevas consultas/propuestas con la revisión nueva: será necesaria aceptación expresa si la función está disponible. No se cambia el gate global de IA ni se habilita Document AI real. Los usuarios de prueba anteriores no reciben una aceptación ficticia.
+
+Fuentes: [RGPD, art. 7.1 y retirada, art. 7.3](https://www.boe.es/doue/2016/119/L00001-00088.pdf), [LOPDGDD, art. 32 sobre bloqueo](https://www.boe.es/buscar/act.php?id=BOE-A-2018-16673#a32). La evidencia técnica no determina por sí sola los plazos legales ni sustituye el procedimiento restringido de conservación/bloqueo que corresponda.
 
 ## Compromisos que requieren operación
 

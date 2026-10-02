@@ -34,7 +34,7 @@ class CalendarController extends Controller
     public function store(Request $r)
     {
         $p = $r->user()->portfolio();
-        $d = $r->validate(['title' => ['required', 'string', 'max:160'], 'description' => ['nullable', 'string'], 'starts_at' => ['required', 'date'], 'property_id' => ['nullable', 'integer']]);
+        $d = $r->validate(['title' => ['required', 'string', 'max:160'], 'description' => ['nullable', 'string', 'max:10000'], 'starts_at' => ['required', 'date'], 'property_id' => ['nullable', 'integer']]);
         if (! empty($d['property_id'])) {
             Property::where('portfolio_id', $p->id)->findOrFail($d['property_id']);
         }
@@ -46,7 +46,7 @@ class CalendarController extends Controller
     {
         $this->ensureOwned($request, $reminder);
         $data = $request->validate([
-            'title' => ['sometimes', 'string', 'max:160'], 'description' => ['sometimes', 'nullable', 'string'],
+            'title' => ['sometimes', 'string', 'max:160'], 'description' => ['sometimes', 'nullable', 'string', 'max:10000'],
             'starts_at' => ['sometimes', 'date'], 'property_id' => ['sometimes', 'nullable', 'integer'],
             'completed' => ['sometimes', 'boolean'],
         ]);

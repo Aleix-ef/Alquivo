@@ -8,6 +8,7 @@ $failed = false;
 $patterns = [
     'Stripe credential' => '/(?:sk|rk)_(?:live|test)_[A-Za-z0-9]{20,}|whsec_[A-Za-z0-9]{20,}/',
     'OpenAI credential' => '/sk-proj-[A-Za-z0-9_-]{30,}/',
+    'Resend credential' => '/\bre_[A-Za-z0-9_-]{20,}\b/',
     'GitHub credential' => '/gh[pousr]_[A-Za-z0-9]{30,}|github_pat_[A-Za-z0-9_]{40,}/',
     'AWS access key' => '/AKIA[0-9A-Z]{16}/',
     'Private key' => '/-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----/',

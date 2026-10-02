@@ -10,6 +10,7 @@ use App\Domain\Assistant\Services\ActionProposalService;
 use App\Domain\Assistant\Services\AiCapabilities;
 use App\Domain\Assistant\Services\AssistantOrchestrator;
 use App\Domain\Assistant\Services\AssistantUsageService;
+use App\Domain\Identity\Services\LegalEvidence;
 use App\Domain\Portfolio\Services\PlanService;
 use App\Http\Controllers\Controller;
 use App\Models\User;
@@ -198,7 +199,14 @@ class AssistantController extends Controller
         $request->validate(['notice_version' => ['required', Rule::in([config('assistant.notice_version')])], 'accepted' => ['accepted']]);
 
         return $this->withLock($request, function () use ($request) {
-            $request->user()->forceFill(['assistant_enabled_at' => now(), 'assistant_notice_version' => config('assistant.notice_version')])->save();
+            DB::transaction(function () use ($request) {
+                $user = User::whereKey($request->user()->id)->lockForUpdate()->firstOrFail();
+                app(LegalEvidence::class)->accept($user, 'assistant', config('assistant.notice_version'));
+                $alreadyAccepted = $user->assistant_enabled_at && $user->assistant_notice_version === config('assistant.notice_version');
+                $user->forceFill(['assistant_enabled_at' => $alreadyAccepted ? $user->assistant_enabled_at : now(),
+                    'assistant_notice_version' => config('assistant.notice_version')])->save();
+            });
+            $request->user()->refresh();
             SecurityAudit::record('assistant.enabled', $request->user()->id);
 
             return ['enabled' => true];
@@ -210,6 +218,8 @@ class AssistantController extends Controller
         return $this->withLock($request, function () use ($request) {
             DB::transaction(function () use ($request) {
                 $user = User::whereKey($request->user()->id)->lockForUpdate()->firstOrFail();
+                app(LegalEvidence::class)->withdraw($user, 'assistant', $user->assistant_notice_version);
+                app(LegalEvidence::class)->withdraw($user, 'document_ai', $user->document_ai_notice_version);
                 $user->forceFill(['assistant_enabled_at' => null, 'assistant_notice_version' => null,
                     'document_ai_accepted_at' => null, 'document_ai_notice_version' => null])->save();
                 AiDocumentExtraction::where('user_id', $user->id)->where('status', '!=', 'confirmed')
@@ -218,6 +228,7 @@ class AssistantController extends Controller
                 AiActionProposal::where('user_id', $request->user()->id)->delete();
                 AiConversation::where('user_id', $request->user()->id)->delete();
             });
+            $request->user()->refresh();
             SecurityAudit::record('assistant.disabled', $request->user()->id);
 
             return response()->noContent();

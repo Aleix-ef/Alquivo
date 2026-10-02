@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Domain\Identity\Services\LegalEvidence;
 use App\Domain\Identity\Services\RevokeSessions;
 use App\Domain\Identity\Services\TrustedDevices;
 use App\Domain\Identity\Services\TwoFactor;
@@ -41,6 +42,7 @@ class AuthController extends Controller
 
         [$user, $portfolio] = DB::transaction(function () use ($data) {
             $user = User::create([...$data, 'terms_accepted_at' => now(), 'terms_version' => config('legal.terms_version')]);
+            app(LegalEvidence::class)->accept($user, 'terms', config('legal.terms_version'));
             $portfolio = Portfolio::create([
                 'name' => $data['portfolio_name'] ?? 'Mi patrimonio',
                 'currency' => 'EUR', 'country_code' => 'ES',

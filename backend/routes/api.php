@@ -25,6 +25,7 @@ use App\Http\Controllers\Api\V1\SupportController;
 use App\Http\Controllers\Api\V1\TransactionController;
 use App\Http\Controllers\Api\V1\TwoFactorController;
 use App\Http\Middleware\AvailableFeature;
+use App\Http\Middleware\RequirePortfolio;
 use App\Http\Middleware\WithinPropertyPlan;
 use App\Support\ProductFeatures;
 use Illuminate\Support\Facades\Route;
@@ -81,13 +82,13 @@ Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
     Route::post('/auth/logout', [AuthController::class, 'logout']);
     Route::post('/auth/email/resend', [AuthController::class, 'resendVerification'])->middleware('throttle:6,1');
     Route::get('/auth/email/verify/{id}/{hash}', [AuthController::class, 'verifyEmail'])->middleware('signed')->name('verification.verify');
-    Route::put('/account', [AccountController::class, 'update'])->middleware('throttle:6,1');
+    Route::put('/account', [AccountController::class, 'update'])->middleware(['throttle:6,1', RequirePortfolio::class]);
     Route::put('/account/password', [AccountController::class, 'password'])->middleware('throttle:6,1');
-    Route::get('/account/usage', [AccountController::class, 'usage']);
-    Route::get('/plans', PlanController::class);
+    Route::get('/account/usage', [AccountController::class, 'usage'])->middleware(RequirePortfolio::class);
+    Route::get('/plans', PlanController::class)->middleware(RequirePortfolio::class);
     Route::delete('/account', [AccountController::class, 'destroy'])->middleware('throttle:6,1');
-    Route::get('/dashboard', DashboardController::class);
-    Route::group([], function () {
+    Route::get('/dashboard', DashboardController::class)->middleware(RequirePortfolio::class);
+    Route::middleware(RequirePortfolio::class)->group(function () {
         Route::prefix('document-ai')->controller(DocumentAiController::class)->group(function () {
             Route::get('/', 'index');
             Route::post('/consent', 'consent');

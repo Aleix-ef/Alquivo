@@ -3,12 +3,14 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Domain\Documents\Services\PrivateFileDeletion;
+use App\Domain\Identity\Services\LegalEvidence;
 use App\Domain\Identity\Services\RevokeSessions;
 use App\Domain\Portfolio\Services\PlanService;
 use App\Domain\Portfolio\Services\StorageUsageService;
 use App\Domain\Support\Models\SupportConversation;
 use App\Domain\Support\Services\SupportChat;
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use App\Support\SecurityAudit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -92,7 +94,7 @@ class AccountController extends Controller
         ]);
         $user = $request->user();
         $portfolio = $user->portfolio();
-        abort_if($portfolio->members()->count() > 1, 422, 'No puedes eliminar una cartera con otros miembros.');
+        abort_if($portfolio && $portfolio->members()->count() > 1, 422, 'No puedes eliminar una cartera con otros miembros.');
         abort_if($user->subscribed('default'), 422, 'Cancela primero tu suscripción desde el portal de facturación.');
 
         Auth::guard('web')->logout();
@@ -100,7 +102,9 @@ class AccountController extends Controller
             $user->deleteStripeCustomer();
         }
         $cleanupIds = DB::transaction(function () use ($user, $portfolio) {
-            $cleanupIds = [app(PrivateFileDeletion::class)->schedule("portfolios/{$portfolio->id}", true)];
+            $user = User::whereKey($user->id)->lockForUpdate()->firstOrFail();
+            app(LegalEvidence::class)->closeAccount($user);
+            $cleanupIds = $portfolio ? [app(PrivateFileDeletion::class)->schedule("portfolios/{$portfolio->id}", true)] : [];
             foreach (SupportConversation::where('user_id', $user->id)->lockForUpdate()->get() as $conversation) {
                 $cleanupIds[] = app(SupportChat::class)->scheduleDeletion($conversation);
             }
@@ -109,7 +113,7 @@ class AccountController extends Controller
                 $subscription->items()->delete();
                 $subscription->delete();
             });
-            $portfolio->delete();
+            $portfolio?->delete();
             $user->delete();
 
             return $cleanupIds;

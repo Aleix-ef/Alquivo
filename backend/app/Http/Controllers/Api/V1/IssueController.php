@@ -34,7 +34,7 @@ class IssueController extends Controller
     public function store(Request $r)
     {
         $p = $r->user()->portfolio();
-        $d = $r->validate(['property_id' => ['required', 'integer'], 'assigned_contact_id' => ['nullable', 'integer'], 'title' => ['required', 'string', 'max:160'], 'description' => ['nullable', 'string'], 'priority' => ['required', Rule::in(['low', 'medium', 'high'])], 'reported_at' => ['required', 'date'], 'due_date' => ['nullable', 'date'], 'estimated_cost' => ['nullable', 'numeric', 'min:0']]);
+        $d = $r->validate(['property_id' => ['required', 'integer'], 'assigned_contact_id' => ['nullable', 'integer'], 'title' => ['required', 'string', 'max:160'], 'description' => ['nullable', 'string', 'max:10000'], 'priority' => ['required', Rule::in(['low', 'medium', 'high'])], 'reported_at' => ['required', 'date'], 'due_date' => ['nullable', 'date'], 'estimated_cost' => ['nullable', 'numeric', 'min:0']]);
         Property::where('portfolio_id', $p->id)->findOrFail($d['property_id']);
         $this->validateContact($p->id, $d['assigned_contact_id'] ?? null);
 
@@ -46,7 +46,7 @@ class IssueController extends Controller
         $this->ensureOwned($r, $issue);
         $d = $r->validate([
             'assigned_contact_id' => ['sometimes', 'nullable', 'integer'],
-            'title' => ['sometimes', 'string', 'max:160'], 'description' => ['sometimes', 'nullable', 'string'],
+            'title' => ['sometimes', 'string', 'max:160'], 'description' => ['sometimes', 'nullable', 'string', 'max:10000'],
             'priority' => ['sometimes', Rule::in(['low', 'medium', 'high'])],
             'status' => ['sometimes', Rule::in(['open', 'in_progress', 'waiting', 'resolved', 'cancelled'])],
             'reported_at' => ['sometimes', 'date'], 'due_date' => ['sometimes', 'nullable', 'date'],

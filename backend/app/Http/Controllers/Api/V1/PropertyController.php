@@ -115,7 +115,7 @@ class PropertyController extends Controller
             'purchase_price' => ['nullable', 'numeric', 'min:0'], 'acquisition_costs' => ['nullable', 'numeric', 'min:0'],
             'current_value' => ['nullable', 'numeric', 'min:0'], 'valuation_date' => ['nullable', 'date'],
             'outstanding_debt' => ['nullable', 'numeric', 'min:0'], 'area' => ['nullable', 'numeric', 'min:0'],
-            'bedrooms' => ['nullable', 'integer', 'min:0'], 'bathrooms' => ['nullable', 'integer', 'min:0'], 'notes' => ['nullable', 'string'],
+            'bedrooms' => ['nullable', 'integer', 'min:0'], 'bathrooms' => ['nullable', 'integer', 'min:0'], 'notes' => ['nullable', 'string', 'max:10000'],
         ];
     }
 }

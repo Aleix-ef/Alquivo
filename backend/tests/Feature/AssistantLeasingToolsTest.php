@@ -32,6 +32,46 @@ class AssistantLeasingToolsTest extends TestCase
         Http::preventStrayRequests();
     }
 
+    public function test_property_name_and_city_forms_resolve_only_one_owned_write_target(): void
+    {
+        $f = $this->fixture();
+        $f['property']->update(['city' => 'Valencia']);
+        $f['portfolio']->properties()->create(['name' => 'San Nicolás', 'city' => 'Madrid',
+            'type' => 'housing', 'address_line' => 'Ficticia']);
+        $other = $this->fixture();
+        $other['property']->update(['city' => 'Valencia']);
+        $run = AiRun::create(['user_id' => $f['user']->id, 'portfolio_id' => $f['portfolio']->id,
+            'conversation_id' => $f['conversation']->id, 'client_request_id' => (string) Str::uuid(),
+            'request_hash' => hash('sha256', 'synthetic city'), 'plan' => 'founder',
+            'billing_month' => today()->startOfMonth(), 'routing_version' => 'test']);
+        $registry = app(ToolRegistry::class);
+        foreach (['San Nicolás de Valencia', 'San Nicolás Valencia', 'San Nicolás en Valencia'] as $query) {
+            $found = $registry->execute($f['portfolio'], $f['user'], $run, 'search_properties', ['query' => $query]);
+            $this->assertSame(1, $found['count']);
+            $this->assertSame($f['property']->id, $found['properties'][0]['id']);
+            $this->assertFalse($found['needs_clarification']);
+            $this->assertStringNotContainsString((string) $other['property']->id, json_encode(array_column($found['properties'], 'id')));
+        }
+        $proposal = $registry->execute($f['portfolio'], $f['user'], $run, 'propose_property_note',
+            ['property_id' => $f['property']->id, 'note' => 'Revisar portal']);
+        $this->assertSame($f['property']->id, $proposal['proposal']['preview']['property']['id']);
+        $this->assertSame('private-note-existing', $f['property']->fresh()->notes);
+
+        $ambiguous = $registry->execute($f['portfolio'], $f['user'], $run, 'search_properties', ['query' => 'San Nicolás']);
+        $this->assertSame(2, $ambiguous['count']);
+        $this->assertTrue($ambiguous['needs_clarification']);
+        Contact::create(['portfolio_id' => $f['portfolio']->id, 'name' => 'Juan Pérez']);
+        Contact::create(['portfolio_id' => $f['portfolio']->id, 'name' => 'Juan López']);
+        foreach (['Juan', 'piso de Juan'] as $query) {
+            $related = $registry->execute($f['portfolio'], $f['user'], $run, 'search_properties', ['query' => $query]);
+            $this->assertSame(0, $related['count']);
+            $this->assertCount(2, $related['related_contacts']);
+        }
+        $this->expectException(InvalidArgumentException::class);
+        $registry->execute($f['portfolio'], $f['user'], $run, 'propose_property_note',
+            ['property_id' => $f['property']->id, 'note' => 'No debe prepararse']);
+    }
+
     public function test_contact_search_is_accent_insensitive_and_never_returns_private_fields(): void
     {
         $f = $this->fixture();
@@ -88,6 +128,9 @@ class AssistantLeasingToolsTest extends TestCase
         $this->assertCount(20, $r['charges']);
         $this->assertTrue($r['truncated']);
         $this->assertSame('14800.00', $r['summary']['remaining_amount']);
+        $this->assertSame('María López', $r['charges'][0]['tenants'][0]['name']);
+        $this->assertSame(1, $r['charges'][0]['tenant_count']);
+        $this->assertSame('María López', app(PortfolioAssistantTools::class)->execute($f['portfolio'], 'get_pending_items', ['kind' => 'rents'])['rents'][0]['tenants'][0]['name']);
         $this->assertSame('200.00', $r['summary']['paid_amount']);
         $legacy = app(PortfolioAssistantTools::class)->execute($f['portfolio'], 'get_pending_items', ['kind' => 'rents']);
         $this->assertEquals($r['summary']['remaining_amount'], $legacy['rents_summary']['pending_amount']);

@@ -3,6 +3,7 @@
 namespace App\Domain\Identity\Services;
 
 use App\Models\User;
+use App\Support\OutboundMail;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\ValidationException;
 use PragmaRX\Google2FA\Google2FA;
@@ -11,7 +12,7 @@ final class TwoFactor
 {
     public function emailDeliveryAvailable(): bool
     {
-        return in_array(config('mail.default'), ['smtp', 'mailgun', 'ses', 'ses-v2', 'postmark', 'resend', 'sendmail'], true);
+        return app(OutboundMail::class)->available();
     }
 
     public function binding(User $user): string

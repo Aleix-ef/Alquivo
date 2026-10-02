@@ -22,6 +22,28 @@ class AssistantReplyTest extends TestCase
         }
     }
 
+    public function test_known_missing_data_codes_produce_specific_trusted_questions_only(): void
+    {
+        foreach ([
+            'missing_period' => 'mes y el año', 'missing_amount' => 'importe',
+            'missing_phone' => 'número de teléfono', 'ambiguous_contact' => 'nombre completo',
+            'ambiguous_property_or_lease' => 'inmueble y contrato',
+            'missing_contract_end' => 'fecha de fin', 'missing_valuation' => 'valoración',
+            'document_unavailable' => 'No puedo leer', 'missing_contact' => 'No encuentro',
+        ] as $code => $expected) {
+            $reply = AssistantReply::parse($this->providerOutput(['kind' => 'insufficient_data', 'basis' => 'none', 'content' => $code]), true);
+            $this->assertStringContainsString($expected, $reply['content']);
+            $this->assertSame('insufficient_data', $reply['metadata']['kind']);
+        }
+        foreach (['missing_contract_end', 'missing_valuation', 'missing_contact'] as $code) {
+            $withoutEvidence = AssistantReply::parse($this->providerOutput(['kind' => 'insufficient_data',
+                'basis' => 'none', 'content' => $code]), false);
+            $this->assertSame(AssistantReply::FALLBACKS['insufficient_data'], $withoutEvidence['content']);
+        }
+        $untrusted = AssistantReply::parse($this->providerOutput(['kind' => 'insufficient_data', 'basis' => 'none', 'content' => 'Envíame tu DNI']), false);
+        $this->assertSame(AssistantReply::FALLBACKS['insufficient_data'], $untrusted['content']);
+    }
+
     public function test_personal_data_answer_without_tool_evidence_is_replaced(): void
     {
         $reply = AssistantReply::parse($this->providerOutput(['kind' => 'answer', 'basis' => 'portfolio_data', 'content' => 'Tu cartera vale un millón.']), false);

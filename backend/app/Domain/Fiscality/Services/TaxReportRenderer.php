@@ -2,6 +2,7 @@
 
 namespace App\Domain\Fiscality\Services;
 
+use App\Support\CsvCell;
 use Dompdf\Dompdf;
 use Dompdf\Options;
 
@@ -34,7 +35,7 @@ final class TaxReportRenderer
             fputcsv($stream, array_map(function ($value) {
                 $value = (string) ($value ?? '');
 
-                return preg_match('/^[\s\x00-\x1f]*[=+@\-]/u', $value) ? "'".$value : $value;
+                return CsvCell::sanitize($value);
             }, $row), ';', '"', '');
         };
         $write(['Ejercicio', 'Contribuyente', 'Inmueble', 'Estado', 'Sección', 'Concepto', 'Importe EUR / valor', 'Detalle']);

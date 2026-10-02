@@ -46,28 +46,21 @@ summary:focus-visible {
 .alquivo-brand {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  flex-shrink: 0;
+  line-height: 0;
   color: var(--ink);
 }
 .alquivo-symbol {
-  width: 39px;
-  height: 34px;
-  overflow: visible;
-}
-.alquivo-mark-main {
-  fill: currentColor;
-}
-.alquivo-mark-sage {
-  fill: #abc9c1;
-}
-.alquivo-mark-gold {
-  fill: #d0a66e;
+  display: block;
+  width: 36px;
+  height: 36px;
 }
 .alquivo-wordmark {
-  color: currentColor;
-  font-size: 17px;
-  font-weight: 700;
-  letter-spacing: 0.16em;
+  display: block;
+  width: 160px;
+  height: auto;
+  aspect-ratio: 656 / 128;
+  fill: currentColor;
 }
 .sidebar .alquivo-brand,
 .alquivo-brand.light {

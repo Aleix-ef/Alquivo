@@ -6,6 +6,7 @@ use App\Domain\Documents\Services\UploadScanner;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\SupportRequest;
 use App\Mail\SupportMessage;
+use App\Support\OutboundMail;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
@@ -25,8 +26,7 @@ final class SupportController extends Controller
         $recipient = config('support.email');
         abort_unless(filter_var($recipient, FILTER_VALIDATE_EMAIL), 503, 'El envío de soporte no está disponible. Inténtalo más tarde.');
         // Never write messages / base64 attachments to a development mail log.
-        $transport = config('mail.mailers.'.config('mail.default').'.transport');
-        abort_unless(in_array($transport, ['smtp', 'ses', 'ses-v2', 'postmark', 'resend', 'mailgun', 'sendmail'], true), 503, 'El envío desde la aplicación aún no está configurado. Puedes escribirnos por correo; tu mensaje no se ha enviado.');
+        abort_unless(app(OutboundMail::class)->available(), 503, 'El envío desde la aplicación aún no está configurado. Puedes escribirnos por correo; tu mensaje no se ha enviado.');
         $files = array_values($request->file('attachments', []));
         foreach ($files as $index => $file) {
             try {

@@ -6,12 +6,29 @@ defineProps({
 </script>
 
 <template>
-  <span class="alquivo-brand" :class="{ compact, light }" aria-label="Alquivo">
-    <svg class="alquivo-symbol" viewBox="0 0 80 64" aria-hidden="true">
-      <path class="alquivo-mark-main" d="M4 54 27 8l24 46H40L27 27 15 54Z" />
-      <path class="alquivo-mark-sage" d="M53 14h10v30H53z" />
-      <path class="alquivo-mark-gold" d="M63 44h14v10H63z" />
+  <span
+    class="alquivo-brand"
+    :class="{ compact, light }"
+    role="img"
+    aria-label="Alquivo"
+  >
+    <svg
+      v-if="compact"
+      class="alquivo-symbol"
+      viewBox="0 0 100 100"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <use href="/favicon.svg?v=wordmark-1#mark" />
     </svg>
-    <span v-if="!compact" class="alquivo-wordmark">ALQUIVO</span>
+    <svg
+      v-else
+      class="alquivo-wordmark"
+      viewBox="0 0 656 128"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <use href="/brand/alquivo-wordmark.svg#wordmark" />
+    </svg>
   </span>
 </template>

@@ -1,5 +1,7 @@
 # Seguridad y preparación del lanzamiento
 
+**Documento histórico (septiembre).** No tomar sus cifras ni decisiones iniciales como estado actual: los propietarios ya disponen de MFA; se permite usar la cartera propia sin verificar el correo; las consultas IA autorizadas pueden incluir nombres de contactos; producción tiene Compose independiente con PostgreSQL privado. Para el checkpoint vigente, correcciones y pendientes consultar [revisión previa a beta](beta-readiness-review.md), [release candidate](release-candidate.md) y [operación de privacidad](privacy-operations.md).
+
 Revisión y correcciones: 6–7 de septiembre de 2026. Este documento recoge controles implementados y requisitos pendientes; no es un certificado de seguridad ni una declaración de cumplimiento legal.
 
 Verificación del código al 7 de septiembre: 63 pruebas del backend y 266 aserciones correctas; pruebas del frontend y compilación correctas; Composer y npm sin avisos de vulnerabilidades conocidas. Se guardó una copia local de PostgreSQL previa a las migraciones en `backups/alquivo-before-security-20260907.dump` (ignorada por Git y con permisos 600). No sustituye a las copias cifradas externas de producción.

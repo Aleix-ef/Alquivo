@@ -24,7 +24,7 @@ class ContactController extends Controller
             'kind' => ['required', Rule::in(['person', 'company'])],
             'name' => ['required', 'string', 'max:120'],
             'tax_id' => ['nullable', 'string', 'max:30'], 'email' => ['nullable', 'email', 'max:255'],
-            'phone' => ['nullable', 'string', 'max:30'], 'notes' => ['nullable', 'string'],
+            'phone' => ['nullable', 'string', 'max:30'], 'notes' => ['nullable', 'string', 'max:10000'],
         ]);
 
         return response()->json(Contact::create([...$data, 'portfolio_id' => $request->user()->portfolio()->id]), 201);
@@ -39,7 +39,7 @@ class ContactController extends Controller
             'tax_id' => ['sometimes', 'nullable', 'string', 'max:30'],
             'email' => ['sometimes', 'nullable', 'email', 'max:255'],
             'phone' => ['sometimes', 'nullable', 'string', 'max:30'],
-            'notes' => ['sometimes', 'nullable', 'string'],
+            'notes' => ['sometimes', 'nullable', 'string', 'max:10000'],
         ]);
 
         return DB::transaction(function () use ($request, $contact, $updatePhone, $data) {

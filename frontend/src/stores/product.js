@@ -17,7 +17,7 @@ export const useProduct = defineStore("product", {
   getters: {
     accountFeatures(state) {
       const session = useSession();
-      return session.initialized && session.user?.local_admin
+      return session.serverConfirmedAdmin
         ? { ...state.features, assistant: true, fiscality: true }
         : state.features;
     },

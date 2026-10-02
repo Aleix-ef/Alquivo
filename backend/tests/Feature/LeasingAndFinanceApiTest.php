@@ -8,6 +8,7 @@ use App\Domain\Leasing\Models\Lease;
 use App\Domain\Portfolio\Models\Portfolio;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 class LeasingAndFinanceApiTest extends TestCase
@@ -205,5 +206,98 @@ class LeasingAndFinanceApiTest extends TestCase
         ])->assertOk()->assertJsonCount(2, 'participants');
         $new = Contact::where('portfolio_id', $portfolio->id)->where('name', 'Ana')->firstOrFail();
         $this->assertDatabaseHas('lease_participants', ['lease_id' => $lease->id, 'contact_id' => $new->id]);
+    }
+
+    public function test_owner_can_edit_dates_with_existing_tenants_without_rewriting_payments(): void
+    {
+        [$user, $portfolio, $property] = $this->owner();
+        $primary = Contact::create(['portfolio_id' => $portfolio->id, 'name' => 'María', 'kind' => 'person']);
+        $secondary = Contact::create(['portfolio_id' => $portfolio->id, 'name' => 'Luis', 'kind' => 'person']);
+        $lease = Lease::create([
+            'portfolio_id' => $portfolio->id, 'property_id' => $property->id,
+            'status' => 'active', 'start_date' => today()->subMonths(2), 'end_date' => today()->addMonth(),
+            'monthly_rent' => 800, 'payment_day' => 5,
+        ]);
+        $lease->participants()->attach([
+            $primary->id => ['role' => 'tenant', 'is_primary' => true],
+            $secondary->id => ['role' => 'tenant', 'is_primary' => false],
+        ]);
+        $charge = RentCharge::create([
+            'portfolio_id' => $portfolio->id, 'lease_id' => $lease->id, 'period' => today()->format('Y-m'),
+            'due_date' => today(), 'amount' => 800, 'paid_amount' => 300, 'status' => 'partial',
+        ]);
+        $start = today()->subMonth()->toDateString();
+        $end = today()->addMonths(2)->toDateString();
+
+        $this->actingAs($user)->putJson("/api/v1/leases/{$lease->id}", [
+            'contact_ids' => [$primary->id, $secondary->id], 'new_contacts' => [],
+            'start_date' => $start, 'end_date' => $end,
+        ])->assertOk()->assertJsonCount(2, 'participants')->assertJsonCount(1, 'charges');
+
+        $this->assertSame($start, $lease->fresh()->start_date->toDateString());
+        $this->assertSame($end, $lease->fresh()->end_date->toDateString());
+        $this->assertDatabaseHas('lease_participants', ['lease_id' => $lease->id, 'contact_id' => $primary->id, 'is_primary' => true]);
+        $this->assertDatabaseHas('lease_participants', ['lease_id' => $lease->id, 'contact_id' => $secondary->id, 'is_primary' => false]);
+        $this->assertDatabaseHas('rent_charges', ['id' => $charge->id, 'amount' => 800, 'paid_amount' => 300, 'status' => 'partial']);
+        $this->assertDatabaseCount('rent_charges', 1);
+    }
+
+    #[DataProvider('unavailableTenantCases')]
+    public function test_editing_lease_rejects_unavailable_tenants_without_saving_changes(string $case): void
+    {
+        [$user, $portfolio, $property] = $this->owner();
+        $existing = Contact::create(['portfolio_id' => $portfolio->id, 'name' => 'María', 'kind' => 'person']);
+        $lease = Lease::create([
+            'portfolio_id' => $portfolio->id, 'property_id' => $property->id,
+            'status' => 'active', 'start_date' => today()->subMonth(), 'monthly_rent' => 800, 'payment_day' => 5,
+        ]);
+        $lease->participants()->attach($existing, ['role' => 'tenant', 'is_primary' => true]);
+        $originalStart = $lease->start_date->toDateString();
+        $invalidId = $existing->id + 1;
+        if ($case !== 'missing') {
+            $contactPortfolio = $case === 'foreign' ? Portfolio::create(['name' => 'Otra cartera']) : $portfolio;
+            $contact = Contact::create(['portfolio_id' => $contactPortfolio->id, 'name' => 'No disponible', 'kind' => 'person']);
+            $invalidId = $contact->id;
+            if ($case === 'deleted') {
+                $contact->delete();
+            }
+        }
+
+        $this->actingAs($user)->putJson("/api/v1/leases/{$lease->id}", [
+            'contact_ids' => [$existing->id, $invalidId],
+            'new_contacts' => [['name' => 'No debe crearse']],
+            'start_date' => today()->toDateString(), 'end_date' => today()->addYear()->toDateString(),
+        ])->assertUnprocessable()->assertJsonValidationErrors('contact_ids');
+
+        $this->assertSame($originalStart, $lease->fresh()->start_date->toDateString());
+        $this->assertNull($lease->fresh()->end_date);
+        $this->assertSame([$existing->id], $lease->participants()->pluck('contacts.id')->all());
+        $this->assertDatabaseHas('lease_participants', ['lease_id' => $lease->id, 'contact_id' => $existing->id, 'is_primary' => true]);
+        $this->assertDatabaseMissing('contacts', ['name' => 'No debe crearse']);
+        $this->assertDatabaseCount('rent_charges', 0);
+    }
+
+    public static function unavailableTenantCases(): array
+    {
+        return ['another portfolio' => ['foreign'], 'nonexistent' => ['missing'], 'archived' => ['deleted']];
+    }
+
+    public function test_adding_a_tenant_without_resubmitting_contact_ids_preserves_existing_participants(): void
+    {
+        [$user, $portfolio, $property] = $this->owner();
+        $existing = Contact::create(['portfolio_id' => $portfolio->id, 'name' => 'María', 'kind' => 'person']);
+        $lease = Lease::create([
+            'portfolio_id' => $portfolio->id, 'property_id' => $property->id,
+            'status' => 'active', 'start_date' => today(), 'monthly_rent' => 800, 'payment_day' => 5,
+        ]);
+        $lease->participants()->attach($existing, ['role' => 'tenant', 'is_primary' => true]);
+
+        $this->actingAs($user)->putJson("/api/v1/leases/{$lease->id}", [
+            'new_contacts' => [['name' => 'Ana', 'phone' => '600123123']],
+        ])->assertOk()->assertJsonCount(2, 'participants');
+
+        $new = Contact::where('portfolio_id', $portfolio->id)->where('name', 'Ana')->firstOrFail();
+        $this->assertDatabaseHas('lease_participants', ['lease_id' => $lease->id, 'contact_id' => $existing->id, 'is_primary' => true]);
+        $this->assertDatabaseHas('lease_participants', ['lease_id' => $lease->id, 'contact_id' => $new->id, 'is_primary' => false]);
     }
 }

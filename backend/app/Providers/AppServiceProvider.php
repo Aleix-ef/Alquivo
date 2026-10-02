@@ -47,7 +47,7 @@ class AppServiceProvider extends ServiceProvider
             ]);
 
             return (new MailMessage)->subject('Confirma tu correo en Alquivo')
-                ->line('Confirma este correo para empezar a gestionar tus inmuebles.')
+                ->line('Confirma este correo para proteger tu cuenta y poder recibir códigos de acceso por email si eliges ese método.')
                 ->action('Confirmar mi correo', $url)
                 ->line('El enlace caduca en 60 minutos. Si lo abres en otro dispositivo, inicia sesión con esta cuenta.');
         });

@@ -40,12 +40,13 @@ class PortfolioAssistantTools
             $this->tool('get_property_details', 'Obtiene la ficha de un inmueble concreto, sus contratos, inquilinos e incidencias.', [
                 'property_id' => ['type' => 'integer', 'description' => 'Identificador del inmueble.'],
             ], ['property_id']),
-            $this->tool('get_financial_summary', 'Calcula ingresos, gastos y beneficio en un intervalo, opcionalmente para un inmueble.', [
-                'from' => ['type' => ['string', 'null'], 'description' => 'Fecha inicial YYYY-MM-DD o null para el inicio del mes actual.'],
-                'to' => ['type' => ['string', 'null'], 'description' => 'Fecha final YYYY-MM-DD o null para hoy.'],
+            $this->tool('get_financial_summary', 'Consulta cuánto se ha cobrado, gastado y ganado (neto pagado), en un periodo o en todo el histórico registrado. Es lectura, no prepara un cobro ni exige una mensualidad. Separa las mensualidades pendientes de los ingresos realmente cobrados.', [
+                'time_scope' => ['type' => 'string', 'enum' => ['period', 'all_time'], 'description' => 'all_time para el total histórico/en general/desde el principio o totales sin periodo indicado; period para un intervalo solicitado.'],
+                'from' => ['type' => ['string', 'null'], 'description' => 'Con period: inicio YYYY-MM-DD o null para inicio del mes actual. Con all_time: null, Laravel obtiene el inicio del histórico.'],
+                'to' => ['type' => ['string', 'null'], 'description' => 'Con period: fin YYYY-MM-DD o null para hoy. Con all_time: null, incluye el histórico hasta hoy.'],
                 'property_id' => ['type' => ['integer', 'null'], 'description' => 'Identificador de inmueble o null para toda la cartera.'],
-            ], ['from', 'to', 'property_id']),
-            $this->tool('get_pending_items', 'Lista cobros, contratos, incidencias, documentos o recordatorios que requieren atención.', [
+            ], ['time_scope', 'from', 'to', 'property_id']),
+            $this->tool('get_pending_items', 'Lista asuntos dentro del horizonte de atención del dashboard. En alquileres incluye saldo y nombres de inquilinos del contrato; no representa todos los periodos si quedan fuera de la ventana. Para todos los alquileres pendientes usa list_rent_charges.', [
                 'kind' => ['type' => 'string', 'enum' => ['all', 'rents', 'leases', 'issues', 'documents', 'reminders']],
             ], ['kind']),
         ];
@@ -60,7 +61,7 @@ class PortfolioAssistantTools
             'list_movements' => ['from' => ['nullable', 'date_format:Y-m-d'], 'to' => ['nullable', 'date_format:Y-m-d'], 'property_id' => ['nullable', 'integer', 'min:1'], 'direction' => ['nullable', Rule::in(['income', 'expense'])]],
             'get_portfolio_overview', 'list_properties' => [],
             'get_property_details' => ['property_id' => ['required', 'integer', 'min:1']],
-            'get_financial_summary' => ['from' => ['nullable', 'date_format:Y-m-d'], 'to' => ['nullable', 'date_format:Y-m-d'], 'property_id' => ['nullable', 'integer', 'min:1']],
+            'get_financial_summary' => ['time_scope' => ['sometimes', Rule::in(['period', 'all_time'])], 'from' => ['nullable', 'date_format:Y-m-d'], 'to' => ['nullable', 'date_format:Y-m-d'], 'property_id' => ['nullable', 'integer', 'min:1']],
             'get_pending_items' => ['kind' => ['required', Rule::in(['all', 'rents', 'leases', 'issues', 'documents', 'reminders'])]],
             default => throw new InvalidArgumentException('Herramienta no permitida.'),
         };
@@ -122,6 +123,8 @@ class PortfolioAssistantTools
             'outstanding_debt' => $debt,
             'net_equity' => $value - $debt,
             'current_month' => ['from' => now()->startOfMonth()->toDateString(), 'to' => today()->toDateString(), 'recorded_transaction_count' => $transactions->count(), 'income' => $income, 'expenses' => $expenses, 'net' => round($income - $expenses, 2)],
+            'current_month_basis' => 'Solo movimientos pagados registrados del mes; no incluye mensualidades pendientes.',
+            'rent_charges_pending_all_periods' => $this->pendingRentSummary($portfolio),
             'contracted_monthly_rent' => $monthlyRent,
             'gross_yield_percent' => $value > 0 ? round($monthlyRent * 12 / $value * 100, 2) : null,
             'occupancy_percent' => $properties->count() ? round($occupied / $properties->count() * 100, 1) : null,
@@ -182,15 +185,8 @@ class PortfolioAssistantTools
 
     private function finances(Portfolio $portfolio, array $arguments): array
     {
-        $from = $this->date($arguments['from'] ?? null, now()->startOfMonth()->toDateString());
-        $to = $this->date($arguments['to'] ?? null, today()->toDateString());
-        if ($from->greaterThan($to) || $from->diffInDays($to) > 1096) {
-            throw new InvalidArgumentException('El intervalo debe estar ordenado y no superar tres años.');
-        }
-
-        $query = Transaction::query()->where('portfolio_id', $portfolio->id)
-            ->whereDate('transaction_date', '>=', $from->toDateString())
-            ->whereDate('transaction_date', '<=', $to->toDateString());
+        $scope = $arguments['time_scope'] ?? 'period';
+        $query = Transaction::query()->where('portfolio_id', $portfolio->id);
         $propertyId = isset($arguments['property_id']) ? (int) $arguments['property_id'] : null;
         if ($propertyId) {
             if (! $portfolio->properties()->whereKey($propertyId)->exists()) {
@@ -198,22 +194,55 @@ class PortfolioAssistantTools
             }
             $query->where('property_id', $propertyId);
         }
-        $transactions = $query->get();
-        $paid = $transactions->where('status', 'paid');
-        $income = (float) $paid->where('direction', 'income')->sum('amount');
-        $expenses = (float) $paid->where('direction', 'expense')->sum('amount');
+        if ($scope === 'all_time') {
+            if (isset($arguments['from']) || isset($arguments['to'])) {
+                throw new InvalidArgumentException('El total histórico obtiene sus fechas de los registros; no admite un intervalo adicional.');
+            }
+            $from = null;
+            $to = CarbonImmutable::today();
+        } else {
+            $from = $this->date($arguments['from'] ?? null, now()->startOfMonth()->toDateString());
+            $to = $this->date($arguments['to'] ?? null, today()->toDateString());
+            if ($from->greaterThan($to) || $from->diffInDays($to) > 1096) {
+                throw new InvalidArgumentException('El intervalo debe estar ordenado y no superar tres años.');
+            }
+            $query->whereDate('transaction_date', '>=', $from->toDateString());
+        }
+        $query->whereDate('transaction_date', '<=', $to->toDateString());
+        // Aggregate in the database: historical totals must not load or expose individual records.
+        $groups = $query->select(['direction', 'status', 'category'])
+            ->selectRaw('COUNT(*) AS recorded_count, SUM(amount) AS total_amount, MIN(transaction_date) AS first_date')
+            ->groupBy('direction', 'status', 'category')->get();
+        if ($scope === 'all_time' && $groups->isNotEmpty()) {
+            $from = CarbonImmutable::parse($groups->min('first_date'));
+        }
+        $paid = $groups->where('status', 'paid');
+        $income = (float) $paid->where('direction', 'income')->sum('total_amount');
+        $expenses = (float) $paid->where('direction', 'expense')->sum('total_amount');
 
         return [
             'found' => true, 'currency' => $portfolio->currency,
-            'from' => $from->toDateString(), 'to' => $to->toDateString(),
-            'recorded_transaction_count' => $transactions->count(),
+            'time_scope' => $scope, 'from' => $from?->toDateString(), 'to' => $to->toDateString(),
+            'basis' => 'income: ingresos cobrados; expenses: gastos pagados; net: income menos expenses, no beneficio fiscal ni revalorización. Solo movimientos pagados registrados del alcance indicado (all_time: todo el histórico hasta hoy, no solo el mes actual). Sin registros no implica ausencia de cobros o gastos reales. other_unpaid_transactions: movimientos sin pagar de ese alcance, NO mensualidades pendientes. rent_charges_pending_all_periods: saldo de mensualidades registradas no canceladas de todos los periodos, no ingreso cobrado ni parte del neto.',
+            'recorded_transaction_count' => (int) $groups->sum('recorded_count'),
+            'recorded_paid_count' => (int) $paid->sum('recorded_count'),
             'income' => round($income, 2), 'expenses' => round($expenses, 2), 'net' => round($income - $expenses, 2),
-            'pending_income' => (float) $transactions->where('direction', 'income')->whereNotIn('status', ['paid', 'cancelled'])->sum('amount'),
-            'pending_expenses' => (float) $transactions->where('direction', 'expense')->whereNotIn('status', ['paid', 'cancelled'])->sum('amount'),
-            'income_by_category' => $paid->where('direction', 'income')->groupBy('category')->map(fn ($items) => round((float) $items->sum('amount'), 2))->all(),
-            'expenses_by_category' => $paid->where('direction', 'expense')->groupBy('category')->map(fn ($items) => round((float) $items->sum('amount'), 2))->all(),
+            'other_unpaid_transactions' => [
+                'income' => (float) $groups->where('direction', 'income')->whereNotIn('status', ['paid', 'cancelled'])->sum('total_amount'),
+                'expenses' => (float) $groups->where('direction', 'expense')->whereNotIn('status', ['paid', 'cancelled'])->sum('total_amount'),
+            ],
+            'rent_charges_pending_all_periods' => $this->pendingRentSummary($portfolio, $propertyId),
+            'income_by_category' => $paid->where('direction', 'income')->groupBy('category')->map(fn ($items) => round((float) $items->sum('total_amount'), 2))->all(),
+            'expenses_by_category' => $paid->where('direction', 'expense')->groupBy('category')->map(fn ($items) => round((float) $items->sum('total_amount'), 2))->all(),
             'app_path' => '/finance',
         ];
+    }
+
+    private function pendingRentSummary(Portfolio $portfolio, ?int $propertyId = null): array
+    {
+        return app(AssistantLeasingQueries::class)->execute($portfolio, 'list_rent_charges', [
+            'property_id' => $propertyId, 'lease_id' => null, 'period' => null, 'status' => 'pending',
+        ])['summary'];
     }
 
     private function pending(Portfolio $portfolio, string $kind): array
@@ -225,7 +254,9 @@ class PortfolioAssistantTools
         foreach ($groups as $group) {
             $items = collect($snapshot['items'])->where('group', $group)->take(20);
             $all[$group] = $group === 'rents' ? $items->map(fn ($item) => [
-                'property' => $item['property']['name'], 'due_date' => $item['date'], 'pending_amount' => $item['amount'],
+                'property' => $item['property']['name'], 'due_date' => $item['date'], 'period' => $item['evidence']['period'],
+                'pending_amount' => $item['amount'], 'tenants' => $item['evidence']['tenants'],
+                'tenant_count' => $item['evidence']['tenant_count'], 'tenants_truncated' => $item['evidence']['tenants_truncated'],
                 'status' => $item['type'] === 'rent_overdue' ? 'overdue' : $item['evidence']['payment_state'],
             ])->values()->all() : $items->values()->all();
         }

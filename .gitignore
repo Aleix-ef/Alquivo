@@ -9,3 +9,6 @@
 *.sql.gz
 *.age
 /tools/stripe/stripe
+# Local editor/merge backups are not source releases; preserve them locally.
+*.orig
+*.rej
