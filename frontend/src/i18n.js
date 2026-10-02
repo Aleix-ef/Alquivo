@@ -159,7 +159,7 @@ const messages = {
       createFree: "Crear cuenta gratis",
       learnAssistant: "Conocer el asistente",
       noCard: "Sin tarjeta",
-      upToTen: "Hasta 10 inmuebles",
+      betaPropertyLimit: "Hasta 50 inmuebles",
       noAutoRenew: "Sin renovación automática",
       previewPortfolio: "Tu patrimonio",
       thisYear: "+ 4,2% este año",
@@ -239,7 +239,7 @@ const messages = {
       betaFree: "La beta es gratis. Tu opinión nos ayuda a crecer.",
       planGrows: "Un plan que acompaña tu cartera.",
       betaDetails:
-        "Gestiona hasta 10 inmuebles durante toda la beta, sin tarjeta ni pagos. No es una prueba de 14 días.",
+        "Hasta 50 inmuebles y 5 GB de documentos y fotos durante toda la beta, sin tarjeta ni pagos. Incluye las funciones ya disponibles; no las que siguen en revisión.",
       freeDetails:
         "Empieza con el plan gratuito y amplía cuando lo necesites. Sin tarjeta ni pagos automáticos.",
       priceInformative:
@@ -252,8 +252,8 @@ const messages = {
       forUpTo: "Para gestionar hasta {count} inmuebles.",
       yearlyPrice: "{price} al año si prefieres pagar anualmente.",
       dashboardFeature: "Dashboard, alquileres y finanzas",
-      tenFeature: "Hasta 10 inmuebles",
-      storageFeature: "1 GB de documentos y fotos",
+      propertyLimitFeature: "Hasta 50 inmuebles",
+      storageFeature: "5 GB de documentos y fotos",
       reportsFeature: "Informes y exportación de datos",
       faqEyebrow: "Dudas habituales.",
       faqTitle: "Claro desde el principio.",
@@ -461,7 +461,7 @@ const messages = {
       createFree: "Create a free account",
       learnAssistant: "Meet the assistant",
       noCard: "No card required",
-      upToTen: "Up to 10 properties",
+      betaPropertyLimit: "Up to 50 properties",
       noAutoRenew: "No automatic renewal",
       previewPortfolio: "Your portfolio",
       thisYear: "+4.2% this year",
@@ -541,7 +541,7 @@ const messages = {
       betaFree: "The beta is free. Your feedback helps us grow.",
       planGrows: "A plan that grows with your portfolio.",
       betaDetails:
-        "Manage up to 10 properties throughout the beta, without a card or payments. This is not a 14-day trial.",
+        "Up to 50 properties and 5 GB for documents and photos throughout the beta, without a card or payments. Includes released features, not those still under review.",
       freeDetails:
         "Start on the free plan and upgrade when you need to. No card or automatic payments.",
       priceInformative:
@@ -554,8 +554,8 @@ const messages = {
       forUpTo: "For up to {count} properties.",
       yearlyPrice: "{price} per year if you prefer annual billing.",
       dashboardFeature: "Dashboard, rentals and finances",
-      tenFeature: "Up to 10 properties",
-      storageFeature: "1 GB for documents and photos",
+      propertyLimitFeature: "Up to 50 properties",
+      storageFeature: "5 GB for documents and photos",
       reportsFeature: "Reports and data exports",
       faqEyebrow: "Common questions.",
       faqTitle: "Clear from the start.",

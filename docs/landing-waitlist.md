@@ -12,6 +12,8 @@ Se aprovechan las cuotas gratuitas de [Pages Functions](https://developers.cloud
 
 **Landing publicada en https://alquivo.com.** El titular ha configurado Cloudflare, D1, Turnstile y el dominio, y confirmado una solicitud real con su propio correo guardada correctamente en D1. Se han comprobado por HTTP la portada y las páginas legales; la función rechaza la lectura de solicitudes mediante GET. El código se mantiene en `release/alquivo-beta-validation`. Esta publicación no abre la aplicación ni activa globalmente su IA. Las instrucciones siguientes quedan como referencia para configuración y mantenimiento; no recrear recursos que ya funcionan.
 
+La oferta de la próxima beta gratuita es **hasta 50 inmuebles y 5 GB de documentos y fotos**, con las funciones disponibles al abrirla. Las consultas de IA conservan límites de uso; no se promete acceso a funciones todavía en revisión. La landing, los límites del backend, los textos de la app y la revisión de condiciones `2026-10-02` reflejan esta misma oferta. No cambian la finalidad ni el consentimiento del formulario de lista de espera.
+
 ## 1. Tener el código en GitHub
 
 Se puede utilizar el repositorio existente `Aleix-ef/Alquivo`, también privado. No hace falta separar frontend/backend ni crear otro repositorio.

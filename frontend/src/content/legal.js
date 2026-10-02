@@ -1,8 +1,8 @@
 import { legalOperator } from "./legalOperator.js";
 
 // Keep in sync with backend/config/legal.php. Archive each published revision.
-export const legalVersion = "2026-10-01-r2";
-export const legalUpdatedAt = "2026-10-01";
+export const legalVersion = "2026-10-02";
+export const legalUpdatedAt = "2026-10-02";
 export const operator = legalOperator;
 export const pendingValue = "Pendiente de completar antes de publicar la beta";
 export const legalDraft =
@@ -101,7 +101,7 @@ export const legalPages = [
         id: "beta",
         title: "2. Qué incluye la beta gratuita",
         paragraphs: [
-          "Durante la beta, la cuenta permite gestionar hasta 10 inmuebles y utilizar hasta 1 GB de almacenamiento, con las funciones habilitadas en la aplicación. Las funciones de IA, cuando estén disponibles, tienen límites de uso específicos que se muestran antes de activarlas o utilizarlas. Que una función se anuncie como próxima no significa que esté incluida o disponible.",
+          "Durante la beta, la cuenta permite gestionar hasta 50 inmuebles y utilizar hasta 5 GB de almacenamiento para documentos y fotos. Incluye las funciones habilitadas para el público en la aplicación; las funciones todavía en revisión no están incluidas. Las funciones de IA, cuando estén disponibles, tienen límites de uso específicos que se muestran antes de activarlas o utilizarlas. Que una función se anuncie como próxima no significa que esté incluida o disponible.",
           "La beta no exige tarjeta ni genera cuotas. No se transforma automáticamente en una suscripción de pago. Si al terminar ofrecemos otros planes, conocerás su precio, duración y condiciones y solo se contratarán mediante una aceptación expresa por tu parte. Una futura oferta de fundador será opcional.",
           "La beta sirve para validar un producto que aún evoluciona: puede haber errores, interrupciones o ajustes. Esta circunstancia no elimina nuestras obligaciones de protección de datos ni los derechos que te reconozca la ley. No existe una garantía de atención inmediata o disponibilidad ininterrumpida.",
         ],

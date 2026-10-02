@@ -100,6 +100,20 @@ test("production includes the beta request, but no account or immediate access",
     /Empieza gratis|Probar la beta gratis|Asistente IA disponible/,
   );
 });
+test("published beta offer has 50 properties and 5 GB without paid or immediate access", async () => {
+  for (const output of [production.output, preview.output]) {
+    const page = await html(output);
+    assert.match(page, /Hasta 50 inmuebles/);
+    assert.match(page, /5 GB de documentos y fotos/);
+    assert.match(page, /funciones disponibles al abrir la beta/);
+    assert.match(page, /La IA tendrá límites de uso/);
+    assert.match(page, /Apuntarte no crea una cuenta ni da acceso inmediato/);
+    assert.doesNotMatch(
+      page,
+      /Hasta 10 inmuebles|1 GB de documentos|Plan Fundador|Gestionar en Stripe|Fiscalidad beta/,
+    );
+  }
+});
 test("every signup CTA targets the form card, not its preceding introduction", async () => {
   for (const output of [production.output, preview.output]) {
     const page = await html(output);

@@ -58,7 +58,7 @@ export const waitlistCopy = {
     noCardToStart: "Beta gratuita, sin tarjeta",
     betaFree: "Pruébalo gratis durante la beta.",
     betaDetails:
-      "Hasta 10 inmuebles y las herramientas esenciales de gestión, con consultas de IA sujetas a límites de uso. Estamos preparando la apertura: deja tu email y te avisaremos cuando puedas entrar.",
+      "Hasta 50 inmuebles, 5 GB de documentos y fotos y las funciones disponibles al abrir la beta. La IA tendrá límites de uso. Deja tu email y te avisaremos cuando puedas entrar.",
     betaAccess: "Próxima apertura",
     faqCard: "¿Apuntarme tiene algún coste?",
     faqCardBeta:

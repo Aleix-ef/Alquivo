@@ -37,11 +37,11 @@ const fallbackPlans = [
     name: "Beta gratuita",
     price_monthly: 0,
     price_yearly: null,
-    property_limit: 10,
+    property_limit: 50,
     features: [
       "Dashboard, alquileres y finanzas",
-      "Hasta 10 inmuebles",
-      "1 GB de documentos y fotos",
+      "Hasta 50 inmuebles",
+      "5 GB de documentos y fotos",
       "Informes y exportación de datos",
     ],
   },
@@ -63,8 +63,8 @@ const money = (value) =>
 
 const featureLabels = {
   "Dashboard, alquileres y finanzas": "dashboardFeature",
-  "Hasta 10 inmuebles": "tenFeature",
-  "1 GB de documentos y fotos": "storageFeature",
+  "Hasta 50 inmuebles": "propertyLimitFeature",
+  "5 GB de documentos y fotos": "storageFeature",
   "Informes y exportación de datos": "reportsFeature",
 };
 const featureLabel = (value) =>
@@ -171,7 +171,7 @@ onMounted(async () => {
             ><CircleCheck :size="16" />
             {{
               product.features.beta_program
-                ? $t("marketing.upToTen")
+                ? $t("marketing.betaPropertyLimit")
                 : $t("marketing.noAutoRenew")
             }}</span
           >

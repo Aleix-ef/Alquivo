@@ -44,7 +44,9 @@ class LocalAdminTest extends TestCase
         $this->getJson('/api/v1/support/team/conversations')->assertOk()->assertJsonPath('can_manage', true);
         $this->getJson('/api/v1/plans')->assertOk()->assertJsonPath('admin_preview', true)
             ->assertJsonCount(3, 'plans')->assertJsonPath('current.code', 'admin')
-            ->assertJsonPath('current.properties.limit', 20)->assertJsonPath('plans.founder.checkout_available', false);
+            ->assertJsonPath('current.properties.limit', 50)->assertJsonPath('current.storage.limit', 5368709120)
+            ->assertJsonPath('plans.founder.property_limit', 20)->assertJsonPath('plans.founder.storage_limit_bytes', 2147483648)
+            ->assertJsonPath('plans.founder.checkout_available', false);
         $this->getJson('/api/v1/public/config')->assertJsonPath('fiscality', false)->assertJsonPath('assistant', false);
         $this->getJson('/api/v1/public/plans')->assertJsonCount(1, 'plans')->assertJsonPath('plans.0.code', 'beta');
         $this->assertSame('free', $portfolio->fresh()->plan);
@@ -58,8 +60,18 @@ class LocalAdminTest extends TestCase
         $this->actingAs($user)->getJson('/api/v1/auth/me')->assertJsonPath('user.local_admin', false);
         $this->getJson('/api/v1/fiscality')->assertNotFound();
         $this->getJson('/api/v1/support/team/conversations')->assertForbidden();
-        $this->getJson('/api/v1/plans')->assertJsonCount(1, 'plans')->assertJsonPath('current.properties.limit', 10);
+        $this->getJson('/api/v1/plans')->assertJsonCount(1, 'plans')->assertJsonPath('current.properties.limit', 50)
+            ->assertJsonPath('current.storage.limit', 5368709120);
         $this->assertSame('beta', app(PlanService::class)->effectiveCode($portfolio));
+    }
+
+    public function test_local_admin_beta_quotas_do_not_change_the_commercial_plan_after_beta(): void
+    {
+        [$admin, $portfolio] = $this->owner();
+        config(['beta.program_enabled' => false]);
+        $this->actingAs($admin)->getJson('/api/v1/plans')->assertOk()
+            ->assertJsonPath('current.properties.limit', 20)->assertJsonPath('current.storage.limit', 2147483648);
+        $this->assertSame('free', $portfolio->fresh()->plan);
     }
 
     public function test_admin_can_use_own_premium_features_but_not_other_portfolios(): void

@@ -29,6 +29,19 @@ test("Spanish and English dictionaries cover the same keys", () => {
   setLocale("es");
 });
 
+test("both languages describe the current beta quotas without publishing reviewed features", () => {
+  for (const locale of ["es", "en"]) {
+    const { marketing } = i18n.global.getLocaleMessage(locale);
+    assert.match(marketing.betaPropertyLimit, /50/);
+    assert.match(marketing.propertyLimitFeature, /50/);
+    assert.match(marketing.storageFeature, /5 GB/);
+    assert.match(marketing.betaDetails, /50/);
+    assert.match(marketing.betaDetails, /5 GB/);
+    assert.doesNotMatch(marketing.betaDetails, /\b10\b|\b1 GB\b/);
+    assert.match(marketing.betaDetails, /revisión|under review/);
+  }
+});
+
 test("English is never enabled for a non-admin or by a saved preference alone", () => {
   const values = new Map([["alquivo:locale", "en"]]);
   globalThis.window = {

@@ -17,7 +17,14 @@ class PlanService
     public function definition(Portfolio $portfolio): array
     {
         if ($this->isAdminPortfolio($portfolio)) {
-            return [...config('plans.founder'), 'name' => 'Administrador local'];
+            $plan = config('plans.founder');
+            // The local preview must not have lower quotas than the public beta.
+            if (app(ProductFeatures::class)->betaProgram()) {
+                $plan['property_limit'] = max($plan['property_limit'], config('plans.beta.property_limit'));
+                $plan['storage_limit_bytes'] = max($plan['storage_limit_bytes'], config('plans.beta.storage_limit_bytes'));
+            }
+
+            return [...$plan, 'name' => 'Administrador local'];
         }
 
         return $this->catalog()[$this->effectiveCode($portfolio)] ?? $this->catalog()['free'];

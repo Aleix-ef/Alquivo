@@ -274,14 +274,17 @@ onMounted(async () => {
         </article>
       </section>
       <p v-if="data.admin_preview" class="plans-note">
-        Tu cartera de pruebas dispone de las funciones del Plan Fundador: 20
-        inmuebles, 2 GB y hasta 50 consultas de IA al mes, si el proveedor está
-        configurado. Este permiso no tiene efecto en producción.
+        Tu cartera de pruebas dispone de funciones internas:
+        {{ data.current.properties.limit }} inmuebles,
+        {{ mb(data.current.storage.limit) / 1024 }} GB y hasta 50 consultas de
+        IA al mes, si el proveedor está configurado. Este permiso no tiene
+        efecto en producción.
       </p>
       <p v-else-if="data.beta_program" class="plans-note">
         Tus datos siguen siendo tuyos: puedes descargar tus documentos y
-        exportar tus datos durante la beta. Si ya tenías más de 10 inmuebles,
-        los excedentes se conservan en modo consulta.
+        exportar tus datos durante la beta. Si ya tenías más de
+        {{ data.current.properties.limit }} inmuebles, los excedentes se
+        conservan en modo consulta.
       </p>
       <p v-else class="plans-note">
         Si termina una prueba anterior o vuelves al plan gratuito, podrás seguir

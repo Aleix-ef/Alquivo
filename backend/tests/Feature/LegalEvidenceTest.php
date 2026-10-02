@@ -65,6 +65,20 @@ final class LegalEvidenceTest extends TestCase
         Http::assertNothingSent();
     }
 
+    public function test_previous_beta_terms_are_not_accepted_for_a_new_registration(): void
+    {
+        $this->assertNotSame('2026-10-01-r2', config('legal.terms_version'));
+        $payload = ['name' => 'Sintética', 'email' => 'new-terms@example.test',
+            'password' => 'testpass123', 'password_confirmation' => 'testpass123',
+            'terms_accepted' => true, 'terms_version' => '2026-10-01-r2'];
+        $this->postJson('/api/v1/auth/register', $payload)->assertUnprocessable()->assertJsonValidationErrors('terms_version');
+        $this->assertDatabaseCount('users', 0);
+        $this->assertDatabaseCount('legal_acceptances', 0);
+        $this->postJson('/api/v1/auth/register', [...$payload, 'terms_version' => config('legal.terms_version')])->assertCreated();
+        $this->assertSame(config('legal.terms_version'), LegalAcceptance::sole()->version);
+        Http::assertNothingSent();
+    }
+
     public function test_assistant_acceptance_is_idempotent_and_rejected_requests_leave_no_evidence(): void
     {
         $user = $this->owner();

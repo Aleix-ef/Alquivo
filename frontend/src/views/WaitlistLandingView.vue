@@ -24,7 +24,7 @@ defineProps({ settings: { type: Object, required: true } });
             gratuita.
           </p>
           <ul>
-            <li>Hasta 10 inmuebles durante la beta.</li>
+            <li>Hasta 50 inmuebles y 5 GB de documentos y fotos.</li>
             <li>Gestión de alquileres y ayuda de Alquivo AI.</li>
             <li>Sin tarjeta ni compromiso de compra.</li>
           </ul>

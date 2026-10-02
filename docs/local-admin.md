@@ -19,7 +19,7 @@ El comando solo funciona en `APP_ENV=local`. No crea la cuenta ni cambia contras
 - Mostrar el asistente y probarlo con consentimiento explícito, siempre que esté configurado y habilitado el proveedor. No genera claves, saldo ni respuestas simuladas.
 - Revisar el catálogo completo en Planes, sin activar cobros ni modificar suscripciones.
 - Bandeja del equipo en `/support/inbox`: leer y responder consultas de soporte locales, incluidos sus adjuntos.
-- Cartera de pruebas con prestaciones del Plan Fundador: 20 inmuebles, 2 GB, informes fiscales y hasta 50 consultas de IA al mes, con los límites de tokens existentes. No es consumo ilimitado.
+- Cartera de pruebas con prestaciones del Plan Fundador, informes fiscales y hasta 50 consultas de IA al mes, con los límites de tokens existentes. Durante la beta sus cuotas de inmuebles y almacenamiento son al menos las públicas: actualmente 50 inmuebles y 5 GB. Fuera de la beta vuelve a las cuotas del Plan Fundador (20 inmuebles y 2 GB). No es consumo ilimitado ni modifica las cuotas comerciales.
 
 No permite acceder a contratos, documentos o inmuebles de otras carteras. Las validaciones, antivirus, cifrado, CSRF, límites de frecuencia y doble factor siguen activos. El permiso del equipo no implica acceso a la cartera de quien consulta: únicamente al contenido que envía a soporte.
 
