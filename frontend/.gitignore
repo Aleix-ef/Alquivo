@@ -10,6 +10,14 @@ lerna-debug.log*
 node_modules
 dist
 dist-ssr
+dist-landing
+dist-landing-preview
+dist-landing.zip
+.waitlist-ssr
+.waitlist-build-*
+.wrangler
+.dev.vars
+.dev.vars.*
 *.local
 
 # Editor directories and files

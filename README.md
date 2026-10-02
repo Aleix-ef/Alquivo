@@ -1,5 +1,25 @@
 # Alquivo
 
+## Landing pública de lista de espera — 2 de octubre de 2026
+
+Preparada una landing independiente para Cloudflare Pages, reutilizando el diseño de Alquivo y sin publicar Laravel ni la aplicación. El formulario es propio, no Tally: guarda solicitudes en una base D1 separada, verifica Turnstile en servidor, registra consentimiento versionado y limita abusos sin guardar IP original. Los CTA solicitan acceso a la futura beta; no hay login, creación de cuentas, pagos ni promesas de acceso inmediato. Incluye aviso legal y privacidad de la lista de espera, soporte por email, fuentes locales, SEO y cabeceras de seguridad.
+
+**Todavía no publicada.** Faltan crear/vincular D1, configurar las claves de Turnstile y desplegar con GitHub en la cuenta Cloudflare del titular. La subida ZIP desde el panel ya no sirve porque no despliega Functions. `npm run build:landing` exige la clave pública real; `npm run build:landing:preview` permite revisar el formulario con envío desactivado. No cambia la app actual ni activa globalmente la IA. Ver [pasos de publicación y consulta de solicitudes](docs/landing-waitlist.md).
+
+## Revisión previa a beta — 1 de octubre de 2026
+
+**Correcciones de código cerradas; publicación todavía pendiente de comprobaciones externas.** Se han actualizado las dependencias con avisos, limitado notas/descripciones, unificado la protección CSV, normalizado las cuentas sin cartera y añadido evidencia cifrada/versionada de aceptación y retirada de IA sin conservar sus conversaciones. Las regresiones de MFA forman parte del repositorio. Verificación actual: 411 tests backend, 410 correctos, 2.674 aserciones y un skip live previsto; 11 archivos de tests frontend, build y 10 páginas estáticas correctos; npm/Composer sin avisos conocidos en esta auditoría. Los textos y avisos se archivan con huella y control de sobrescritura. Faltan servicios/contratos y conservación definitivos, HTTPS y operación del servidor, copias externas y revisión humana de IA/privacidad. Ver [estado y lista restante](docs/beta-readiness-review.md) y [operación de privacidad](docs/privacy-operations.md). No constituye certificación jurídica ni garantía de seguridad absoluta.
+
+## Correo y publicación — 28 de septiembre de 2026
+
+El dominio está verificado en Resend según el titular y el cliente de Resend ya está integrado. La configuración local usa `MAIL_MAILER=resend` y `soporte@alquivo.com`: se solicitó la recuperación desde la app y el destinatario confirmó haber recibido el correo. No se ha probado aún el enlace de cambio de contraseña ni los demás tipos de mensaje. Ver [activación del correo](docs/email-delivery.md). El buzón de soporte recibe mediante Cloudflare Email Routing hacia Gmail gratuito; esto requiere revisión de privacidad antes de recibir documentos de clientes.
+
+Los datos definitivos comunicados por el titular (autónomo/persona física, NIF, domicilio y correo) ya figuran en las páginas legales. **El aviso continúa en borrador** porque faltan confirmar alojamiento, copias, conservación y garantías de los proveedores, además de la revisión jurídica final. Crear un proyecto en Hetzner no equivale a disponer de un servidor desplegado.
+
+
+## Inglés de prueba, solo administración — 29 de septiembre de 2026
+
+El selector 🇪🇸/🇬🇧 se muestra únicamente dentro de la aplicación a una sesión con rol local de administrador confirmado por el servidor, como la vista previa de fiscalidad. Landing, registro, recuperación y páginas legales permanecen en español, aunque el navegador prefiera inglés o exista una preferencia antigua guardada. Al cerrar sesión se vuelve al español. La traducción interior sigue incompleta y no se promociona inglés a usuarios de la beta. Ver [estado de la localización](docs/localization.md).
 
 ## Estado de IA para beta (25 de septiembre de 2026)
 
@@ -12,7 +32,7 @@ Producto SaaS Alquivo. Este directorio es independiente del proyecto académico 
 
 Disponibles en `/legal`, `/terms`, `/privacy`, `/cookies` y `/data-processing`, con enlaces desde landing, registro, guías e interior, índice y opción de imprimir/guardar PDF. El registro exige aceptar la versión que muestra el frontend; el servidor rechaza versiones antiguas y registra la fecha y versión aceptadas sin alterar aceptaciones anteriores.
 
-**Estado: borrador implementado, pendiente de datos y revisión final antes de publicar.** Faltan identidad/NIF/domicilio del titular, entidades y ubicaciones de los proveedores, garantías de transferencias y plazos reales de copias/buzón/logs. Se centralizan en `frontend/src/content/legalOperator.js`; no introducir secretos. No se ha contratado ningún proveedor ni inventado sus datos.
+**Estado: borrador implementado, pendiente de proveedores y revisión final antes de publicar.** Constan el titular autónomo, NIF, domicilio y correo. Resend, Cloudflare Email Routing y Gmail gratuito figuran por separado, pero faltan alojamiento, copias, plazos de conservación y revisión de las transferencias. Los datos públicos se centralizan en `frontend/src/content/legalOperator.js`; no introducir secretos.
 
 Las condiciones propuestas comprometen un aviso de 30 días antes del fin de la beta o una reducción sustancial, sin conversión automática a pago, y 15 días para cambios de subencargados. Requieren cumplir el procedimiento operativo documentado. Guía de publicación, obligaciones y fuentes: [textos legales de la beta](docs/legal-beta.md).
 
@@ -354,6 +374,8 @@ Los primeros usuarios deben decidir qué se desarrolla después. Las hipótesis 
 - Onboarding guiado que lleve al usuario hasta su primer inmueble y contrato en pocos minutos.
 
 No deben incorporarse al MVP sin validación integraciones bancarias, marketplace, mensajería entre propietarios e inquilinos, seguros, automatizaciones avanzadas o gestión para grandes inmobiliarias. El chat de soporte sí está disponible. Las consultas y propuestas del asistente deben medirse antes de ampliar sus capacidades o abrirlas a todos los usuarios de la beta.
+
+Como hipótesis posterior a la beta, queda registrada **Alquivo Enterprise**: una edición para inmobiliarias y gestores que administren carteras de varios propietarios. La idea es aprovechar el mismo núcleo de Alquivo y añadir una experiencia profesional solo después de validar necesidades, permisos, separación de datos y modelo de precios con gestores reales. No forma parte del MVP ni se anuncia todavía. Ver [visión futura de Alquivo Enterprise](docs/future-enterprise.md).
 
 ### Señales para ampliar el producto
 

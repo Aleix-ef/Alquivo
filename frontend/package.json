@@ -6,6 +6,10 @@
   "scripts": {
     "dev": "vite",
     "build": "node tools/build-public.mjs",
+    "build:landing": "node tools/build-waitlist.mjs",
+    "build:landing:preview": "node tools/build-waitlist.mjs --preview",
+    "preview:landing": "node tools/preview-waitlist.mjs",
+    "test:landing": "node --test tests/waitlist*.test.js",
     "preview": "vite preview",
     "test": "node --test tests/*.test.js",
     "test:seo": "node tools/check-seo.mjs",
