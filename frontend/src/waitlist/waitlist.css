@@ -55,10 +55,15 @@ html {
   min-width: 0;
   box-shadow: var(--shadow-raised);
 }
+.waitlist-card h2,
 .waitlist-card h3 {
   font-size: 1.5rem;
   line-height: 1.4;
   margin: 0 0 1rem;
+}
+.waitlist-card:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 4px;
 }
 .waitlist-card p {
   font-size: 1rem;
@@ -249,11 +254,113 @@ html {
     flex-wrap: wrap;
   }
 }
-@media (max-width: 400px) {
+/* Keep the mobile journey short without reducing text or touch target sizes.
+   The assistant example, core features, beta terms and FAQ remain available. */
+@media (max-width: 680px) {
+  .waitlist-page .product-preview,
+  .waitlist-page .process-section,
+  .waitlist-page .calm-section,
+  .waitlist-page .feature-stat,
+  .waitlist-intro {
+    display: none;
+  }
+  .waitlist-page .hero-section {
+    padding: 2rem 1.25rem 2.5rem;
+  }
+  .waitlist-page .hero-actions {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+  .waitlist-page .hero-actions .button {
+    width: 100%;
+    white-space: normal;
+    padding-block: 0.75rem;
+  }
+  .waitlist-page .hero-actions .text-action {
+    min-height: 2.75rem;
+    justify-content: center;
+  }
+  .waitlist-page .hero-reassurance {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem 1rem;
+  }
+  .waitlist-page .ai-preview-section,
+  .waitlist-page .feature-section,
+  .waitlist-page .plans-section,
+  .waitlist-page .faq-section,
+  .waitlist-section {
+    padding: 2.5rem 1.25rem;
+  }
+  .waitlist-page .ai-preview-inner {
+    gap: 1.5rem;
+  }
+  .waitlist-page .ai-preview-card {
+    padding: 1.25rem;
+  }
+  .waitlist-page .feature-grid {
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+  }
+  .waitlist-page .feature-card,
+  .waitlist-page .feature-card-large {
+    display: grid;
+    grid-template-columns: 2.25rem minmax(0, 1fr);
+    column-gap: 0.875rem;
+    row-gap: 0.5rem;
+    min-height: 0;
+    padding: 1.25rem;
+  }
+  .waitlist-page .feature-icon {
+    grid-row: 1 / span 2;
+    width: 2.25rem;
+    height: 2.25rem;
+  }
+  .waitlist-page .feature-card h3 {
+    margin: 0;
+    font-size: 1.125rem;
+  }
+  .waitlist-page .feature-card p {
+    grid-column: 2;
+    font-size: 1rem;
+    line-height: 1.7;
+  }
+  .waitlist-page .marketing-plans {
+    margin-top: 1.5rem;
+  }
+  .waitlist-page .marketing-plan {
+    min-height: 0;
+    padding: 1.25rem;
+  }
+  .waitlist-page .faq-section {
+    gap: 1.5rem;
+  }
+  .waitlist-page .faq-list summary {
+    min-height: 3rem;
+    padding-block: 1rem;
+    font-size: 1.125rem;
+  }
   .waitlist-optional-fields {
     grid-template-columns: minmax(0, 1fr);
     gap: 0;
   }
+  .waitlist-card {
+    padding: 1.25rem;
+  }
+  /* On phones, support remains available after the footer rather than covering
+     the form, keyboard or legal links with a fixed overlay. */
+  .waitlist-support {
+    position: static;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: fit-content;
+    min-height: 3rem;
+    margin: 0 auto 1.5rem;
+  }
+}
+@media (max-width: 400px) {
   .waitlist-page .marketing-header {
     flex-wrap: wrap;
     padding-block: 1rem;

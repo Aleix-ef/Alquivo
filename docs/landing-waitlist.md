@@ -10,7 +10,7 @@ Cloudflare Pages sirve la landing, Pages Functions recibe únicamente `POST /api
 
 Se aprovechan las cuotas gratuitas de [Pages Functions](https://developers.cloudflare.com/pages/functions/pricing/), [D1](https://developers.cloudflare.com/d1/platform/pricing/) y [Turnstile](https://developers.cloudflare.com/turnstile/plans/). No son ilimitadas; mantener Workers Free, revisar consumo y no contratar planes adicionales. La renovación del dominio va aparte.
 
-**Landing no publicada ni probada en tu cuenta todavía.** El código se prepara en la rama `release/alquivo-beta-validation`; faltan las claves reales, la base D1, sus vínculos y el dominio en tu cuenta Cloudflare. No se han cambiado DNS, enviado datos a proveedores, abierto la app ni activado globalmente su IA.
+**Landing publicada en https://alquivo.com.** El titular ha configurado Cloudflare, D1, Turnstile y el dominio, y confirmado una solicitud real con su propio correo guardada correctamente en D1. Se han comprobado por HTTP la portada y las páginas legales; la función rechaza la lectura de solicitudes mediante GET. El código se mantiene en `release/alquivo-beta-validation`. Esta publicación no abre la aplicación ni activa globalmente su IA. Las instrucciones siguientes quedan como referencia para configuración y mantenimiento; no recrear recursos que ya funcionan.
 
 ## 1. Tener el código en GitHub
 
@@ -158,9 +158,17 @@ DELETE FROM waitlist_rate_limits WHERE expires_at <= unixepoch();
 
 Pruebas de formulario: `npm run test:landing`. Incluyen guardado con SQL real en SQLite y adaptador de la API D1, transporte HTTP local, consentimiento/versionado, mínimos de datos, deduplicación, conservación, control de origen, antispam, límites de tamaño y frecuencia, error de base/proveedor, estados de cliente y aislamiento del artefacto.
 
-Verificado: 96 pruebas específicas del formulario y 149 pruebas frontend completas, compilación de la app ordinaria, sus 10 páginas SEO y compilación de la función con Wrangler 4.147.0. Portada/privacidad/aviso devuelven 200 en la vista previa y login/API de la app 404. No se ha hecho una revisión visual en navegador ni se ha medido el rendimiento público.
+Verificado: 98 pruebas específicas del formulario y 151 pruebas frontend completas. También se ha comprobado la compilación de la app ordinaria, sus 10 páginas SEO y la compilación de la función con Wrangler 4.147.0. Portada/privacidad/aviso devuelven 200 en el dominio definitivo; login/API de la app devuelven 404 en Pages. No se ha hecho una revisión visual automatizada en navegador ni se ha medido el rendimiento público.
 
-Turnstile está simulado en los tests; no se han enviado emails o datos a Cloudflare ni consultado OpenAI. **La comprobación real de D1 y Turnstile se hace al configurar tu cuenta** con el envío indicado arriba. No sustituye una revisión jurídica ni promete seguridad absoluta.
+Turnstile está simulado en los tests; estos no envían emails ni datos a Cloudflare ni consultan OpenAI. **La comprobación real de D1 y Turnstile la ha realizado el titular** con el envío indicado arriba. No sustituye una revisión jurídica ni promete seguridad absoluta.
+
+### Ajuste de móvil y acceso al formulario
+
+El destino `/#solicitud` está en la tarjeta del formulario, no en la introducción «Menos Excel». Es un destino único accesible por teclado, sin enfocar automáticamente el email ni abrir el teclado del teléfono. Los enlaces legales de vuelta a la solicitud usan el mismo destino.
+
+Hasta 680 px se reduce el espaciado, se ocultan la maqueta decorativa del dashboard y los bloques repetidos de proceso/tranquilidad, se compactan las fichas de funciones y se retira la introducción duplicada junto al formulario. Se mantienen el ejemplo de IA, las funciones, las condiciones de la beta, las preguntas frecuentes y toda la información de consentimiento. Los campos opcionales pasan a una columna; soporte sigue accesible al final sin tapar el formulario. No se reduce el tamaño de los campos ni se modifican el envío, los límites o la base de datos.
+
+Las regresiones comprueban el destino real de los enlaces en producción y vista previa, y las reglas CSS de móvil. Falta confirmar visualmente en un teléfono el espaciado y el salto al formulario tras esta actualización.
 
 Para revisar el diseño sin credenciales desde `frontend`:
 

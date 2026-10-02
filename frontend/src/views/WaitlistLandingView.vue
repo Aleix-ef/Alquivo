@@ -13,11 +13,7 @@ defineProps({ settings: { type: Object, required: true } });
   <a class="waitlist-skip" href="#contenido">Saltar al contenido</a>
   <MarketingView waitlist-mode>
     <template #closing>
-      <section
-        id="solicitud"
-        class="waitlist-section"
-        aria-labelledby="waitlist-title"
-      >
+      <section class="waitlist-section" aria-labelledby="waitlist-form-title">
         <div class="waitlist-intro">
           <p class="marketing-eyebrow">Sé de los primeros en probar Alquivo</p>
           <h2 id="waitlist-title">
@@ -37,8 +33,8 @@ defineProps({ settings: { type: Object, required: true } });
             debemos mejorar.
           </p>
         </div>
-        <div class="waitlist-card">
-          <h3>Solicita acceso a la beta</h3>
+        <div id="solicitud" class="waitlist-card" tabindex="-1">
+          <h2 id="waitlist-form-title">Solicita acceso a la beta</h2>
           <p>
             Solo necesitamos tu email. El nombre y el número de inmuebles son
             opcionales.

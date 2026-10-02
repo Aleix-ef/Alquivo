@@ -4,7 +4,7 @@
 
 Preparada una landing independiente para Cloudflare Pages, reutilizando el diseño de Alquivo y sin publicar Laravel ni la aplicación. El formulario es propio, no Tally: guarda solicitudes en una base D1 separada, verifica Turnstile en servidor, registra consentimiento versionado y limita abusos sin guardar IP original. Los CTA solicitan acceso a la futura beta; no hay login, creación de cuentas, pagos ni promesas de acceso inmediato. Incluye aviso legal y privacidad de la lista de espera, soporte por email, fuentes locales, SEO y cabeceras de seguridad.
 
-**Todavía no publicada.** Faltan crear/vincular D1, configurar las claves de Turnstile y desplegar con GitHub en la cuenta Cloudflare del titular. La subida ZIP desde el panel ya no sirve porque no despliega Functions. `npm run build:landing` exige la clave pública real; `npm run build:landing:preview` permite revisar el formulario con envío desactivado. No cambia la app actual ni activa globalmente la IA. Ver [pasos de publicación y consulta de solicitudes](docs/landing-waitlist.md).
+**Publicada en https://alquivo.com.** El titular ha configurado D1 y Turnstile y confirmado el guardado de una solicitud propia; la portada y las páginas legales responden correctamente. La rama conectada a Pages es `release/alquivo-beta-validation`. El ajuste de móvil reduce bloques repetidos y espacios, y los CTA apuntan directamente a la tarjeta del formulario. `npm run build:landing` exige la clave pública real; `npm run build:landing:preview` permite revisar el formulario con envío desactivado. No publica la app ni activa globalmente la IA. Ver [configuración, mantenimiento y consulta de solicitudes](docs/landing-waitlist.md).
 
 ## Revisión previa a beta — 1 de octubre de 2026
 

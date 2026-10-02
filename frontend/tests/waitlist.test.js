@@ -100,6 +100,50 @@ test("production includes the beta request, but no account or immediate access",
     /Empieza gratis|Probar la beta gratis|Asistente IA disponible/,
   );
 });
+test("every signup CTA targets the form card, not its preceding introduction", async () => {
+  for (const output of [production.output, preview.output]) {
+    const page = await html(output);
+    const target = page.match(/<[^>]+\bid="solicitud"[^>]*>/g);
+    assert.equal(target?.length, 1);
+    assert.match(target[0], /^<div\b/);
+    assert.match(target[0], /class="waitlist-card"/);
+    assert.match(target[0], /tabindex="-1"/);
+    assert.match(
+      page,
+      /<h2 id="waitlist-form-title">Solicita acceso a la beta<\/h2>/,
+    );
+    const card = page.slice(page.indexOf(target[0]));
+    assert.ok(card.indexOf('id="waitlist-form"') > 0);
+    assert.ok(card.indexOf('id="waitlist-email"') > 0);
+    assert.doesNotMatch(card, /Menos Excel/);
+    assert.ok(Array.from(page.matchAll(/href="\/#solicitud"/g)).length >= 3);
+  }
+});
+test("mobile compaction is scoped to the waitlist and preserves the form and core content", async () => {
+  const source = await readFile(
+    new URL("../src/waitlist/waitlist.css", import.meta.url),
+    "utf8",
+  );
+  const mobile = source.slice(
+    source.indexOf("@media (max-width: 680px)"),
+    source.indexOf("@media (max-width: 400px)"),
+  );
+  assert.ok(mobile.length > 0);
+  assert.match(
+    mobile,
+    /\.waitlist-page \.product-preview,[\s\S]*?\.waitlist-intro\s*\{\s*display: none/,
+  );
+  assert.doesNotMatch(
+    mobile,
+    /\.(ai-preview-section|feature-section|plans-section|faq-section|waitlist-card|waitlist-form-area)\s*\{\s*display: none/,
+  );
+  assert.match(
+    mobile,
+    /\.waitlist-optional-fields\s*\{\s*grid-template-columns: minmax\(0, 1fr\)/,
+  );
+  assert.match(mobile, /\.waitlist-support\s*\{\s*position: static/);
+  assert.match(source, /\.waitlist-field input,[\s\S]*?font-size: 1rem/);
+});
 test("the existing logo, dark theme and local fonts are reused", async () => {
   const page = await html(production.output);
   assert.match(page, /data-theme="dark"/);
