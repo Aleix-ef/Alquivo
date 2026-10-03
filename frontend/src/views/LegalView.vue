@@ -75,10 +75,6 @@ function printPage() {
               <dd>{{ operator.name || pendingValue }}</dd>
             </div>
             <div>
-              <dt>Forma jurídica</dt>
-              <dd>{{ operator.legalForm || pendingValue }}</dd>
-            </div>
-            <div>
               <dt>NIF</dt>
               <dd>{{ operator.taxId || pendingValue }}</dd>
             </div>

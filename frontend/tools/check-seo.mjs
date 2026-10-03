@@ -3,8 +3,8 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { paths, settings, betaProgram } from "../dist-ssr/entry-public.js";
-import { publicPages } from "../src/seo.js";
-import { legalPages, legalVersion } from "../src/content/legal.js";
+import { publicPages, escapeHtml } from "../src/seo.js";
+import { legalPages, legalVersion, operator } from "../src/content/legal.js";
 
 const backendLegal = await readFile(
   new URL("../../backend/config/legal.php", import.meta.url),
@@ -64,6 +64,18 @@ for (const path of paths) {
   if (legalPage) {
     assert.ok(html.includes(legalPage.title), `${path}: legal title rendered`);
     assert.ok(html.includes(legalVersion), `${path}: legal version rendered`);
+    assert.doesNotMatch(
+      html,
+      /Forma jurídica|Trabajador autónomo|persona física/iu,
+      `${path}: optional legal-form mention is not displayed`,
+    );
+    if (legalPage.sections.some((section) => section.identity)) {
+      for (const field of ["name", "taxId", "address", "email"])
+        assert.ok(
+          html.includes(escapeHtml(operator[field])),
+          `${path}: operator ${field} remains accessible`,
+        );
+    }
     for (const section of legalPage.sections)
       assert.ok(
         html.includes(`id="${section.id}"`),

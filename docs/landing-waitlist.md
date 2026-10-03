@@ -138,6 +138,8 @@ Repetir el envío real desde el dominio definitivo y comprobar D1. Ahora se pued
 
 ## Consulta y privacidad de las solicitudes
 
+Las páginas legales de la landing y de la aplicación no muestran la mención opcional «autónomo/persona física». Conservan nombre, NIF, domicilio y correo del titular, conforme a la identificación prevista en el [artículo 10 de la LSSI](https://www.boe.es/buscar/act.php?id=BOE-A-2002-13758#a10). En la privacidad de la landing el nombre figura como «Responsable». Es un ajuste de presentación: no altera la finalidad, los plazos ni el consentimiento del formulario, ni reescribe versiones de condiciones ya archivadas. La configuración conserva la forma jurídica como metadato; no se presenta como una sociedad mercantil. Las revisiones pendientes de proveedores de la aplicación siguen pendientes.
+
 Las solicitudes están disponibles únicamente desde tu cuenta Cloudflare/D1. No hay listado público ni endpoint de exportación; no se mandan sus datos por correo ni a la IA. Por ahora esta consola evita construir una segunda aplicación de administración.
 
 - Activar MFA en Cloudflare y GitHub y limitar acceso a la base.
@@ -160,7 +162,7 @@ DELETE FROM waitlist_rate_limits WHERE expires_at <= unixepoch();
 
 Pruebas de formulario: `npm run test:landing`. Incluyen guardado con SQL real en SQLite y adaptador de la API D1, transporte HTTP local, consentimiento/versionado, mínimos de datos, deduplicación, conservación, control de origen, antispam, límites de tamaño y frecuencia, error de base/proveedor, estados de cliente y aislamiento del artefacto.
 
-La comprobación del 3 de octubre pasa 160 pruebas de frontend, incluidas 106 específicas de la lista de espera. Cubren el formulario único antes del ejemplo de IA, los datos opcionales desplegables, el texto de los botones, los estados del acceso móvil al formulario, errores recuperables, dimensiones del antispam, versión del script publicado y guardado sintético de los tres campos. También se comprueban la compilación de la app ordinaria y sus 10 páginas SEO. La compilación anterior de la función con Wrangler 4.147.0 sigue vigente: esta actualización no modifica el servidor. Portada/privacidad/aviso devuelven 200 en el dominio definitivo; login/API de la app devuelven 404 en Pages. No se ha hecho una revisión visual automatizada en navegador ni se ha medido el rendimiento público.
+La comprobación del 3 de octubre pasa 161 pruebas de frontend, incluidas 107 específicas de la lista de espera. Cubren el formulario único antes del ejemplo de IA, los datos opcionales desplegables, el texto de los botones, los estados del acceso móvil al formulario, errores recuperables, dimensiones del antispam, versión del script publicado, guardado sintético de los tres campos y conservación de la identificación del titular sin mostrar la forma jurídica. También se comprueban la compilación de la app ordinaria y sus 10 páginas SEO. La compilación anterior de la función con Wrangler 4.147.0 sigue vigente: esta actualización no modifica el servidor. Portada/privacidad/aviso devuelven 200 en el dominio definitivo; login/API de la app devuelven 404 en Pages. No se ha hecho una revisión visual automatizada en navegador ni se ha medido el rendimiento público.
 
 Turnstile está simulado en los tests; estos no envían emails ni datos a Cloudflare ni consultan OpenAI. **La comprobación real de D1 y Turnstile la ha realizado el titular** con el envío indicado arriba. No sustituye una revisión jurídica ni promete seguridad absoluta.
 

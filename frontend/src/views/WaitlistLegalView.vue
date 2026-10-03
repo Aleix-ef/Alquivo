@@ -13,7 +13,7 @@ defineProps({ privacy: { type: Boolean, default: false } });
     </header>
     <main id="contenido" class="legal-content">
       <p class="marketing-eyebrow">
-        Web informativa · Actualizado el 2 de octubre de 2026
+        Web informativa · Actualizado el 3 de octubre de 2026
       </p>
       <h1>
         {{ privacy ? "Privacidad de la lista de espera" : "Aviso legal" }}
@@ -27,12 +27,8 @@ defineProps({ privacy: { type: Boolean, default: false } });
         <h2>{{ privacy ? "Quién trata tus datos" : "Titular de esta web" }}</h2>
         <dl class="legal-identity">
           <div>
-            <dt>Titular</dt>
+            <dt>{{ privacy ? "Responsable" : "Titular" }}</dt>
             <dd>{{ operator.name }}</dd>
-          </div>
-          <div>
-            <dt>Forma jurídica</dt>
-            <dd>{{ operator.legalForm }}</dd>
           </div>
           <div>
             <dt>NIF</dt>

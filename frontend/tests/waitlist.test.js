@@ -12,6 +12,8 @@ import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { createHash } from "node:crypto";
 import { waitlistConsent } from "../src/waitlist/contract.js";
+import { legalOperator } from "../src/content/legalOperator.js";
+import { escapeHtml } from "../src/seo.js";
 import { waitlistSettings, waitlistPages } from "../src/waitlist/settings.js";
 import {
   buildWaitlist,
@@ -361,6 +363,27 @@ test("legal copy describes the waitlist, consent, retention and actual providers
     privacy,
     /Borrador previo|identificación pendiente|Aceptar todas|Tally|tally.so/,
   );
+});
+test("legal pages omit the optional legal-form mention without hiding the operator's identity", async () => {
+  for (const output of [production.output, preview.output]) {
+    for (const path of ["privacidad/index.html", "aviso-legal/index.html"]) {
+      const page = await html(output, path);
+      assert.doesNotMatch(
+        page,
+        /Forma jurídica|Trabajador autónomo|persona física/iu,
+      );
+      for (const field of ["name", "taxId", "address", "email"])
+        assert.ok(
+          page.includes(escapeHtml(legalOperator[field])),
+          `${path}: ${field}`,
+        );
+      assert.match(page, /Actualizado el 3 de octubre de 2026/);
+      assert.match(page, /mailto:soporte@alquivo.com/);
+      assert.match(page, /href="\/#solicitud"/);
+      if (path.startsWith("privacidad"))
+        assert.match(page, /<dt>Responsable<\/dt>/);
+    }
+  }
 });
 test("only the form endpoint invokes Functions; source/migrations stay outside public output", async () => {
   assert.deepEqual(JSON.parse(await html(production.output, "_routes.json")), {
