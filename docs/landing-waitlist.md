@@ -160,7 +160,7 @@ DELETE FROM waitlist_rate_limits WHERE expires_at <= unixepoch();
 
 Pruebas de formulario: `npm run test:landing`. Incluyen guardado con SQL real en SQLite y adaptador de la API D1, transporte HTTP local, consentimiento/versionado, mínimos de datos, deduplicación, conservación, control de origen, antispam, límites de tamaño y frecuencia, error de base/proveedor, estados de cliente y aislamiento del artefacto.
 
-La comprobación del 3 de octubre pasa 159 pruebas de frontend, incluidas 105 específicas de la lista de espera. Cubren el formulario único antes del ejemplo de IA, los datos opcionales desplegables, el texto de los botones, los estados del acceso móvil al formulario, errores recuperables, dimensiones del antispam y guardado sintético de los tres campos. También se comprueban la compilación de la app ordinaria y sus 10 páginas SEO. La compilación anterior de la función con Wrangler 4.147.0 sigue vigente: esta actualización no modifica el servidor. Portada/privacidad/aviso devuelven 200 en el dominio definitivo; login/API de la app devuelven 404 en Pages. No se ha hecho una revisión visual automatizada en navegador ni se ha medido el rendimiento público.
+La comprobación del 3 de octubre pasa 160 pruebas de frontend, incluidas 106 específicas de la lista de espera. Cubren el formulario único antes del ejemplo de IA, los datos opcionales desplegables, el texto de los botones, los estados del acceso móvil al formulario, errores recuperables, dimensiones del antispam, versión del script publicado y guardado sintético de los tres campos. También se comprueban la compilación de la app ordinaria y sus 10 páginas SEO. La compilación anterior de la función con Wrangler 4.147.0 sigue vigente: esta actualización no modifica el servidor. Portada/privacidad/aviso devuelven 200 en el dominio definitivo; login/API de la app devuelven 404 en Pages. No se ha hecho una revisión visual automatizada en navegador ni se ha medido el rendimiento público.
 
 Turnstile está simulado en los tests; estos no envían emails ni datos a Cloudflare ni consultan OpenAI. **La comprobación real de D1 y Turnstile la ha realizado el titular** con el envío indicado arriba. No sustituye una revisión jurídica ni promete seguridad absoluta.
 
@@ -177,6 +177,8 @@ El botón inferior móvil es únicamente un enlace al mismo formulario. Aparece 
 Al cargar Turnstile se elige `compact` si el espacio disponible es menor de 300 px; en tarjetas amplias se usa `flexible`. Evita que el desafío, cuando pide interacción, desborde una tarjeta en un móvil pequeño: [dimensiones oficiales del widget](https://developers.cloudflare.com/turnstile/get-started/client-side-rendering/widget-configurations/#widget-sizes). No se eliminan ni saltan desafíos y la verificación en servidor permanece intacta.
 
 Las regresiones comprueban el destino real de los enlaces en producción y vista previa, y las reglas CSS de móvil. Falta confirmar visualmente en un teléfono el espaciado y el salto al formulario tras esta actualización.
+
+El script del formulario lleva en su URL una versión SHA-256 de sus propios bytes. Una actualización de sus interacciones produce una URL nueva para evitar reutilizar una copia antigua del navegador; el verificador de publicación exige exactamente ese script, sin autorizar scripts externos adicionales ni relajar la CSP.
 
 Para revisar el diseño sin credenciales desde `frontend`:
 

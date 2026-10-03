@@ -10,6 +10,7 @@ import {
 } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
+import { createHash } from "node:crypto";
 import { waitlistConsent } from "../src/waitlist/contract.js";
 import { waitlistSettings, waitlistPages } from "../src/waitlist/settings.js";
 import {
@@ -227,12 +228,27 @@ test("native form matches the brand, requires consent and has a no-JavaScript co
   assert.match(page, /name="property_count"/);
   assert.match(page, /<noscript>/);
   assert.match(page, /mailto:soporte@alquivo.com/);
-  assert.match(page, /<script src="\/assets\/form.js" defer><\/script>/);
+  assert.match(
+    page,
+    /<script src="\/assets\/form.js\?v=[a-f0-9]{12}" defer><\/script>/,
+  );
   assert.doesNotMatch(
     page,
     /Tally|tally\.so|<iframe|<script src="https:|SECRET_MUST_NEVER_BE_IN_HTML/,
   );
   assert.match(page, /id="waitlist-success"[^>]* hidden/);
+});
+test("the form script URL is versioned with the published bytes, not a stale shared URL", async () => {
+  const content = await readFile(join(production.output, "assets/form.js"));
+  const version = createHash("sha256")
+    .update(content)
+    .digest("hex")
+    .slice(0, 12);
+  const page = await html(production.output);
+  assert.ok(
+    page.includes(`<script src="/assets/form.js?v=${version}" defer></script>`),
+  );
+  assert.doesNotMatch(page, /<script src="\/assets\/form.js"/);
 });
 test("preview shows the native form but cannot send or claim success", async () => {
   const page = await html(preview.output);

@@ -12,6 +12,7 @@ import {
 } from "node:fs/promises";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { dirname, join, resolve } from "node:path";
+import { createHash } from "node:crypto";
 import { escapeHtml, renderHead } from "../src/seo.js";
 import { waitlistPages, waitlistSettings } from "../src/waitlist/settings.js";
 
@@ -72,11 +73,17 @@ export async function buildWaitlist({ preview = false, env, outputDir } = {}) {
       "brand/alquivo-wordmark.svg",
     ])
       await cp(join(root, "public", name), join(publicDir, name));
-    if (!settings.preview)
+    let formVersion = "";
+    if (!settings.preview) {
       await cp(
         join(root, "src/waitlist/form.js"),
         join(publicDir, "assets/form.js"),
       );
+      formVersion = createHash("sha256")
+        .update(await readFile(join(publicDir, "assets/form.js")))
+        .digest("hex")
+        .slice(0, 12);
+    }
 
     for (const page of waitlistPages) {
       const body = await render(page.path, settings);
@@ -97,7 +104,7 @@ export async function buildWaitlist({ preview = false, env, outputDir } = {}) {
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
 ${head}
 ${styleFiles.map((name) => `<link rel="stylesheet" href="/assets/${escapeHtml(name)}">`).join("\n")}
-</head><body>${body}${page.path === "/" && !settings.preview ? '<script src="/assets/form.js" defer></script>' : ""}</body></html>\n`;
+</head><body>${body}${page.path === "/" && !settings.preview ? `<script src="/assets/form.js?v=${formVersion}" defer></script>` : ""}</body></html>\n`;
       const path =
         page.path === "/"
           ? join(publicDir, "index.html")
@@ -159,6 +166,12 @@ ${styleFiles.map((name) => `<link rel="stylesheet" href="/assets/${escapeHtml(na
 }
 
 export async function verifyWaitlistOutput(directory, settings) {
+  const expectedScript = settings.preview
+    ? null
+    : `<script src="/assets/form.js?v=${createHash("sha256")
+        .update(await readFile(join(directory, "assets/form.js")))
+        .digest("hex")
+        .slice(0, 12)}" defer>`;
   const publicFiles = new Set([
     "index.html",
     "404.html",
@@ -192,7 +205,11 @@ export async function verifyWaitlistOutput(directory, settings) {
       throw new Error(
         `La landing no puede enlazar con el backend o cuentas: ${file}`,
       );
-    if (/<script(?! src="\/assets\/form\.js" defer>)/.test(html))
+    if (
+      Array.from(html.matchAll(/<script\b[^>]*>/g)).some(
+        ([tag]) => tag !== expectedScript,
+      )
+    )
       throw new Error(`Script no autorizado en la landing: ${file}`);
     if (settings.preview && !html.includes('content="noindex, follow"'))
       throw new Error("Una vista previa no puede indexarse.");
