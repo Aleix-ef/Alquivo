@@ -5,12 +5,54 @@ if (form && form.dataset.preview !== "true") {
   const button = document.getElementById("waitlist-submit");
   const error = document.getElementById("waitlist-error");
   const success = document.getElementById("waitlist-success");
+  const idleLabel = button.textContent;
+  const floating = document.getElementById("waitlist-mobile-cta");
+  let busy = false;
+  let updateFloating = () => {};
+  // A single form: the mobile shortcut never collects data or opens a dialog.
+  if (floating && typeof window.IntersectionObserver === "function") {
+    const card = document.getElementById("solicitud");
+    const footer = document.querySelector(".marketing-footer");
+    let cardVisible = false;
+    let footerVisible = false;
+    let hasSeenCard = false;
+    updateFloating = () => {
+      const editing = form.contains(document.activeElement);
+      const visible =
+        hasSeenCard &&
+        !cardVisible &&
+        !footerVisible &&
+        !editing &&
+        !busy &&
+        !form.hidden;
+      floating.hidden = !visible;
+      document.documentElement.classList.toggle(
+        "waitlist-cta-visible",
+        visible,
+      );
+    };
+    const observer = new window.IntersectionObserver((entries) => {
+      for (const entry of entries) {
+        if (entry.target === card) {
+          cardVisible = entry.isIntersecting;
+          hasSeenCard ||= cardVisible;
+        } else if (entry.target === footer)
+          footerVisible = entry.isIntersecting;
+      }
+      updateFloating();
+    });
+    observer.observe(card);
+    if (footer) observer.observe(footer);
+    form.addEventListener("focusin", updateFloating);
+    form.addEventListener("focusout", () => setTimeout(updateFloating, 0));
+  }
   let widget;
   let loading;
   let pending;
-  let busy = false;
 
   function showError(message) {
+    // The error is inside the fieldset: re-enable it before moving keyboard focus.
+    fields.disabled = false;
     error.textContent = message;
     error.hidden = false;
     error.focus();
@@ -40,7 +82,11 @@ if (form && form.dataset.preview !== "true") {
             sitekey: form.dataset.siteKey,
             theme: "dark",
             language: "es",
-            size: "flexible",
+            // Flexible has a 300px minimum; compact fits small phone form cards.
+            size:
+              document.getElementById("waitlist-challenge").clientWidth < 300
+                ? "compact"
+                : "flexible",
             action: "beta_waitlist",
             appearance: "interaction-only",
             execution: "execute",
@@ -79,6 +125,7 @@ if (form && form.dataset.preview !== "true") {
     if (busy || !form.reportValidity()) return;
     const values = new FormData(form);
     busy = true;
+    updateFloating();
     fields.disabled = true;
     button.textContent = "Enviando tu solicitud…";
     form.setAttribute("aria-busy", "true");
@@ -125,6 +172,7 @@ if (form && form.dataset.preview !== "true") {
       // Never claim success on a timeout, HTML/404 or failed database write.
       form.hidden = true;
       success.hidden = false;
+      updateFloating();
       document.getElementById("waitlist-success-title").focus();
     } catch (reason) {
       showError(
@@ -136,8 +184,9 @@ if (form && form.dataset.preview !== "true") {
       clearTimeout(challengeTimer);
       pending = undefined;
       busy = false;
+      updateFloating();
       fields.disabled = false;
-      button.textContent = "Solicitar acceso gratis";
+      button.textContent = idleLabel;
       form.removeAttribute("aria-busy");
       if (!form.hidden && widget !== undefined) window.turnstile.reset(widget);
     }

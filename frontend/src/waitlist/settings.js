@@ -35,7 +35,7 @@ export function waitlistSettings(env = {}, { preview = false } = {}) {
 }
 
 export const waitlistCopy = {
-  common: { startFree: "Solicita acceso" },
+  common: { startFree: "Avísame cuando abra" },
   marketing: {
     plans: "Beta gratuita",
     freeBeta: "Próxima beta gratuita",
@@ -43,14 +43,23 @@ export const waitlistCopy = {
     heroFirst: "Tus alquileres, en orden.",
     heroSecond: "Tus dudas, con respuesta.",
     heroWithoutAI:
-      "Inmuebles, cobros, gastos y contratos en un mismo lugar. Pregunta a Alquivo AI por tus datos y entiende cómo va tu patrimonio. Apúntate para probarlo en la próxima beta gratuita.",
-    tryBeta: "Solicita acceso a la beta",
-    startBeta: "Solicita acceso a la beta",
-    startFree: "Solicita acceso a la beta",
+      "Organiza tus cobros, gastos y contratos. Pregunta a Alquivo AI sobre tus inmuebles.",
+    tryBeta: "Avísame cuando abra",
+    startBeta: "Avísame cuando abra",
+    startFree: "Avísame cuando abra",
     inPreparation: "En la próxima beta",
     assistantDetailOff:
       "Pregunta cuánto has cobrado, qué alquileres tienes pendientes o cuándo termina un contrato. Alquivo AI consulta los datos que hayas registrado y te ayuda a preparar cambios que tú revisas y confirmas.",
     noInventing: "Si falta información, te la pedirá",
+    paymentsControl: "Cobros y gastos, claros.",
+    paymentsControlBody:
+      "Consulta qué has cobrado, qué falta por pagar y cuánto has gastado.",
+    nothingMissed: "Contratos bajo control.",
+    nothingMissedBody:
+      "Ten a mano tus alquileres y las fechas que necesitas revisar.",
+    documentsPlace: "Tus documentos, a mano.",
+    documentsPlaceBody:
+      "Encuentra contratos, facturas y fotos asociados a cada inmueble.",
     exampleAnswerTitle: "Por ejemplo, con estos datos ficticios",
     exampleAnswer:
       "Tienes 550 € pendientes del alquiler de septiembre de San Nicolás. El contrato de Marina termina el 31 de octubre. Puedes revisar ambos registros antes de decidir qué hacer.",

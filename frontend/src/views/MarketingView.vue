@@ -231,6 +231,8 @@ onMounted(async () => {
       </div>
     </section>
 
+    <slot name="signup" />
+
     <section
       id="asistente"
       class="ai-preview-section"
@@ -344,7 +346,7 @@ onMounted(async () => {
         <h2>{{ $t("marketing.madeForInvestors") }}</h2>
       </div>
       <div class="feature-grid">
-        <article class="feature-card feature-card-large">
+        <article class="feature-card feature-card-large waitlist-extra-feature">
           <div class="feature-icon"><BarChart3 /></div>
           <h3>{{ $t("marketing.oneView") }}</h3>
           <p>
@@ -377,7 +379,7 @@ onMounted(async () => {
             {{ $t("marketing.documentsPlaceBody") }}
           </p>
         </article>
-        <article class="feature-card">
+        <article class="feature-card waitlist-extra-feature">
           <div class="feature-icon"><BellRing /></div>
           <h3>{{ $t("marketing.attendImportant") }}</h3>
           <p>
@@ -514,7 +516,7 @@ onMounted(async () => {
             {{ $t("marketing.faqAINo") }}
           </p>
         </details>
-        <details>
+        <details class="waitlist-extra-faq">
           <summary>
             {{ $t("marketing.faqTypes") }}<ChevronRight :size="19" />
           </summary>
@@ -522,7 +524,7 @@ onMounted(async () => {
             {{ $t("marketing.faqTypesAnswer") }}
           </p>
         </details>
-        <details>
+        <details class="waitlist-extra-faq">
           <summary>
             {{ $t("marketing.faqAdvisor") }}<ChevronRight :size="19" />
           </summary>
@@ -534,7 +536,7 @@ onMounted(async () => {
     </section>
 
     <section
-      class="simple-section"
+      class="simple-section about-section"
       aria-labelledby="about-alquivo"
       itemscope
       itemtype="https://schema.org/SoftwareApplication"

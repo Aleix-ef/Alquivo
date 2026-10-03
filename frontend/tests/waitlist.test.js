@@ -86,7 +86,7 @@ for (const url of [
 test("production includes the beta request, but no account or immediate access", async () => {
   const page = await html(production.output);
   assert.match(page, /Tus alquileres, en orden/);
-  assert.match(page, /Solicita acceso a la beta/);
+  assert.match(page, /Avísame cuando abra/);
   assert.match(page, /id="solicitud"/);
   assert.match(page, /href="\/#solicitud"/);
   assert.match(page, /Apuntarte no crea una cuenta ni da acceso inmediato/);
@@ -124,13 +124,40 @@ test("every signup CTA targets the form card, not its preceding introduction", a
     assert.match(target[0], /tabindex="-1"/);
     assert.match(
       page,
-      /<h2 id="waitlist-form-title">Solicita acceso a la beta<\/h2>/,
+      /<h2 id="waitlist-form-title">Te avisamos cuando abra<\/h2>/,
     );
     const card = page.slice(page.indexOf(target[0]));
     assert.ok(card.indexOf('id="waitlist-form"') > 0);
     assert.ok(card.indexOf('id="waitlist-email"') > 0);
     assert.doesNotMatch(card, /Menos Excel/);
     assert.ok(Array.from(page.matchAll(/href="\/#solicitud"/g)).length >= 3);
+  }
+});
+test("one early form preserves optional fields behind a native disclosure", async () => {
+  for (const output of [production.output, preview.output]) {
+    const page = await html(output);
+    assert.equal(Array.from(page.matchAll(/<form\b/g)).length, 1);
+    const start = page.indexOf('id="waitlist-form"');
+    assert.ok(start > 0 && start < page.indexOf('<section id="asistente"'));
+    assert.match(page, /<details class="waitlist-more">/);
+    assert.doesNotMatch(page, /<details class="waitlist-more"[^>]* open/);
+    assert.match(page, /Cuéntanos un poco más/);
+    const optional = page.match(
+      /<details class="waitlist-more">([\s\S]*?)<\/details>/,
+    )[1];
+    assert.match(optional, /name="name"/);
+    assert.match(optional, /name="property_count"/);
+    assert.doesNotMatch(optional, /\brequired\b|\bdisabled\b/);
+    assert.match(page, /autocapitalize="none" spellcheck="false"/);
+    assert.match(
+      page,
+      /id="waitlist-mobile-cta"[^>]* href="\/#solicitud"[^>]* hidden/,
+    );
+    assert.match(page, /Ya estás en la lista/);
+    assert.doesNotMatch(
+      page,
+      /Solicitar acceso gratis|Solicita acceso a la beta/,
+    );
   }
 });
 test("mobile compaction is scoped to the waitlist and preserves the form and core content", async () => {
@@ -157,6 +184,15 @@ test("mobile compaction is scoped to the waitlist and preserves the form and cor
   );
   assert.match(mobile, /\.waitlist-support\s*\{\s*position: static/);
   assert.match(source, /\.waitlist-field input,[\s\S]*?font-size: 1rem/);
+  assert.match(
+    mobile,
+    /\.waitlist-page \.feature-card\.waitlist-extra-feature/,
+  );
+  assert.match(mobile, /env\(safe-area-inset-bottom\)/);
+  assert.match(
+    source,
+    /\.waitlist-mobile-cta,\s*\.waitlist-mobile-cta\[hidden\]\s*\{\s*display: none/,
+  );
 });
 test("the existing logo, dark theme and local fonts are reused", async () => {
   const page = await html(production.output);

@@ -85,6 +85,15 @@ html {
   white-space: normal;
   padding-block: 0.75rem;
 }
+.waitlist-page .button:not(.button-quiet) {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--on-primary);
+}
+.waitlist-page .button:not(.button-quiet):hover {
+  background: var(--primary-hover);
+  border-color: var(--primary-hover);
+}
 .waitlist-card [hidden] {
   display: none;
 }
@@ -132,6 +141,28 @@ html {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 1rem;
+}
+.waitlist-more {
+  margin-bottom: 1.5rem;
+  border-block: 1px solid var(--line);
+}
+.waitlist-more summary {
+  padding-block: 0.9rem;
+  min-height: 3rem;
+  color: var(--ink);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.waitlist-more summary span {
+  color: var(--muted);
+  font-weight: 400;
+}
+.waitlist-more > p {
+  margin-top: 0;
+}
+.waitlist-more .waitlist-field:last-child {
+  margin-bottom: 1rem;
 }
 .waitlist-consent {
   display: flex;
@@ -216,6 +247,24 @@ html {
 .waitlist-support:hover {
   border-color: var(--green);
 }
+.waitlist-closing {
+  padding: 3rem 1.5rem;
+  text-align: center;
+  background: var(--surface-soft);
+  border-block: 1px solid var(--line);
+}
+.waitlist-closing h2 {
+  margin-top: 0;
+  font: 400 clamp(2rem, 4vw, 3rem)/1.2 var(--display);
+}
+.waitlist-closing p {
+  font-size: 1.125rem;
+  color: var(--muted);
+}
+.waitlist-mobile-cta,
+.waitlist-mobile-cta[hidden] {
+  display: none;
+}
 .waitlist-legal .legal-content {
   font-size: 1.0625rem;
 }
@@ -261,11 +310,30 @@ html {
   .waitlist-page .process-section,
   .waitlist-page .calm-section,
   .waitlist-page .feature-stat,
+  .waitlist-page .feature-card.waitlist-extra-feature,
+  .waitlist-page .waitlist-extra-faq,
+  .waitlist-page .about-section,
+  .waitlist-page .marketing-plans,
+  .waitlist-page .hero-actions,
+  .waitlist-page .marketing-header-actions,
   .waitlist-intro {
     display: none;
   }
   .waitlist-page .hero-section {
-    padding: 2rem 1.25rem 2.5rem;
+    padding: 1.25rem 1.25rem 1rem;
+  }
+  .waitlist-page .marketing-header {
+    min-height: 64px;
+  }
+  .waitlist-page .hero-copy h1 {
+    font-size: clamp(2.125rem, 8vw, 2.75rem);
+    line-height: 1.15;
+  }
+  .waitlist-page .hero-lead {
+    font-size: 1.125rem;
+  }
+  .waitlist-page .hero-reassurance span:first-child {
+    display: none;
   }
   .waitlist-page .hero-actions {
     flex-direction: column;
@@ -289,9 +357,18 @@ html {
   .waitlist-page .ai-preview-section,
   .waitlist-page .feature-section,
   .waitlist-page .plans-section,
-  .waitlist-page .faq-section,
-  .waitlist-section {
+  .waitlist-page .faq-section {
     padding: 2.5rem 1.25rem;
+  }
+  .waitlist-section {
+    padding: 0.5rem 1.25rem 2.5rem;
+    background: var(--canvas);
+    border: 0;
+  }
+  .waitlist-page .section-heading h2,
+  .waitlist-page .ai-preview-copy h2 {
+    font-size: clamp(1.875rem, 7vw, 2.375rem);
+    line-height: 1.2;
   }
   .waitlist-page .ai-preview-inner {
     gap: 1.5rem;
@@ -347,6 +424,44 @@ html {
   }
   .waitlist-card {
     padding: 1.25rem;
+  }
+  .waitlist-card > p {
+    line-height: 1.6;
+  }
+  .waitlist-page .ai-preview-points,
+  .waitlist-page .ai-preview-topics {
+    display: none;
+  }
+  .waitlist-closing {
+    padding: 2.5rem 1.25rem;
+  }
+  .waitlist-closing .button {
+    width: 100%;
+  }
+  .waitlist-mobile-cta:not([hidden]) {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    z-index: 3;
+    left: 1.25rem;
+    right: 1.25rem;
+    bottom: calc(0.75rem + env(safe-area-inset-bottom));
+    min-height: 3.5rem;
+    padding: 0.75rem 1rem;
+    border-radius: 0.75rem;
+    background: var(--primary);
+    color: var(--on-primary);
+    border: 1px solid var(--primary);
+    font-size: 1.0625rem;
+    font-weight: 700;
+    box-shadow: var(--shadow-raised);
+  }
+  :root.waitlist-cta-visible {
+    scroll-padding-bottom: calc(5rem + env(safe-area-inset-bottom));
+  }
+  :root.waitlist-cta-visible body {
+    padding-bottom: calc(5rem + env(safe-area-inset-bottom));
   }
   /* On phones, support remains available after the footer rather than covering
      the form, keyboard or legal links with a fixed overlay. */

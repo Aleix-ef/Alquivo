@@ -12,7 +12,7 @@ defineProps({ settings: { type: Object, required: true } });
 <template>
   <a class="waitlist-skip" href="#contenido">Saltar al contenido</a>
   <MarketingView waitlist-mode>
-    <template #closing>
+    <template #signup>
       <section class="waitlist-section" aria-labelledby="waitlist-form-title">
         <div class="waitlist-intro">
           <p class="marketing-eyebrow">Sé de los primeros en probar Alquivo</p>
@@ -34,10 +34,10 @@ defineProps({ settings: { type: Object, required: true } });
           </p>
         </div>
         <div id="solicitud" class="waitlist-card" tabindex="-1">
-          <h2 id="waitlist-form-title">Solicita acceso a la beta</h2>
+          <h2 id="waitlist-form-title">Te avisamos cuando abra</h2>
           <p>
-            Solo necesitamos tu email. El nombre y el número de inmuebles son
-            opcionales.
+            Deja tu correo para recibir la invitación a la beta gratuita.
+            Apuntarte no crea una cuenta ni da acceso inmediato.
           </p>
           <form
             id="waitlist-form"
@@ -52,50 +52,59 @@ defineProps({ settings: { type: Object, required: true } });
             <fieldset id="waitlist-fields">
               <legend class="waitlist-sr-only">Tu solicitud de acceso</legend>
               <label class="waitlist-field" for="waitlist-email">
-                Email
+                Tu correo electrónico
                 <input
                   id="waitlist-email"
                   name="email"
                   type="email"
                   autocomplete="email"
                   inputmode="email"
+                  autocapitalize="none"
+                  spellcheck="false"
                   maxlength="254"
                   placeholder="tu@email.com"
                   required
                 />
               </label>
-              <div class="waitlist-optional-fields">
-                <label class="waitlist-field" for="waitlist-name">
-                  <span
-                    >Nombre
-                    <span class="waitlist-optional">(opcional)</span></span
-                  >
-                  <input
-                    id="waitlist-name"
-                    name="name"
-                    type="text"
-                    autocomplete="given-name"
-                    maxlength="100"
-                    placeholder="Tu nombre"
-                  />
-                </label>
-                <label class="waitlist-field" for="waitlist-properties">
-                  <span
-                    >Inmuebles
-                    <span class="waitlist-optional">(opcional)</span></span
-                  >
-                  <select id="waitlist-properties" name="property_count">
-                    <option value="">Selecciona</option>
-                    <option
-                      v-for="option in waitlistPropertyCounts"
-                      :key="option.value"
-                      :value="option.value"
+              <details class="waitlist-more">
+                <summary>Cuéntanos un poco más <span>(opcional)</span></summary>
+                <p>
+                  Tu nombre y cuántos inmuebles gestionas nos ayudan a preparar
+                  la beta para ti.
+                </p>
+                <div class="waitlist-optional-fields">
+                  <label class="waitlist-field" for="waitlist-name">
+                    <span
+                      >Nombre
+                      <span class="waitlist-optional">(opcional)</span></span
                     >
-                      {{ option.label }}
-                    </option>
-                  </select>
-                </label>
-              </div>
+                    <input
+                      id="waitlist-name"
+                      name="name"
+                      type="text"
+                      autocomplete="given-name"
+                      maxlength="100"
+                      placeholder="Tu nombre"
+                    />
+                  </label>
+                  <label class="waitlist-field" for="waitlist-properties">
+                    <span
+                      >¿Cuántos inmuebles tienes?
+                      <span class="waitlist-optional">(opcional)</span></span
+                    >
+                    <select id="waitlist-properties" name="property_count">
+                      <option value="">Selecciona</option>
+                      <option
+                        v-for="option in waitlistPropertyCounts"
+                        :key="option.value"
+                        :value="option.value"
+                      >
+                        {{ option.label }}
+                      </option>
+                    </select>
+                  </label>
+                </div>
+              </details>
               <div class="waitlist-honeypot" aria-hidden="true" inert>
                 <label for="waitlist-website">No rellenes este campo</label>
                 <input
@@ -135,7 +144,7 @@ defineProps({ settings: { type: Object, required: true } });
                 type="submit"
                 :disabled="settings.preview"
               >
-                Solicitar acceso gratis
+                Avísame cuando abra
               </button>
               <p id="waitlist-form-note" class="waitlist-form-note">
                 {{
@@ -164,7 +173,7 @@ defineProps({ settings: { type: Object, required: true } });
           >
             <span class="waitlist-success-icon" aria-hidden="true">✓</span>
             <h3 id="waitlist-success-title" tabindex="-1">
-              Solicitud recibida
+              Ya estás en la lista
             </h3>
             <p>{{ waitlistSuccess }}</p>
           </div>
@@ -184,6 +193,18 @@ defineProps({ settings: { type: Object, required: true } });
         </div>
       </section>
     </template>
+    <template #closing>
+      <section
+        class="waitlist-closing"
+        aria-labelledby="waitlist-closing-title"
+      >
+        <h2 id="waitlist-closing-title">¿Quieres probar Alquivo?</h2>
+        <p>La beta será gratuita. Te avisamos cuando puedas entrar.</p>
+        <a class="button button-large" href="/#solicitud"
+          >Avísame cuando abra</a
+        >
+      </section>
+    </template>
     <template #legal>
       <nav class="legal-links" aria-label="Información legal">
         <a href="/privacidad">Privacidad</a
@@ -191,6 +212,14 @@ defineProps({ settings: { type: Object, required: true } });
       </nav>
     </template>
   </MarketingView>
+  <a
+    id="waitlist-mobile-cta"
+    class="waitlist-mobile-cta button"
+    href="/#solicitud"
+    hidden
+  >
+    Avísame cuando abra
+  </a>
   <a
     class="waitlist-support"
     :href="`mailto:${legalOperator.email}`"

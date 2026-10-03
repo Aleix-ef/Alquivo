@@ -9,7 +9,7 @@ defineProps({ privacy: { type: Boolean, default: false } });
   <div class="legal-page waitlist-legal">
     <header class="legal-header">
       <a href="/" aria-label="Alquivo, volver al inicio"><BrandLogo /></a
-      ><a href="/#solicitud" class="button">Solicita acceso</a>
+      ><a href="/#solicitud" class="button">Avísame cuando abra</a>
     </header>
     <main id="contenido" class="legal-content">
       <p class="marketing-eyebrow">

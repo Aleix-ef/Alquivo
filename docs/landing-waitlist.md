@@ -1,6 +1,6 @@
 # Publicar la landing de Alquivo con formulario propio
 
-Actualizado el 2 de octubre de 2026. Esta guía **sustituye la anterior con Tally y ZIP**.
+Actualizado el 3 de octubre de 2026. Esta guía **sustituye la anterior con Tally y ZIP**.
 
 ## Estado y coste
 
@@ -160,7 +160,7 @@ DELETE FROM waitlist_rate_limits WHERE expires_at <= unixepoch();
 
 Pruebas de formulario: `npm run test:landing`. Incluyen guardado con SQL real en SQLite y adaptador de la API D1, transporte HTTP local, consentimiento/versionado, mínimos de datos, deduplicación, conservación, control de origen, antispam, límites de tamaño y frecuencia, error de base/proveedor, estados de cliente y aislamiento del artefacto.
 
-Verificado: 98 pruebas específicas del formulario y 151 pruebas frontend completas. También se ha comprobado la compilación de la app ordinaria, sus 10 páginas SEO y la compilación de la función con Wrangler 4.147.0. Portada/privacidad/aviso devuelven 200 en el dominio definitivo; login/API de la app devuelven 404 en Pages. No se ha hecho una revisión visual automatizada en navegador ni se ha medido el rendimiento público.
+La comprobación del 3 de octubre pasa 159 pruebas de frontend, incluidas 105 específicas de la lista de espera. Cubren el formulario único antes del ejemplo de IA, los datos opcionales desplegables, el texto de los botones, los estados del acceso móvil al formulario, errores recuperables, dimensiones del antispam y guardado sintético de los tres campos. También se comprueban la compilación de la app ordinaria y sus 10 páginas SEO. La compilación anterior de la función con Wrangler 4.147.0 sigue vigente: esta actualización no modifica el servidor. Portada/privacidad/aviso devuelven 200 en el dominio definitivo; login/API de la app devuelven 404 en Pages. No se ha hecho una revisión visual automatizada en navegador ni se ha medido el rendimiento público.
 
 Turnstile está simulado en los tests; estos no envían emails ni datos a Cloudflare ni consultan OpenAI. **La comprobación real de D1 y Turnstile la ha realizado el titular** con el envío indicado arriba. No sustituye una revisión jurídica ni promete seguridad absoluta.
 
@@ -168,7 +168,13 @@ Turnstile está simulado en los tests; estos no envían emails ni datos a Cloudf
 
 El destino `/#solicitud` está en la tarjeta del formulario, no en la introducción «Menos Excel». Es un destino único accesible por teclado, sin enfocar automáticamente el email ni abrir el teclado del teléfono. Los enlaces legales de vuelta a la solicitud usan el mismo destino.
 
-Hasta 680 px se reduce el espaciado, se ocultan la maqueta decorativa del dashboard y los bloques repetidos de proceso/tranquilidad, se compactan las fichas de funciones y se retira la introducción duplicada junto al formulario. Se mantienen el ejemplo de IA, las funciones, las condiciones de la beta, las preguntas frecuentes y toda la información de consentimiento. Los campos opcionales pasan a una columna; soporte sigue accesible al final sin tapar el formulario. No se reduce el tamaño de los campos ni se modifican el envío, los límites o la base de datos.
+El formulario aparece inmediatamente después de la presentación, antes del ejemplo de IA, también en escritorio. Es un único formulario y una única solicitud: email obligatorio; nombre y rango de inmuebles conservados dentro de «Cuéntanos un poco más (opcional)». Ese apartado funciona con el elemento nativo `details`, sin JavaScript; al rellenarlo, los datos se guardan junto al correo en D1, como antes. No se añaden notificaciones por email ni se crean cuentas. Los botones de la landing y las páginas legales usan «Avísame cuando abra».
+
+Hasta 680 px se ocultan la maqueta decorativa del dashboard, las acciones repetidas de la cabecera/presentación, los bloques de proceso/tranquilidad y la explicación duplicada del producto. Se mantienen un ejemplo estático de IA con datos ficticios, tres beneficios, un resumen de beta con 50 inmuebles y 5 GB, tres preguntas frecuentes y toda la información de consentimiento. El catálogo detallado y las preguntas adicionales permanecen en escritorio. Los campos opcionales pasan a una columna; soporte sigue accesible al final sin tapar el formulario. No se reduce el tamaño de los campos ni se modifican el consentimiento, los límites, el antispam o la base de datos.
+
+El botón inferior móvil es únicamente un enlace al mismo formulario. Aparece después de haberlo visto y continuar hacia el contenido; se oculta si la tarjeta o el pie legal están visibles, durante el foco/envío del formulario y tras confirmar el guardado. Respeta la zona segura inferior y reserva espacio; sin `IntersectionObserver` permanece oculto y los enlaces normales siguen disponibles. No genera solicitudes, seguimiento ni almacenamiento del navegador. Se corrigió además el foco del aviso de error: el formulario se rehabilita antes de enfocarlo y se mantienen los valores para reintentar.
+
+Al cargar Turnstile se elige `compact` si el espacio disponible es menor de 300 px; en tarjetas amplias se usa `flexible`. Evita que el desafío, cuando pide interacción, desborde una tarjeta en un móvil pequeño: [dimensiones oficiales del widget](https://developers.cloudflare.com/turnstile/get-started/client-side-rendering/widget-configurations/#widget-sizes). No se eliminan ni saltan desafíos y la verificación en servidor permanece intacta.
 
 Las regresiones comprueban el destino real de los enlaces en producción y vista previa, y las reglas CSS de móvil. Falta confirmar visualmente en un teléfono el espaciado y el salto al formulario tras esta actualización.
 
