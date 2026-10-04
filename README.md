@@ -1,5 +1,13 @@
 # Alquivo
 
+## Preparación externa de la beta — 4 de octubre de 2026
+
+**Guía actual de ejecución:** [proveedores, buzón, servidor, copias y decisión de IA](docs/beta-launch-guide.md). La landing está pública y el titular confirma Search Console configurado; la aplicación todavía no tiene servidor. No hay que añadir módulos para cerrar este bloque. La plantilla de producción usa `https://app.alquivo.com`, separada de la landing, con pagos/fiscalidad/IA pública apagados y sin claves privadas.
+
+Revisión legal archivada **`2026-10-04`**, todavía borrador: servicios actuales frente a previstos, objetivos de conservación y límites reales de `store=false`. Gmail gratuito sigue siendo el buzón receptor; el cambio profesional es una propuesta, no una contratación. Faltan contratos efectivos, configuración/retención y recuperación externas, pruebas HTTPS y revisión humana independiente de IA. No se certifica seguridad absoluta ni cumplimiento jurídico.
+
+Comprobación de este bloque: **436 pruebas backend: 434 correctas, 2.835 aserciones y dos skips live previstos; 165 frontend correctas; build/SEO de 10 páginas y preview de landing correctos**. Subconjunto en PostgreSQL 17 vacío: **70 correctas, 523 aserciones y un skip live** (son repeticiones de la suite, no sumar como casos distintos). npm y Composer sin avisos conocidos en los locks consultados. HTTP local respeta MFA y aislamiento de soporte; el recorrido completo de demo se omite sin quitar su segundo factor. Resend aceptó un único correo técnico sintético a soporte; recepción pendiente de confirmación. **Inferencias/coste adicional IA: 0 USD**, sin cambios de `.env`, routing o flags globales. Detalle en [revisión previa a beta](docs/beta-readiness-review.md).
+
 ## Landing pública de lista de espera — actualizado el 3 de octubre de 2026
 
 Preparada una landing independiente para Cloudflare Pages, reutilizando el diseño de Alquivo y sin publicar Laravel ni la aplicación. El formulario es propio, no Tally: guarda solicitudes en una base D1 separada, verifica Turnstile en servidor, registra consentimiento versionado y limita abusos sin guardar IP original. Los CTA solicitan acceso a la futura beta; no hay login, creación de cuentas, pagos ni promesas de acceso inmediato. Incluye aviso legal y privacidad de la lista de espera, soporte por email, fuentes locales, SEO y cabeceras de seguridad.
@@ -25,7 +33,7 @@ El selector 🇪🇸/🇬🇧 se muestra únicamente dentro de la aplicación a 
 
 El asistente conversacional se ha habilitado **solo en el entorno local** para que el propietario lo pruebe antes de publicar. GPT-6 Luna es el modelo normal; GPT-6 Sol solo se usa como respaldo técnico si una petición falla o la respuesta no tiene el formato esperado. Astra sigue apagado. La IA tiene ahora protagonismo en el dashboard y en la navegación.
 
-Cada usuario conserva activación voluntaria con aviso previo; no se envía nada hasta aceptar y escribir al asistente. La plantilla y producción continúan apagadas por defecto. No se ha hecho una consulta real a OpenAI ni una evaluación de calidad; Document AI sigue simulada. Por tanto, esta activación **no es autorización para publicar**. Revisar pruebas, costes y requisitos legales en [progreso de implementación IA](docs/ai-implementation-progress.md).
+Cada usuario conserva activación voluntaria con aviso previo; no se envía nada hasta aceptar y escribir al asistente. La plantilla continúa apagada por defecto. En la fecha de esa activación no se habían hecho evaluaciones reales; posteriormente se realizaron las pruebas sintéticas documentadas en [evaluaciones](docs/ai-evaluations.md), todavía con revisión humana independiente pendiente. Document AI sigue simulada y la app no está desplegada. Esta activación **no es autorización para publicar**. Revisar pruebas, costes y requisitos legales en [progreso de implementación IA](docs/ai-implementation-progress.md).
 Producto SaaS Alquivo. Este directorio es independiente del proyecto académico anterior.
 
 ## Textos legales de la beta — 24 de septiembre de 2026
@@ -56,7 +64,7 @@ La IA de soporte queda **pendiente y sin implementar**. Funcionamiento, activaci
 
 La portada y las nuevas guías públicas ya se generan como HTML legible sin JavaScript, manteniendo Vue y la API privada. Se añaden metadatos por página, canonical, datos estructurados, sitemap, robots, respuestas 404 reales, enlaces internos y compresión. Las cuentas, datos privados y pantallas de acceso no se indexan; no se ha relajado la CSP y el asistente solo está activado en el entorno local de pruebas.
 
-**La indexación está desactivada en local y por defecto.** Para el lanzamiento hay que configurar el dominio HTTPS definitivo en `VITE_PUBLIC_SITE_URL`, activar `VITE_SEO_INDEXABLE=true` y reconstruir web; después verificar el dominio y enviar el sitemap a Google/Bing. No se ha publicado ni enviado ninguna URL. Manual de activación, pruebas, contenido y estrategia: [SEO y descubrimiento](docs/seo-and-discovery.md).
+**La indexación de la aplicación está desactivada en local y en la plantilla de producción.** La landing independiente en `alquivo.com` sí es indexable y el titular confirma Search Console configurado. Mantener `app.alquivo.com` con `VITE_SEO_INDEXABLE=false`: no trasladar la indexación de marketing a las pantallas de cuenta. Manual de contenido y estrategia: [SEO y descubrimiento](docs/seo-and-discovery.md).
 
 Verificación: 150 pruebas de backend / 764 aserciones, 20 pruebas de frontend y comprobaciones SEO de siete páginas generadas correctas. Compilaciones indexable y protegida verificadas; Nginx, estados HTTP, redirecciones y cabeceras comprobados. Se corrigió la respuesta anónima de API sin cabecera JSON (401 en lugar de 500). La cuenta demo tiene doble factor: se ha comprobado que la contraseña sola no da acceso, sin desactivar ni leer sus claves; el recorrido HTTP completo autenticado queda pendiente de completar ese factor. No se ha realizado revisión visual en navegador ni medición de rendimiento público.
 
@@ -183,14 +191,17 @@ El frontend nunca recibe la clave ni consulta directamente al proveedor. Laravel
 
 Incluye la mascota de Alquivo con poses de bienvenida, consulta y respuesta. Las consultas ajenas a la aplicación, la falta de datos, las acciones no implementadas y los problemas de soporte tienen respuestas diferenciadas. El [documento del asistente](docs/assistant.md) explica las protecciones y pruebas pendientes con saldo real. El [progreso de Alquivo AI](docs/ai-implementation-progress.md) distingue lo terminado de las siguientes fases; no basta con tests simulados para validar la calidad del modelo.
 
-Para activar respuestas reales, añade al entorno privado del backend y reconstruye el servicio:
+Configuración de modelos para el entorno privado, **solo después de aprobar la apertura**; las claves no sustituyen la activación voluntaria, validación ni controles globales:
 
 ```dotenv
 OPENAI_API_KEY=sk-...
-OPENAI_ASSISTANT_MODEL=gpt-5.4-mini
+OPENAI_ASSISTANT_MODEL=gpt-6-luna
+AI_CHAT_PROFILE=fast
+AI_FALLBACK_PROFILE=complex
+AI_GLOBAL_MONTHLY_BUDGET_USD=5
 ```
 
-`backend/config/ai.php` centraliza perfiles, tarifas versionadas y presupuestos por ejecución, cartera y proveedor. `AI_CHAT_PROFILE=legacy` conserva el modelo configurado; `fast` selecciona Luna. El fallback se activa expresamente con `AI_FALLBACK_PROFILE`, no por defecto. Astra sigue desactivado. El [harness de evaluaciones](docs/ai-evaluations.md) es actualmente offline: no mide la precisión real ni consume API. Las cuotas de `config/assistant.php` son Beta 20, Gratuito 5 y Fundador/prueba 50 consultas mensuales. Borrar chats no restaura cuota. Las acciones requieren cuenta verificada, activación vigente, permisos y plan habilitado; `AI_ACTIONS_ENABLED=false` las desactiva sin romper consultas. El aviso `2026-09-22` informa de los nombres de contactos que se pueden consultar y del teléfono o texto que el usuario envíe al chat. El asistente aún no procesa documentos ni actúa autónomamente; sigue pendiente validación con modelos reales antes de abrirlo a la beta.
+`backend/config/ai.php` centraliza perfiles, tarifas versionadas y presupuestos por ejecución, cartera y proveedor. `fast` selecciona Luna y `complex` selecciona Sol **solo como fallback técnico**, nunca por complejidad de la pregunta. Astra sigue desactivado. Hay replay offline y un [evaluador opt-in del flujo de producción](docs/ai-evaluations.md); su ejecución real exige datos sintéticos y presupuesto adicional autorizado. Las cuotas de `config/assistant.php` son Beta 20, Gratuito 5 y Fundador/prueba 50 consultas mensuales. Borrar chats no restaura cuota. Las acciones requieren cuenta verificada, activación vigente, permisos y plan habilitado; `AI_ACTIONS_ENABLED=false` las desactiva sin romper consultas. El aviso vigente `2026-10-01` informa de los nombres de contactos que se pueden consultar y del teléfono o texto que el usuario envíe al chat. El asistente no procesa documentos ni actúa autónomamente. Las muestras reales sintéticas están documentadas; faltan revisión humana independiente y pruebas del despliegue antes de decidir beta.
 
 ## Document AI — laboratorio local
 

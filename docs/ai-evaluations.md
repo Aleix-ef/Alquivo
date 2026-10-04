@@ -1,5 +1,13 @@
 # Evaluaciones de Alquivo AI
 
+## Preparación de lanzamiento, sin inferencias (2026-10-04)
+
+No se han ejecutado consultas al proveedor: **0 ejecuciones reales, 0 tokens, 0 USD adicionales**; no existen nuevas clasificaciones PASS/SAFE FAILURE/DANGEROUS FAILURE ni revisión humana independiente en este bloque. Las muestras de calidad de abajo siguen vigentes como evidencia histórica, no deben sumarse a tests técnicos para producir una tasa de precisión.
+
+Verificación ordinaria: 434 pruebas backend correctas/2.835 aserciones, dos skips live opt-in; 165 frontend. Subconjunto PostgreSQL 17 vacío: 70 correctas/523 aserciones, un skip live, incluyendo histórico, propuestas y autorización; provider simulado y sin red externa. Mantiene confirmación por endpoint, idempotencia, cifrado y aislamiento. Los tests de correo y MFA no son evaluaciones de comprensión de Luna.
+
+Nueva revisión legal `2026-10-04` detalla controles API frente a logs del proveedor; la plantilla de producción mantiene IA global apagada. No se ha editado el `.env` privado, prompt/routing, cuatro rondas, Luna/Sol técnico, Astra ni Document AI en simulación. Revisión humana del informe y pruebas navegador/HTTPS aún pendientes: [guía de decisión y apertura](beta-launch-guide.md#7-ia-decisión-de-apertura-no-activación-automática). No abrir beta por esta comprobación técnica.
+
 ## Regresión de totales históricos y contexto (2026-10-02)
 
 Se reprodujo la limitación señalada por el propietario: «cuánto he cobrado de San Nicolás» se acotaba al mes actual y «en total con el piso» recibía una aclaración de mensualidad. No se consultó ni envió al proveedor la cartera del propietario.

@@ -1,6 +1,12 @@
 # Alquivo AI — progreso de implementación
 
-Última actualización: 2026-10-02. Documento de reanudación; distingue código implementado, comprobaciones realizadas y tareas pendientes. No representa autorización de lanzamiento.
+Última actualización: 2026-10-04. Documento de reanudación; distingue código implementado, comprobaciones realizadas y tareas pendientes. No representa autorización de lanzamiento.
+
+## Checkpoint de preparación externa (2026-10-04)
+
+Sin nuevas funciones ni inferencias: privacidad/proveedores revisados como borrador `2026-10-04`, plantilla para `app.alquivo.com` y [guía de contratación, copias, correo y decisión de IA](beta-launch-guide.md). Mantiene cerrados los flags globales de la plantilla; no se ha cambiado el entorno privado local. Luna/Sol técnico explicitados en el ejemplo, Astra apagado, cuatro rondas y Document AI simulada intactos. `store=false` no se presenta como retención cero ni garantía de ubicación europea.
+
+Suite técnica: 434 backend correctas/2.835 aserciones con dos skips live, 165 frontend y build/SEO correctos. Subconjunto PostgreSQL 17 aislado: 70 correctas/523 aserciones, un skip live; solo datos sintéticos/providers simulados, recurso temporal retirado. **0 llamadas, 0 tokens y 0 USD nuevos de IA**. No sustituye la revisión humana independiente del reporte ni los recorridos navegador/MFA/confirmación en el servidor HTTPS. No abrir beta automáticamente. Proveedores efectivos, buzón, servidor y backup externo/alertas/retención siguen pendientes de contratar y verificar; no deben darse por cerrados por la documentación.
 
 ## Checkpoint de consultas históricas (2026-10-02)
 

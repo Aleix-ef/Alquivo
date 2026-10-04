@@ -1,6 +1,8 @@
 # Textos legales de la beta
 
-Revisión de trabajo: 2 de octubre de 2026. **Redacción e integración implementadas; no es una certificación jurídica ni una autorización para abrir la beta con los campos incompletos.**
+Revisión de trabajo: 4 de octubre de 2026. **Redacción e integración implementadas; no es una certificación jurídica ni una autorización para abrir la beta con los campos incompletos.**
+
+La preparación actual y los pasos del titular están en [la guía de lanzamiento](beta-launch-guide.md). Se verificaron las condiciones públicas de Cloudflare, Resend, Hetzner y OpenAI; no se han aceptado contratos en cuentas privadas ni contratado servidor/copias/buzón nuevo. Los objetivos propuestos son copias diarias hasta 30 días, consultas por email hasta 12 meses desde su cierre (con excepciones justificadas), logs técnicos propios 14 días y auditoría propia 30 días. Su ejecución y las condiciones de registros propios de proveedores siguen pendientes. Gmail gratuito continúa siendo el receptor real, confirmado por el titular el 4 de octubre.
 
 ## Documentos y mantenimiento
 
@@ -32,7 +34,7 @@ No se han inventado contratos ni datos de proveedores. La entrega de un correo d
 
 ## Aceptación y versiones
 
-La versión de borrador actual es `2026-10-02`, definida en el frontend y en `backend/config/legal.php`. Actualiza la oferta de la beta a **50 inmuebles y 5 GB** de documentos y fotos, únicamente con funciones habilitadas para el público; las funciones en revisión no están incluidas y la IA conserva sus límites de uso. El archivo de la revisión anterior `2026-10-01-r2` se conserva sin cambios. El registro envía `terms_version`; el servidor exige la versión vigente y `terms_accepted=true`. Rechaza formularios antiguos con un mensaje para recargar y revisar las condiciones. Guarda `terms_accepted_at` y `terms_version`, y evidencia mínima independiente de esa aceptación. Backend y frontend deben desplegarse juntos. La privacidad se presenta como información leída, no como un consentimiento universal ni aceptación de publicidad. La IA mantiene su activación separada y su aviso no cambia en esta revisión.
+La versión de borrador actual es `2026-10-04`, definida en el frontend y en `backend/config/legal.php`. Mantiene la oferta de beta de **50 inmuebles y 5 GB** únicamente con funciones públicas habilitadas y los límites de IA. Distingue proveedores efectivos y previstos, conservación propuesta y almacenamiento API frente a logs de prevención de abusos; no promete retención cero ni residencia europea de OpenAI. Los archivos anteriores, incluidos `2026-10-01-r2` y `2026-10-02`, se conservan sin cambios. El registro envía `terms_version`; el servidor exige la versión vigente y `terms_accepted=true`. Rechaza formularios antiguos con un mensaje para recargar y revisar las condiciones. Guarda `terms_accepted_at` y `terms_version`, y evidencia mínima independiente de esa aceptación. Backend y frontend deben desplegarse juntos. La privacidad se presenta como información leída, no como un consentimiento universal ni aceptación de publicidad. La IA mantiene su activación separada y su aviso no cambia en esta revisión.
 
 No se modifican las fechas/versiones de usuarios existentes ni se les atribuye una nueva aceptación. Antes de incorporar cuentas reales antiguas bajo estas condiciones, recabar su aceptación por un mecanismo documentado; todavía no se ha añadido un flujo de reaceptación para cuentas existentes. La demo y sus datos históricos no prueban aceptación contractual de un cliente.
 

@@ -52,7 +52,8 @@ try {
       assert.equal(plans.current.code, 'beta');
       assert.equal(plans.current.on_trial, false);
       assert.equal(plans.plans.beta.price_monthly, 0);
-      assert.equal(plans.plans.beta.property_limit, 10);
+      assert.equal(plans.plans.beta.property_limit, 50);
+      assert.equal(plans.plans.beta.storage_limit_bytes, 5 * 1024 ** 3);
       const catalog = await (await request('/api/v1/public/plans', { anonymous: true })).json();
       assert.deepEqual(catalog.plans.map(p => p.code), ['beta']);
     } else {

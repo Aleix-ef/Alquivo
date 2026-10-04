@@ -1,8 +1,8 @@
 import { legalOperator } from "./legalOperator.js";
 
 // Keep in sync with backend/config/legal.php. Archive each published revision.
-export const legalVersion = "2026-10-02";
-export const legalUpdatedAt = "2026-10-02";
+export const legalVersion = "2026-10-04";
+export const legalUpdatedAt = "2026-10-04";
 export const operator = legalOperator;
 export const pendingValue = "Pendiente de completar antes de publicar la beta";
 export const legalDraft =
@@ -242,13 +242,20 @@ export const legalPages = [
           "El asistente solo se utiliza cuando la función está habilitada y aceptas su aviso específico. La activación es voluntaria y puedes revocarla. Para los datos personales que aportas en tu propio nombre, esa elección se basa en tu consentimiento; para los datos de otras personas, el envío es una instrucción del propietario y requiere que este disponga de su propia base jurídica. Tu aceptación no sustituye los derechos de los inquilinos.",
           "Cuando utilizas el chat, OpenAI recibe tu pregunta, el historial reciente y los datos seleccionados que necesita para responder. Pueden incluir nombres de contactos y su relación con contratos, nombres de inmuebles, títulos de incidencias, importes y fechas. Las herramientas del chat no recuperan DNI, correos, teléfonos ya guardados, notas anteriores, direcciones completas ni el contenido de los documentos. Si escribes esos datos en un mensaje, o los incluyes en nombres o títulos, también pueden llegar al proveedor; evita hacerlo si no es necesario.",
           "Las propuestas de gastos, cobros o cambios de datos requieren tu confirmación antes de guardarse como operaciones reales. Borrar el chat no borra las operaciones que ya hayas confirmado. El servicio no adopta decisiones exclusivamente automatizadas con efectos jurídicos o similares sobre ti o tus inquilinos.",
-          "El historial y los borradores del asistente se eliminan a los 30 días mediante la tarea de limpieza; también puedes borrarlos o desactivar la función. Las métricas de uso, coste y trazabilidad sin el texto de la conversación se conservan durante 12 meses completos más el mes en curso. La aplicación solicita al proveedor que no almacene las respuestas mediante la opción de almacenamiento de la API; eso no garantiza la inexistencia de registros de seguridad del proveedor. Sus condiciones, ubicación y garantías deben figurar en la relación de proveedores antes de activar el servicio público.",
+          "El historial y los borradores del asistente se eliminan a los 30 días mediante la tarea de limpieza; también puedes borrarlos o desactivar la función. Las métricas de uso, coste y trazabilidad sin el texto de la conversación se conservan durante 12 meses completos más el mes en curso.",
+          "La aplicación usa la API de OpenAI y solicita no almacenar las respuestas con store=false. Esa opción no elimina los registros de prevención de abusos: OpenAI indica una conservación habitual de hasta 30 días, con posibles excepciones legales o de seguridad. Los datos de la API no se utilizan para entrenar modelos por defecto; las opciones de compartir datos de la cuenta deben mantenerse desactivadas. No se promete retención cero ni residencia exclusivamente europea. Antes de abrir la función pública deben verificarse el contrato, las opciones de la cuenta y las garantías que figuran en la relación de proveedores.",
           "La importación documental disponible para pruebas administrativas utiliza una simulación local que no envía archivos a OpenAI. Tiene un aviso separado y almacena sus borradores y fragmentos cifrados hasta 30 días o hasta revocar ese permiso. Los originales y las operaciones confirmadas siguen en sus módulos. Antes de habilitar análisis documental real se informará del proveedor y de los datos enviados y se solicitará una activación independiente; el permiso del chat no lo cubre.",
         ],
         links: [
           {
             to: "/data-processing#proveedores",
             label: "Proveedores y transferencias de datos",
+          },
+        ],
+        externalLinks: [
+          {
+            href: "https://developers.openai.com/api/docs/guides/your-data",
+            label: "Controles de datos de la API de OpenAI",
           },
         ],
       },
@@ -463,7 +470,7 @@ export const legalPages = [
         title: "5. Subencargados y ubicación del tratamiento",
         providers: true,
         paragraphs: [
-          "El responsable autoriza los proveedores identificados en la relación siguiente para los servicios descritos. La autorización no se extiende a proveedores sin identificar. Antes de la apertura pública deben figurar la entidad contratada, la ubicación relevante del tratamiento y la garantía de cualquier transferencia fuera del Espacio Económico Europeo.",
+          "La relación siguiente distingue los servicios actuales de los previstos o pendientes de contratación. Una referencia a un proveedor previsto no significa que ya reciba datos ni autoriza a sustituirlo sin informar. Antes de la apertura pública deben verificarse la entidad contratada, la ubicación relevante del tratamiento y las garantías de cualquier transferencia fuera del Espacio Económico Europeo. La autorización del responsable se limita a los proveedores efectivamente contratados e identificados para las funciones que utilice.",
           "Alquivo impondrá a sus subencargados obligaciones de protección de datos equivalentes a las que correspondan en este acuerdo y seguirá respondiendo ante el responsable por el cumplimiento de sus obligaciones. Informará de las incorporaciones o sustituciones previstas con al menos 15 días de antelación, para que el responsable pueda objetar por razones de protección de datos. Si no se alcanza una solución, podrá dejar de utilizar la función afectada o finalizar el servicio con devolución o supresión de sus datos. No se someterán sus datos al proveedor objetado mientras se resuelve la objeción.",
           "La IA solo interviene cuando la función esté habilitada y el responsable la active tras consultar su aviso. Activar el chat no autoriza enviar archivos originales para análisis documental. No se atribuye al consentimiento del usuario la función de sustituir las garantías legales de una transferencia internacional.",
         ],

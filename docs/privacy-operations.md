@@ -1,6 +1,6 @@
 # Operación de privacidad antes de beta
 
-Preparación de 1 de octubre de 2026. Procedimiento propuesto, **pendiente de aprobación y puesta en práctica por el titular**. No declara cumplimiento ni sustituye contratos/revisión profesional. No guardar aquí solicitudes reales, documentos de identidad, claves o registros de clientes: el repositorio puede ser público.
+Preparación actualizada el 4 de octubre de 2026. Procedimiento propuesto, **pendiente de aprobación y puesta en práctica por el titular**. No declara cumplimiento ni sustituye contratos/revisión profesional. No guardar aquí solicitudes reales, documentos de identidad, claves o registros de clientes: el repositorio puede ser público. Contratación, despliegue y recuperación paso a paso en [la guía de lanzamiento](beta-launch-guide.md).
 
 ## Responsabilidad y registros restringidos
 
@@ -32,6 +32,8 @@ Restaurar en entorno aislado, sin correo/IA/pagos ni acceso de usuarios; verific
 ## Proveedores y cambios
 
 Inventario y contratos efectivos de alojamiento, backup, Resend, Cloudflare Email Routing, buzón y OpenAI; revisar entidades, ubicación, garantías, subencargados y finalidad. Confirmar la política de evidencia (1.095 días de referencia técnica), copias, buzón y registros. No asumir que `store=false` elimina los registros de seguridad de OpenAI.
+
+Conservar privadamente un registro de actividades de tratamiento y una evaluación de riesgos: funciones, finalidad/base, datos/personas, responsables/encargados, transferencias, acceso, conservación y controles. Valorar/documentar si procede evaluación de impacto; una beta pequeña no elimina esta tarea. Las metas del borrador `2026-10-04` (copias 30 días, buzón 12 meses tras cierre, logs propios 14/30 días) no acreditan que ya se estén aplicando. Gmail sigue siendo real y alojamiento/copias previstos. Confirmar políticas/cuentas antes de cambiar el aviso a definitivo.
 
 Cerrar los campos de `legalOperator.js`, incrementar la revisión y archivar el artefacto final. Cumplir el aviso de cambios de subencargados/fin de beta prometido en condiciones. Si se trasladan cuentas reales anteriores, resolver su incorporación bajo condiciones vigentes; no sobrescribir o inventar aceptación. No importar las cuentas/documentos de desarrollo a producción.
 

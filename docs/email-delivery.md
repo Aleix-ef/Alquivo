@@ -1,5 +1,15 @@
 # Correo transaccional de Alquivo
 
+## Comprobación actual — 4 de octubre de 2026
+
+**Resend aceptó un único correo técnico sintético** con asunto «Prueba tecnica de correo - Alquivo» a `soporte@alquivo.com`, enviado por el servicio Mail de Laravel en el Docker local. No contiene datos de clientes, enlaces, tokens ni un ticket real; no se ha solicitado un reset de una cuenta. La recepción sigue pendiente de confirmación humana: aceptación del transporte no equivale a entrega en bandeja ni a comprobar la cola o los flujos completos de cuenta.
+
+Nuevas regresiones `ProductionMailLinksTest`: cinco pruebas/28 aserciones correctas, incluidas en la suite ordinaria y repetidas en PostgreSQL temporal. Recuperación, verificación firmada con caducidad y host, ticket y código MFA usan el contrato esperado con `https://app.alquivo.com`; notificaciones simuladas, sin envío real en esos tests. La plantilla pública apunta al subdominio de la app, no a la landing. **Todavía no existe servidor/HTTPS de aplicación** y no se editó el `.env` privado.
+
+El titular confirma Cloudflare → Gmail gratuito como recepción actual. El procedimiento para pasar a un buzón profesional conservando dirección y Resend está en [la guía de lanzamiento](beta-launch-guide.md#2-cambiar-el-buzón-sin-perder-soportealquivocom). Ninguna compra o modificación MX/SPF/DKIM se ha realizado. El checklist HTTPS de esa guía sigue pendiente antes de invitar usuarios.
+
+## Comprobación anterior — 28 de septiembre de 2026
+
 Estado (28 de septiembre de 2026): dominio `alquivo.com` verificado en Resend según el titular. La aplicación tiene el cliente Resend y los flujos de verificación, recuperación, códigos de doble factor y avisos de tickets. **El correo saliente local está activado con Resend** y el remitente `soporte@alquivo.com`. Se solicitó la recuperación para una dirección de prueba del titular mediante la API de la aplicación, se generó la solicitud de restablecimiento y el titular confirmó haber recibido el mensaje «Recupera tu acceso a Alquivo». La configuración operativa debe permanecer en archivos privados fuera de Git.
 
 ## Revisión previa al envío a GitHub — 2 de octubre de 2026

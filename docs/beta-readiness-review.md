@@ -1,5 +1,20 @@
 # Revisión previa a beta — 1 de octubre de 2026
 
+## Checkpoint vigente — 4 de octubre de 2026
+
+Preparación externa sin nuevas funciones ni apertura: [guía paso a paso](beta-launch-guide.md). Los informes de abajo se conservan como histórico; este checkpoint actualiza la verificación, no certifica cumplimiento ni ausencia de vulnerabilidades.
+
+- Privacidad/proveedores: borrador archivado `2026-10-04`; Cloudflare Pages/D1/Turnstile/DNS/Email Routing, Resend y Gmail actual frente a Hetzner/copias previstos. Metas de conservación explícitamente pendientes de operación. OpenAI: `store=false` no elimina logs de prevención de abusos ni acredita residencia UE; contrato/cuenta y entrenamiento voluntario pendientes de verificar por el titular. No se han contratado servicios ni aceptado acuerdos en su nombre.
+- Plantilla de producción: `app.alquivo.com`, cookies seguras y sesión nombrada; landing separada. Luna principal/Sol fallback técnico y presupuesto global inicial de 5 USD/mes, sin cambiar el router. IA global, cobros y fiscalidad apagados. `.env` privado intacto.
+- Correo: cinco nuevas regresiones HTTPS de recuperación/verificación/tickets/código MFA; Resend aceptó un único correo técnico sintético a soporte desde Laravel local. Recepción pendiente de confirmar; no se prueban con ello enlaces del servidor aún inexistente, cola ni todos los flujos reales.
+- Copias: guard `backup-external.sh` reutiliza la herramienta actual y rechaza destino ausente/no montado/tipo local y enlace de repositorio. Regresiones negativas y sintaxis correctas. **No hay montaje externo, cron, caducidad, alerta ni restauración offsite configurados/probados**. La guía exige esos pasos y advierte de la pausa de servicio durante copia.
+- Suite ordinaria: **436 pruebas, 434 correctas, 2.835 aserciones, dos skips opt-in live**; 165 frontend correctas; build cliente/SSR y comprobación SEO/CSP de 10 páginas; preview de landing. npm y Composer actual (`composer:2`, el Composer del host es antiguo) sin avisos conocidos al consultar locks. Escaneo publicable, huella legal, Pint, formato y diff correctos.
+- PostgreSQL 17 temporal sin puertos: **71 pruebas, 70 correctas, 523 aserciones, un skip live**; MFA, correo, contratos/tools, histórico, propuestas y evidencia legal. Se corrigió un montaje inválido de caché en el contenedor de testing antes del ensayo correcto; no era un hallazgo de la app. Datos exclusivamente sintéticos, sin red hacia proveedores, contenedores temporales retirados. No sumar el subconjunto a la suite como casos distintos ni como evaluaciones reales del modelo.
+- HTTP local: MFA de demo conservado; contraseña sola no permite acceso y recorrido autenticado completo omitido. Soporte visitante respeta sesión/CSRF/origen, rutas privadas/no-store/noindex, sin tickets creados. No hay OAuth Google en este checkout.
+- **IA: cero inferencias, cero tokens y 0 USD adicionales.** Sin cambio global de flags, confirmación, aislamiento, límites, Astra o Document AI. La revisión humana de los reportes previos sigue pendiente; no hay nuevas clasificaciones PASS/SAFE/DANGEROUS del modelo en este bloque.
+
+Pendientes antes de datos reales: (1) contratos/cuentas, política y revisión final de privacidad, especialmente buzón; (2) VPS HTTPS restringido, firewall, claves, ClamAV/cola/scheduler/monitorización; (3) backup externo recuperado y retención/alertas comprobadas; (4) navegador HTTPS y entrega real de todos los correos/funciones; (5) revisión humana y decisión expresa de IA/apertura. Servidor, copias y pasos del titular en la guía. No hace falta añadir módulos.
+
 ## Cierre de las correcciones de código
 
 **Los cinco hallazgos de código del informe inicial están corregidos y verificados en la suite. La publicación sigue pendiente de requisitos externos.** No se garantiza ausencia de vulnerabilidades ni cumplimiento jurídico completo.
