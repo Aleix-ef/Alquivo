@@ -327,15 +327,17 @@ onBeforeUnmount(() => {
           >Renta mensual<input
             v-model="editForm.monthly_rent"
             type="number"
-            min="1"
+            min="0.01"
             step="0.01"
+            inputmode="decimal"
             required /></label
         ><label
           >Fianza<input
             v-model="editForm.deposit_amount"
             type="number"
             min="0"
-            step="0.01" /></label
+            step="0.01"
+            inputmode="decimal" /></label
         ><label
           >Día de cobro<input
             v-model="editForm.payment_day"
@@ -376,15 +378,17 @@ onBeforeUnmount(() => {
           >Renta mensual<input
             v-model="renewalForm.monthly_rent"
             type="number"
-            min="1"
+            min="0.01"
             step="0.01"
+            inputmode="decimal"
             required /></label
         ><label
           >Fianza<input
             v-model="renewalForm.deposit_amount"
             type="number"
             min="0"
-            step="0.01" /></label
+            step="0.01"
+            inputmode="decimal" /></label
         ><label
           >Día de cobro<input
             v-model="renewalForm.payment_day"

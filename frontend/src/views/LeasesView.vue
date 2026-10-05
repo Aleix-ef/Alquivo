@@ -29,8 +29,18 @@ const form = ref({
 });
 const selectedContactIds = ref([]);
 const newContacts = ref([]);
-const closeNew = () => router.replace(route.query.from === "property" && route.query.property ? `/properties/${route.query.property}?tab=alquiler` : "/leases");
-watch(() => route.query.property, (id) => { if (id) form.value.property_id = id; });
+const closeNew = () =>
+  router.replace(
+    route.query.from === "property" && route.query.property
+      ? `/properties/${route.query.property}?tab=alquiler`
+      : "/leases",
+  );
+watch(
+  () => route.query.property,
+  (id) => {
+    if (id) form.value.property_id = id;
+  },
+);
 const money = (v) =>
   new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(
     v || 0,
@@ -47,7 +57,12 @@ async function load() {
     leases.value = l;
     properties.value = p;
     contacts.value = c;
-    if (show.value && !c.length && !selectedContactIds.value.length && !newContacts.value.length) {
+    if (
+      show.value &&
+      !c.length &&
+      !selectedContactIds.value.length &&
+      !newContacts.value.length
+    ) {
       newContacts.value = [{ name: "", email: "", phone: "" }];
     }
   } catch {
@@ -196,13 +211,17 @@ onMounted(load);
           >Renta mensual<input
             v-model="form.monthly_rent"
             type="number"
-            min="1"
+            min="0.01"
+            step="0.01"
+            inputmode="decimal"
             required /></label
         ><label
           >Fianza<input
             v-model="form.deposit_amount"
             type="number"
-            min="0" /></label
+            min="0"
+            step="0.01"
+            inputmode="decimal" /></label
         ><label
           >Día de cobro<input
             v-model="form.payment_day"

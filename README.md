@@ -1,5 +1,13 @@
 # Alquivo
 
+## Importes con céntimos — 5 de octubre de 2026
+
+Corregidos los campos de renta y fianza al crear un alquiler: el navegador exigía enteros porque faltaba `step="0.01"`, aunque la API ya aceptaba decimales. Creación, edición y renovación admiten céntimos; se añade teclado decimal en alquileres, movimientos/cobros y costes de incidencias. Precios, valoraciones, gastos de adquisición, deuda y superficie ya admitían centésimas y quedan cubiertos por regresiones. Días de cobro, dormitorios y baños conservan su validación de enteros. No cambian las validaciones de servidor ni los datos existentes.
+
+Corregido también el máximo del formulario de cobro parcial: `380.03 - 330.01` se convertía en `50.01999999999998` y podía impedir introducir `50.02`. `rentPaymentLimits` calcula límites en céntimos enteros y devuelve cadenas de dos decimales; la edición suma exactamente el cobro que se está corrigiendo. El backend sigue comprobando autorización y saldo por su cuenta. No se cambian cálculos fiscales, propuestas/IA ni mensualidades ya emitidas.
+
+Verificación: **453 pruebas backend, 451 correctas, 2.990 aserciones y dos skips live previstos; 178 frontend correctas**, incluyendo revisión de atributos de todos los inputs numéricos y límites con céntimos. PostgreSQL 17 temporal aislado: **31 pruebas y 204 aserciones**, subconjunto repetido de la suite ordinaria, solo datos sintéticos y sin red externa. Build cliente/SSR correcto. No se ejecutan inferencias ni se modifican `.env`, flags, claves o textos legales. La revisión interactiva de teclado/validación nativa en navegador sigue pendiente; las pruebas de HTML y API no la sustituyen.
+
 ## Espera y rendimiento del asistente — 5 de octubre de 2026
 
 Optimización conservadora: los resúmenes financieros evitan cargar filas que se descartaban y reutilizan los mismos saldos, sin caché de dinero ni cambios de prompt/modelos/seguridad. El chat muestra tiempo de espera real y un aviso neutral; nuevo diagnóstico interno `assistant:latency`, sin contenido de conversaciones ni gasto de IA. **442 pruebas backend correctas, 2.907 aserciones y dos skips live; 171 frontend correctas**, más un subconjunto PostgreSQL aislado. La mejora SQL medida es de milisegundos: no se promete una aceleración de segundos del modelo. **0 USD adicionales**, sin activar beta. [Detalle, medición y comprobaciones pendientes](docs/assistant-latency.md).

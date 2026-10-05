@@ -4,6 +4,7 @@ import { ArrowDownLeft, ArrowUpRight, Pencil, Plus, Trash2 } from "@lucide/vue";
 import { useRoute, useRouter } from "vue-router";
 import api from "../api";
 import { fetchAllPages } from "../pagination";
+import { rentPaymentLimits } from "../rentPayments";
 import ConfirmDialog from "../components/ConfirmDialog.vue";
 import { useConfirmDialog } from "../composables/useConfirmDialog";
 const route = useRoute(),
@@ -87,8 +88,11 @@ async function load() {
     properties.value = p;
     recurringRules.value = r;
     if (route.query.charge) {
-      const charge = l.flatMap((lease) => lease.charges || []).find((item) => String(item.id) === String(route.query.charge));
-      if (charge && !["paid", "cancelled"].includes(charge.status)) openPayment(charge);
+      const charge = l
+        .flatMap((lease) => lease.charges || [])
+        .find((item) => String(item.id) === String(route.query.charge));
+      if (charge && !["paid", "cancelled"].includes(charge.status))
+        openPayment(charge);
       const query = { ...route.query };
       delete query.charge;
       router.replace({ query });
@@ -147,8 +151,8 @@ function closePayment() {
   }
 }
 function openPayment(charge) {
-  const remaining = Number(charge.amount) - Number(charge.paid_amount);
-  paymentTarget.value = { charge, transaction: null, maximum: remaining };
+  const { remaining, maximum } = rentPaymentLimits(charge);
+  paymentTarget.value = { charge, transaction: null, maximum };
   paymentForm.value = {
     amount: remaining,
     transaction_date: new Date().toISOString().slice(0, 10),
@@ -161,13 +165,11 @@ function editPayment(transaction) {
   const charge = leases.value
     .flatMap((lease) => lease.charges || [])
     .find((item) => item.id === transaction.rent_charge_id);
-  const remaining = charge
-    ? Number(charge.amount) - Number(charge.paid_amount)
-    : 0;
+  const { maximum } = rentPaymentLimits(charge, transaction.amount);
   paymentTarget.value = {
     charge,
     transaction,
-    maximum: Number(transaction.amount) + remaining,
+    maximum,
   };
   paymentForm.value = {
     amount: Number(transaction.amount),
@@ -497,7 +499,17 @@ onBeforeUnmount(() => {
       </div>
       <div v-else class="empty"><p>Aún no hay movimientos.</p></div>
     </section>
-    <div v-if="show" class="drawer-bg" @click.self="router.replace(route.query.from === 'property' && route.query.property ? `/properties/${route.query.property}?tab=dinero` : '/finance')">
+    <div
+      v-if="show"
+      class="drawer-bg"
+      @click.self="
+        router.replace(
+          route.query.from === 'property' && route.query.property
+            ? `/properties/${route.query.property}?tab=dinero`
+            : '/finance',
+        )
+      "
+    >
       <form class="drawer" @submit.prevent="save">
         <header>
           <div>
@@ -533,6 +545,7 @@ onBeforeUnmount(() => {
             type="number"
             min="0.01"
             step="0.01"
+            inputmode="decimal"
             required /></label
         ><label
           >Fecha<input v-model="form.transaction_date" type="date" required
@@ -555,11 +568,7 @@ onBeforeUnmount(() => {
         </footer>
       </form>
     </div>
-    <div
-      v-if="paymentTarget"
-      class="drawer-bg"
-      @click.self="closePayment"
-    >
+    <div v-if="paymentTarget" class="drawer-bg" @click.self="closePayment">
       <form class="drawer" @submit.prevent="savePayment">
         <p class="eyebrow">Alquiler</p>
         <h2>
@@ -575,6 +584,7 @@ onBeforeUnmount(() => {
             min="0.01"
             :max="paymentTarget.maximum"
             step="0.01"
+            inputmode="decimal"
             required
         /></label>
         <small>Máximo disponible: {{ money(paymentTarget.maximum) }}</small>
@@ -655,6 +665,7 @@ onBeforeUnmount(() => {
             type="number"
             min="0.01"
             step="0.01"
+            inputmode="decimal"
             required
         /></label>
         <label

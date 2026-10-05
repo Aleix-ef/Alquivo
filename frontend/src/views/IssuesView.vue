@@ -116,7 +116,9 @@ async function save() {
     if (editing.value) await api.put(`/issues/${editing.value.id}`, payload);
     else await api.post("/issues", payload);
     if (route.query.from === "property" && route.query.property) {
-      await router.replace(`/properties/${route.query.property}?tab=incidencias`);
+      await router.replace(
+        `/properties/${route.query.property}?tab=incidencias`,
+      );
     } else {
       await router.replace("/issues");
       await load();
@@ -204,7 +206,17 @@ onMounted(load);
       <button class="button primary" @click="openNew">Crear incidencia</button>
     </section>
 
-    <div v-if="show" class="drawer-bg" @click.self="router.replace(route.query.from === 'property' && route.query.property ? `/properties/${route.query.property}?tab=incidencias` : '/issues')">
+    <div
+      v-if="show"
+      class="drawer-bg"
+      @click.self="
+        router.replace(
+          route.query.from === 'property' && route.query.property
+            ? `/properties/${route.query.property}?tab=incidencias`
+            : '/issues',
+        )
+      "
+    >
       <form class="drawer" @submit.prevent="save">
         <p class="eyebrow">
           {{ editing ? "Seguimiento" : "Nueva incidencia" }}
@@ -265,13 +277,15 @@ onMounted(load);
             v-model="form.estimated_cost"
             type="number"
             min="0"
-            step="0.01" /></label
+            step="0.01"
+            inputmode="decimal" /></label
         ><label v-if="editing"
           >Coste real<input
             v-model="form.actual_cost"
             type="number"
             min="0"
             step="0.01"
+            inputmode="decimal"
         /></label>
         <template
           v-if="
