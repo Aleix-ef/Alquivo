@@ -367,6 +367,22 @@
   height: 100%;
   justify-content: center;
 }
+.assistant-thinking {
+  align-items: flex-start;
+  gap: 8px;
+}
+.assistant-thinking-copy {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  padding-top: 4px;
+  font-size: 15px;
+  line-height: 1.5;
+}
+.assistant-thinking-copy small {
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
 .assistant-error {
   margin: 0;
   padding: 9px 16px;

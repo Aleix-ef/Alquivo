@@ -1,5 +1,15 @@
 # Evaluaciones de Alquivo AI
 
+## Regresión técnica de latencia, sin inferencias (2026-10-05)
+
+Optimización limitada a no hidratar filas y relaciones descartadas al pedir un resumen de pendientes/contrato. La fuente y el resultado de la agregación permanecen iguales; los tests comparan ambos caminos, pagos nuevos/eliminados, saldos reales y aislamiento. No se modifican prompt, schemas, historial, routing, cuatro rondas, confirmación, presupuesto ni flags globales. Document AI continúa simulada.
+
+**0 ejecuciones reales, 0 llamadas, 0 tokens y 0 USD adicionales.** No existen nuevas categorías PASS/SAFE FAILURE/DANGEROUS FAILURE de comprensión del modelo; no confundir regresiones con proveedores simulados con una reevaluación de Luna. La revisión humana independiente anterior sigue pendiente.
+
+Suite ordinaria: **444 pruebas backend, 442 correctas, 2.907 aserciones, dos skips live previstos; 171 frontend**. PostgreSQL 17 temporal sin Internet: **74 pruebas, 73 correctas, 458 aserciones, un skip live**, subconjunto repetido de la suite ordinaria. Sin fallos observados en estas regresiones; no constituye garantía de ausencia de errores en producción.
+
+Medición sintética de diez repeticiones: resumen de cartera **5→1 consultas**, inmueble **6→2**. En PostgreSQL las medias del camino completo frente al resumen ligero fueron **6,928→2,286 ms** y **7,654→2,752 ms**. Son tiempos SQL/proyección locales, no latencia del proveedor o de respuesta completa. [Informe y diagnóstico operativo](assistant-latency.md). No se promete una reducción de segundos sin comparación real autorizada. El nuevo estado de espera tiene pruebas de ciclo de vida, pero falta revisión visual en navegador conectado. No abrir beta automáticamente.
+
 ## Preparación de lanzamiento, sin inferencias (2026-10-04)
 
 No se han ejecutado consultas al proveedor: **0 ejecuciones reales, 0 tokens, 0 USD adicionales**; no existen nuevas clasificaciones PASS/SAFE FAILURE/DANGEROUS FAILURE ni revisión humana independiente en este bloque. Las muestras de calidad de abajo siguen vigentes como evidencia histórica, no deben sumarse a tests técnicos para producir una tasa de precisión.

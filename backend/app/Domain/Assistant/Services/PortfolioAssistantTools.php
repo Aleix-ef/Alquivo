@@ -240,9 +240,7 @@ class PortfolioAssistantTools
 
     private function pendingRentSummary(Portfolio $portfolio, ?int $propertyId = null): array
     {
-        return app(AssistantLeasingQueries::class)->execute($portfolio, 'list_rent_charges', [
-            'property_id' => $propertyId, 'lease_id' => null, 'period' => null, 'status' => 'pending',
-        ])['summary'];
+        return app(AssistantLeasingQueries::class)->pendingRentSummary($portfolio, $propertyId);
     }
 
     private function pending(Portfolio $portfolio, string $kind): array

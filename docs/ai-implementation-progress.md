@@ -1,6 +1,14 @@
 # Alquivo AI — progreso de implementación
 
-Última actualización: 2026-10-04. Documento de reanudación; distingue código implementado, comprobaciones realizadas y tareas pendientes. No representa autorización de lanzamiento.
+Última actualización: 2026-10-05. Documento de reanudación; distingue código implementado, comprobaciones realizadas y tareas pendientes. No representa autorización de lanzamiento.
+
+## Checkpoint de latencia conservadora (2026-10-05)
+
+Eliminada la carga descartada de mensualidades/relaciones al obtener únicamente saldos pendientes o el resumen de un contrato. Reutiliza la misma agregación determinista, sin caché de balances, cambios de cálculos ni de contrato de las tools. En la prueba sintética: 5→1 consultas para cartera y 6→2 para inmueble; PostgreSQL temporal, medias 6,928→2,286 ms y 7,654→2,752 ms respectivamente. **Es una mejora SQL de milisegundos, no una medición de aceleración del chat.**
+
+Añadido `assistant:latency`: informe operativo acotado de métricas existentes, sin conversaciones, argumentos, identidades, escrituras ni llamadas al proveedor. La espera del chat muestra segundos y un aviso neutral; no inventa progreso, no hace polling y no muestra contenido sin validar. Detalles, reproducción y límites en [assistant-latency.md](assistant-latency.md).
+
+Verificación: 442 pruebas backend correctas/2.907 aserciones, dos skips live; 171 frontend; PostgreSQL 17 aislado 73 correctas/458 aserciones y un skip live. El subconjunto PostgreSQL repite casos ordinarios. Build/SEO correctos, sin cambios legales. **0 llamadas, 0 tokens y 0 USD nuevos de IA.** No modifica prompt, schemas, historial, routing, modelos, cuatro rondas, presupuesto, MFA, consentimiento, cifrado, aislamiento, confirmación o idempotencia. Document AI sigue simulada, flags globales y `.env` privado sin cambios. Sin nueva evaluación semántica ni revisión humana independiente; revisión visual de espera pendiente por ausencia de navegador conectado. Los requisitos externos/de apertura anteriores permanecen pendientes.
 
 ## Checkpoint de preparación externa (2026-10-04)
 

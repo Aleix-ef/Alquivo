@@ -15,8 +15,10 @@ use App\Domain\Portfolio\Models\Portfolio;
 use App\Models\User;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use InvalidArgumentException;
 use Tests\TestCase;
 
@@ -155,6 +157,109 @@ class AssistantLeasingToolsTest extends TestCase
         $this->assertSame(1, $this->readTool($f, 'list_leases', ['status' => 'active', 'expires_within_days' => 30])['count']);
         $this->expectException(ModelNotFoundException::class);
         $this->readTool($f, 'get_lease_details', ['lease_id' => $other['lease']->id]);
+    }
+
+    public function test_light_pending_summary_matches_full_results_without_loading_the_sample(): void
+    {
+        $f = $this->fixture();
+        $this->payment($f, '100.10');
+        for ($i = 1; $i <= 24; $i++) {
+            $month = today()->startOfMonth()->subMonths($i);
+            $f['lease']->charges()->create(['portfolio_id' => $f['portfolio']->id, 'period' => $month->format('Y-m'), 'due_date' => $month, 'amount' => '600.00']);
+        }
+        foreach ([null, $f['property']->id] as $propertyId) {
+            [$full, $fullQueries] = $this->measureQueries(fn () => $this->readTool($f, 'list_rent_charges', ['status' => 'pending', 'property_id' => $propertyId]));
+            [$summary, $queries] = $this->measureQueries(fn () => app(AssistantLeasingQueries::class)->pendingRentSummary($f['portfolio'], $propertyId));
+            $this->assertSame($full['summary'], $summary);
+            $this->assertCount($propertyId === null ? 1 : 2, $queries);
+            $this->assertSame(4, count($fullQueries) - count($queries));
+            $this->assertStringNotContainsString('"contacts"', implode(' ', array_column($queries, 'query')));
+            $this->assertSame(25, $summary['count']);
+            $this->assertTrue($full['truncated']);
+            $financial = app(PortfolioAssistantTools::class)->execute($f['portfolio'], 'get_financial_summary', ['property_id' => $propertyId]);
+            $this->assertSame($summary, $financial['rent_charges_pending_all_periods']);
+            if (getenv('ALQUIVO_BENCHMARK_ASSISTANT') === 'YES') {
+                $times = ['full' => [], 'summary' => []];
+                for ($i = 0; $i < 10; $i++) {
+                    [, , $times['full'][]] = $this->measureQueries(fn () => $this->readTool($f, 'list_rent_charges', ['status' => 'pending', 'property_id' => $propertyId]));
+                    [, , $times['summary'][]] = $this->measureQueries(fn () => app(AssistantLeasingQueries::class)->pendingRentSummary($f['portfolio'], $propertyId));
+                }
+                fwrite(STDOUT, "\n".json_encode(['synthetic_query_benchmark' => true, 'driver' => DB::connection()->getDriverName(),
+                    'scope' => $propertyId === null ? 'portfolio' : 'property', 'repetitions' => 10,
+                    'full_queries' => count($fullQueries), 'summary_queries' => count($queries),
+                    'full_mean_ms' => round(array_sum($times['full']) / 10, 3), 'summary_mean_ms' => round(array_sum($times['summary']) / 10, 3)])."\n");
+            }
+        }
+        $overview = app(PortfolioAssistantTools::class)->execute($f['portfolio'], 'get_portfolio_overview', []);
+        $this->assertSame($full['summary'], $overview['rent_charges_pending_all_periods']);
+        Http::assertNothingSent();
+    }
+
+    public function test_light_summary_reads_new_payments_and_deletions_without_caching_balances(): void
+    {
+        $f = $this->fixture();
+        $reads = app(AssistantLeasingQueries::class);
+        $this->assertSame('600.00', $reads->pendingRentSummary($f['portfolio'])['remaining_amount']);
+        $this->payment($f, '100.10');
+        $this->assertSame('499.90', $reads->pendingRentSummary($f['portfolio'])['remaining_amount']);
+        Transaction::where('rent_charge_id', $f['charge']->id)->delete();
+        $this->assertSame('600.00', $reads->pendingRentSummary($f['portfolio'])['remaining_amount']);
+        $this->payment($f, '600.00');
+        $empty = $reads->pendingRentSummary($f['portfolio']);
+        $this->assertSame(0, $empty['count']);
+        $this->assertSame('0.00', $empty['remaining_amount']);
+        $this->assertSame($this->readTool($f, 'list_rent_charges', ['status' => 'pending'])['summary'], $empty);
+    }
+
+    public function test_light_summary_keeps_foreign_and_deleted_properties_and_cancelled_charges_out(): void
+    {
+        $f = $this->fixture();
+        $other = $this->fixture();
+        $reads = app(AssistantLeasingQueries::class);
+        try {
+            $reads->pendingRentSummary($f['portfolio'], $other['property']->id);
+            $this->fail('Foreign property must still be rejected.');
+        } catch (ModelNotFoundException) {
+            $this->assertTrue(true);
+        }
+        try {
+            $reads->pendingRentSummary($f['portfolio'], 0);
+            $this->fail('Invalid property must still be rejected.');
+        } catch (ValidationException) {
+            $this->assertTrue(true);
+        }
+        $f['charge']->update(['status' => 'cancelled']);
+        $this->assertSame(0, $reads->pendingRentSummary($f['portfolio'])['count']);
+        $f['charge']->update(['status' => 'pending']);
+        $f['property']->delete();
+        $this->assertSame(0, $reads->pendingRentSummary($f['portfolio'])['count']);
+        $this->expectException(ModelNotFoundException::class);
+        $reads->pendingRentSummary($f['portfolio'], $f['property']->id);
+    }
+
+    public function test_contract_detail_keeps_participants_but_does_not_load_charge_rows_for_its_summary(): void
+    {
+        $f = $this->fixture();
+        [$detail, $queries] = $this->measureQueries(fn () => $this->readTool($f, 'get_lease_details', ['lease_id' => $f['lease']->id]));
+        $this->assertSame('María López', $detail['lease']['participants'][0]['name']);
+        $this->assertSame('600.00', $detail['rent_summary']['remaining_amount']);
+        $this->assertStringNotContainsString('select "rent_charges".*', strtolower(implode(' ', array_column($queries, 'query'))));
+        $this->assertSame($this->readTool($f, 'list_rent_charges', ['status' => 'all', 'lease_id' => $f['lease']->id])['summary'], $detail['rent_summary']);
+    }
+
+    private function measureQueries(callable $operation): array
+    {
+        DB::flushQueryLog();
+        DB::enableQueryLog();
+        $started = hrtime(true);
+        try {
+            $result = $operation();
+
+            return [$result, DB::getQueryLog(), (hrtime(true) - $started) / 1_000_000];
+        } finally {
+            DB::disableQueryLog();
+            DB::flushQueryLog();
+        }
     }
 
     public function test_foreign_property_and_unknown_arguments_are_rejected(): void

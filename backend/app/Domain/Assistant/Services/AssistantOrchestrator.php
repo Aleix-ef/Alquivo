@@ -189,9 +189,7 @@ class AssistantOrchestrator
         if (! preg_match('/(?:no\\s+(?:hay|tengo|tienes|constan|existen|quedan)\\s+(?:ingresos(?:\\s+ni\\s+gastos)?|cobros|alquileres|mensualidades)\\s+pendientes|todos?\\s+los?\\s+alquileres\\s+est[aá]n\\s+cobrados)/iu', $content)) {
             return null;
         }
-        $summary = app(AssistantLeasingQueries::class)->execute($portfolio, 'list_rent_charges', [
-            'property_id' => null, 'lease_id' => null, 'period' => null, 'status' => 'pending',
-        ])['summary'];
+        $summary = app(AssistantLeasingQueries::class)->pendingRentSummary($portfolio);
         if (bccomp($summary['remaining_amount'], '0.00', 2) <= 0) {
             return null;
         }

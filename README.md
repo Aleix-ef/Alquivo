@@ -1,5 +1,9 @@
 # Alquivo
 
+## Espera y rendimiento del asistente — 5 de octubre de 2026
+
+Optimización conservadora: los resúmenes financieros evitan cargar filas que se descartaban y reutilizan los mismos saldos, sin caché de dinero ni cambios de prompt/modelos/seguridad. El chat muestra tiempo de espera real y un aviso neutral; nuevo diagnóstico interno `assistant:latency`, sin contenido de conversaciones ni gasto de IA. **442 pruebas backend correctas, 2.907 aserciones y dos skips live; 171 frontend correctas**, más un subconjunto PostgreSQL aislado. La mejora SQL medida es de milisegundos: no se promete una aceleración de segundos del modelo. **0 USD adicionales**, sin activar beta. [Detalle, medición y comprobaciones pendientes](docs/assistant-latency.md).
+
 ## Preparación externa de la beta — 4 de octubre de 2026
 
 **Guía actual de ejecución:** [proveedores, buzón, servidor, copias y decisión de IA](docs/beta-launch-guide.md). La landing está pública y el titular confirma Search Console configurado; la aplicación todavía no tiene servidor. No hay que añadir módulos para cerrar este bloque. La plantilla de producción usa `https://app.alquivo.com`, separada de la landing, con pagos/fiscalidad/IA pública apagados y sin claves privadas.

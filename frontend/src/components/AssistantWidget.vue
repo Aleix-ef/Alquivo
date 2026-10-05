@@ -14,6 +14,7 @@ import {
 import { assistantContext } from "../assistantHelp";
 import HelpGuides from "./HelpGuides.vue";
 import { useDialog } from "../composables/useDialog";
+import { useAssistantWait } from "../composables/useAssistantWait";
 
 const open = ref(false);
 const emit = defineEmits(["open-change"]);
@@ -37,6 +38,11 @@ watch(open, (value) => emit("open-change", value));
 const initialized = ref(false);
 const loading = ref(false);
 const sending = ref(false);
+const {
+  elapsedSeconds,
+  slow: slowResponse,
+  label: waitingLabel,
+} = useAssistantWait(sending);
 const available = ref(true);
 const enabled = ref(false);
 const capabilities = ref({
@@ -844,7 +850,16 @@ async function scrollToBottom() {
               </template>
               <div v-if="sending" class="assistant-thinking">
                 <AssistantMascot state="thinking" />
-                <span>Consultando tus datos. Puede tardar unos segundos…</span>
+                <div class="assistant-thinking-copy">
+                  <span role="status">{{ waitingLabel }}</span>
+                  <small v-if="elapsedSeconds >= 3" aria-hidden="true">
+                    {{ elapsedSeconds }} s
+                  </small>
+                  <small v-if="slowResponse">
+                    Puedes cerrar este panel y volver a abrirlo mientras
+                    termina.
+                  </small>
+                </div>
               </div>
             </div>
 

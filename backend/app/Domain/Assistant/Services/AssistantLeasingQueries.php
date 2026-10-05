@@ -64,6 +64,17 @@ final class AssistantLeasingQueries
         };
     }
 
+    /** Same pending balances as list_rent_charges, without hydrating its discarded sample. */
+    public function pendingRentSummary(Portfolio $portfolio, ?int $propertyId = null): array
+    {
+        Validator::make(['property_id' => $propertyId], ['property_id' => ['nullable', 'integer', 'min:1']])->validate();
+        if ($propertyId !== null) {
+            $portfolio->properties()->findOrFail($propertyId, ['id']);
+        }
+
+        return $this->charges($portfolio, ['property_id' => $propertyId, 'status' => 'pending'], summaryOnly: true)['summary'];
+    }
+
     private function contacts(Portfolio $portfolio, array $data): array
     {
         $needle = mb_strtolower(Str::ascii(trim($data['query'])));
@@ -122,7 +133,7 @@ final class AssistantLeasingQueries
         return ['lease' => [...$this->leaseProjection($lease), 'deposit_amount' => $lease->deposit_amount, 'payment_day' => $lease->payment_day,
             'participants' => $lease->participants->take(20)->map(fn ($person) => ['id' => $person->id, 'name' => $person->name, 'role' => $person->pivot->role])->all(),
             'participant_count' => $lease->participants->count(), 'participants_truncated' => $lease->participants->count() > 20],
-            'rent_summary' => $this->charges($portfolio, ['lease_id' => $id, 'status' => 'all'])['summary'],
+            'rent_summary' => $this->charges($portfolio, ['lease_id' => $id, 'status' => 'all'], summaryOnly: true)['summary'],
             'currency' => $portfolio->currency, 'app_path' => '/leases/'.$id];
     }
 
@@ -133,7 +144,7 @@ final class AssistantLeasingQueries
             'end_date' => $lease->end_date?->toDateString(), 'monthly_rent' => $lease->monthly_rent];
     }
 
-    private function charges(Portfolio $portfolio, array $data): array
+    private function charges(Portfolio $portfolio, array $data, bool $summaryOnly = false): array
     {
         if (! empty($data['lease_id'])) {
             $this->leaseQuery($portfolio)->findOrFail($data['lease_id']);
@@ -156,6 +167,11 @@ final class AssistantLeasingQueries
         }
         $totals = DB::query()->fromSub((clone $query)->select(['amount', 'due_date'])->selectSub(clone $paid, 'recorded_paid'), 'matched')
             ->selectRaw('COUNT(*) AS total_count, COALESCE(SUM(amount), 0) AS total_amount, COALESCE(SUM(recorded_paid), 0) AS paid_amount, COALESCE(SUM(CASE WHEN amount > recorded_paid THEN amount - recorded_paid ELSE 0 END), 0) AS remaining_amount, COALESCE(SUM(CASE WHEN amount > recorded_paid AND due_date < ? THEN 1 ELSE 0 END), 0) AS overdue_count', [today()->toDateString()])->first();
+        $summary = ['count' => (int) $totals->total_count, 'overdue_count' => (int) $totals->overdue_count, 'amount' => bcadd((string) $totals->total_amount, '0', 2),
+            'paid_amount' => bcadd((string) $totals->paid_amount, '0', 2), 'remaining_amount' => bcadd((string) $totals->remaining_amount, '0', 2)];
+        if ($summaryOnly) {
+            return ['summary' => $summary];
+        }
         $charges = $query->select('rent_charges.*')->selectSub($paid, 'recorded_paid')
             ->with(['lease.property', 'lease.participants' => fn ($q) => $q->where('contacts.portfolio_id', $portfolio->id)])
             ->orderBy('due_date')->orderBy('id')->limit(20)->get();
@@ -171,8 +187,7 @@ final class AssistantLeasingQueries
                 'paid_amount' => bcadd((string) $charge->recorded_paid, '0', 2), 'remaining_amount' => bccomp($remaining, '0', 2) > 0 ? $remaining : '0.00',
                 'status' => bccomp($remaining, '0', 2) <= 0 ? 'paid' : ($charge->due_date->lt(today()) ? 'overdue' : (bccomp((string) $charge->recorded_paid, '0', 2) > 0 ? 'partial' : 'pending'))];
         })->all(), 'count' => (int) $totals->total_count, 'truncated' => (int) $totals->total_count > 20, 'currency' => $portfolio->currency,
-            'summary' => ['count' => (int) $totals->total_count, 'overdue_count' => (int) $totals->overdue_count, 'amount' => bcadd((string) $totals->total_amount, '0', 2),
-                'paid_amount' => bcadd((string) $totals->paid_amount, '0', 2), 'remaining_amount' => bcadd((string) $totals->remaining_amount, '0', 2)],
+            'summary' => $summary,
             'app_path' => ! empty($data['lease_id']) ? '/leases/'.$data['lease_id'] : '/finance'];
     }
 
