@@ -37,6 +37,13 @@ final class ActionProposalService
         return $this->propose('property_note', $portfolio, $user, $run, $input);
     }
 
+    public function proposeCreation(string $type, Portfolio $portfolio, User $user, AiRun $run, array $input): AiActionProposal
+    {
+        abort_unless(isset(CreationProposalActions::FIELDS[$type]), 422);
+
+        return $this->propose($type, $portfolio, $user, $run, $input);
+    }
+
     private function propose(string $type, Portfolio $portfolio, User $user, AiRun $run, array $input): AiActionProposal
     {
         return DB::transaction(function () use ($type, $portfolio, $user, $run, $input) {

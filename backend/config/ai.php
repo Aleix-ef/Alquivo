@@ -15,6 +15,12 @@ return [
         'complex' => 'gpt-6-sol',
         'exceptional' => 'gpt-6-astra',
     ],
+    // Only the Luna chat route may override its provider default. Compare before enabling.
+    // Null preserves the original request; fallback/document profiles are unaffected.
+    'chat_reasoning_effort' => env('AI_CHAT_REASONING_EFFORT'),
+    // Compose existing authorized resolution and read queries, without another model round.
+    // Retained as a comparison/rollback switch; never bypasses unique-charge evidence.
+    'resolve_property_references' => true,
     'exceptional_enabled' => false,
     // One technical retry only; this is not semantic complexity routing. GPT-6 Astra remains opt-in.
     'fallback_profile' => env('AI_FALLBACK_PROFILE', 'complex'),
@@ -37,6 +43,7 @@ return [
     ],
     'actions' => [
         'enabled' => (bool) env('AI_ACTIONS_ENABLED', true),
+        'creation_enabled' => false, // New writes: local admin preview until independently evaluated.
         'plans' => ['beta', 'founder', 'trial', 'admin'],
         'proposal_ttl_minutes' => 30,
     ],

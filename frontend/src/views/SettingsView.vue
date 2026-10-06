@@ -5,6 +5,7 @@ import { useSession } from "../session";
 import api from "../api";
 import ConfirmDialog from "../components/ConfirmDialog.vue";
 import TwoFactorSettings from "../components/TwoFactorSettings.vue";
+import PasswordInput from "../components/PasswordInput.vue";
 import { useConfirmDialog } from "../composables/useConfirmDialog";
 
 const session = useSession();
@@ -136,9 +137,8 @@ onMounted(async () => {
           v-if="account.email.trim().toLowerCase() !== session.user?.email"
         >
           Confirma tu contraseña para cambiar el correo
-          <input
+          <PasswordInput
             v-model="account.current_password"
-            type="password"
             required
             autocomplete="current-password"
           />
@@ -174,24 +174,21 @@ onMounted(async () => {
           {{ passwordState.success }}
         </p>
         <label
-          >Contraseña actual<input
+          >Contraseña actual<PasswordInput
             v-model="password.current_password"
-            type="password"
             required
             autocomplete="current-password"
         /></label>
         <label
-          >Nueva contraseña<input
+          >Nueva contraseña<PasswordInput
             v-model="password.password"
-            type="password"
             required
             minlength="8"
             autocomplete="new-password"
         /></label>
         <label
-          >Confirmar contraseña<input
+          >Confirmar contraseña<PasswordInput
             v-model="password.password_confirmation"
-            type="password"
             required
             autocomplete="new-password"
         /></label>
@@ -255,9 +252,9 @@ onMounted(async () => {
         </p>
         <p v-if="deletionError" class="error">{{ deletionError }}</p>
         <label
-          >Contraseña actual<input
+          >Contraseña actual<PasswordInput
             v-model="deletion.current_password"
-            type="password"
+            autocomplete="current-password"
             required /></label
         ><label
           >Escribe ELIMINAR<input v-model="deletion.confirmation" required

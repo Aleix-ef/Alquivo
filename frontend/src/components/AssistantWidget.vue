@@ -48,6 +48,7 @@ const enabled = ref(false);
 const capabilities = ref({
   chat: false,
   actions: false,
+  creation_actions: false,
   documents: false,
   intelligence: false,
 });
@@ -166,6 +167,7 @@ async function initialize() {
     capabilities.value = {
       chat: data.capabilities?.chat === true,
       actions: data.capabilities?.actions === true,
+      creation_actions: data.capabilities?.creation_actions === true,
       documents: false,
       intelligence: false,
     };
@@ -668,10 +670,19 @@ async function scrollToBottom() {
                     <p>
                       Si están disponibles las acciones, podrás pedir borradores
                       de gastos y cobros, actualizar teléfonos y añadir notas a
-                      inmuebles. Nada se guarda sin que revises y confirmes la
-                      propuesta. Los teléfonos o notas nuevos que escribas en el
-                      chat sí se enviarán a OpenAI; puedes usar los formularios
-                      de Alquivo si prefieres no compartirlos.
+                      inmuebles. Las altas de inmuebles, contactos y contratos
+                      en borrador están en revisión administrativa. Nada se
+                      guarda sin que revises y confirmes la propuesta. Los datos
+                      nuevos que escribas —incluidos direcciones, correos,
+                      teléfonos o notas— sí se enviarán a OpenAI; puedes usar
+                      los formularios de Alquivo si prefieres no compartirlos.
+                    </p>
+                    <p>
+                      Dentro del mismo chat puede recordarse durante 30 minutos
+                      el inmueble recién consultado. Se conserva sólo una
+                      referencia, no sus saldos ni una confirmación de pago, y
+                      se vuelven a comprobar sus datos en cada pregunta. No se
+                      comparte memoria entre chats o cuentas.
                     </p>
                     <p>
                       Evita escribir DNI, datos bancarios, datos de salud u otra
@@ -709,6 +720,11 @@ async function scrollToBottom() {
                   También puedo preparar gastos y cobros, cambiar un teléfono y
                   añadir una nota a un inmueble. Siempre podrás revisar y editar
                   cada propuesta antes de confirmarla.
+                </p>
+                <p v-if="capabilities.creation_actions">
+                  En esta vista previa también puedo preparar inmuebles,
+                  contactos y contratos en borrador. Se crean sólo al pulsar su
+                  botón; los contratos no activan el alquiler automáticamente.
                 </p>
                 <div class="assistant-suggestions">
                   <button
@@ -793,6 +809,9 @@ async function scrollToBottom() {
                         :key="proposal.id"
                         :proposal-id="proposal.id"
                         :enabled="capabilities.actions && enabled && available"
+                        :creation-enabled="
+                          capabilities.creation_actions && enabled && available
+                        "
                         @navigate="close"
                       />
                       <nav

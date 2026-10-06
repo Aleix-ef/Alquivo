@@ -1,3 +1,12 @@
+import {
+  creationLabels,
+  creationFields,
+  creationProblem,
+  creationPreviewValid,
+  creationPayload,
+  creationResultPath,
+} from "./assistantCreationActions.js";
+
 const uuid =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const proposalStatuses = new Set([
@@ -11,6 +20,7 @@ const proposalTypes = new Set([
   "contact_phone",
   "rent_payment",
   "property_note",
+  ...Object.keys(creationLabels),
 ]);
 const entityId = (value) => Number.isSafeInteger(value) && value > 0;
 const namedEntity = (value) =>
@@ -35,6 +45,7 @@ const validDate = (value) => {
 };
 
 export const actionLabels = {
+  ...creationLabels,
   expense: {
     title: "Propuesta de gasto",
     confirm: "Confirmar gasto",
@@ -136,6 +147,7 @@ export function checkedActionProposal(proposal, expectedId, expectedType) {
     valid &&=
       namedEntity(preview.property) &&
       !actionEditProblem(proposal, { note: preview.note });
+  if (creationLabels[proposal.type]) valid &&= creationPreviewValid(proposal);
   if (!valid)
     throw new Error(
       "Los datos de la propuesta no son válidos. Vuelve a comprobarla.",
@@ -144,6 +156,7 @@ export function checkedActionProposal(proposal, expectedId, expectedType) {
 }
 
 export function actionEditFields(proposal) {
+  if (creationLabels[proposal.type]) return creationFields(proposal);
   const preview = proposal.preview;
   if (proposal.type === "expense") return expenseEditFields(preview);
   if (proposal.type === "contact_phone") return { phone: preview.phone };
@@ -156,6 +169,8 @@ export function actionEditFields(proposal) {
 }
 
 export function actionEditProblem(proposal, fields) {
+  if (creationLabels[proposal.type])
+    return creationProblem(proposal.type, fields);
   if (proposal.type === "expense") return expenseEditProblem(fields);
   if (proposal.type === "contact_phone") {
     const phone = String(fields.phone || "").trim();
@@ -194,6 +209,7 @@ export function actionEditProblem(proposal, fields) {
 }
 
 export function actionRevisionPayload(proposal, fields) {
+  if (creationLabels[proposal.type]) return creationPayload(proposal, fields);
   if (proposal.type === "expense")
     return expenseRevisionPayload(proposal, fields);
   const payload = { revision: proposal.revision };
@@ -213,6 +229,7 @@ export function actionRevisionPayload(proposal, fields) {
 // application routes from canonical, validated target IDs only.
 export function actionResultPath(proposal) {
   if (proposal.status !== "executed") return null;
+  if (creationLabels[proposal.type]) return creationResultPath(proposal);
   if (proposal.type === "expense") return "/finance";
   if (proposal.type === "contact_phone") return "/contacts";
   if (proposal.type === "rent_payment" && entityId(proposal.preview.lease?.id))
@@ -232,13 +249,16 @@ export function actionRefreshEvents(proposal) {
     contact_phone: ["alquivo:contacts-changed"],
     rent_payment: ["alquivo:finance-changed", "alquivo:leases-changed"],
     property_note: ["alquivo:properties-changed"],
+    property_create: ["alquivo:properties-changed"],
+    contact_create: ["alquivo:contacts-changed"],
+    lease_create: ["alquivo:leases-changed", "alquivo:properties-changed"],
   };
   return (events[proposal.type] || []).map((name) => ({
     name,
     detail: {
-      propertyId: proposal.preview.property?.id,
-      contactId: proposal.preview.contact?.id,
-      leaseId: proposal.preview.lease?.id,
+      propertyId: proposal.preview.property?.id ?? proposal.result?.property_id,
+      contactId: proposal.preview.contact?.id ?? proposal.result?.contact_id,
+      leaseId: proposal.preview.lease?.id ?? proposal.result?.lease_id,
     },
   }));
 }

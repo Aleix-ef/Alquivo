@@ -89,6 +89,95 @@ class AssistantLeasingToolsTest extends TestCase
         $this->assertSame($f['property']->id, $r['contacts'][0]['properties'][0]['id']);
     }
 
+    public function test_property_details_supply_authorized_tenant_names_without_private_contact_fields(): void
+    {
+        $f = $this->fixture();
+        $other = $this->fixture();
+        // Deliberately corrupt linkage: even a foreign participant must not be projected.
+        $f['lease']->participants()->attach($other['contact'], ['role' => 'tenant', 'is_primary' => false]);
+        $r = app(PortfolioAssistantTools::class)->execute($f['portfolio'], 'get_property_details', ['property_id' => $f['property']->id]);
+        $this->assertSame([['id' => $f['contact']->id, 'name' => 'María López', 'role' => 'tenant']], $r['property']['leases'][0]['participants']);
+        $this->assertSame($f['lease']->id, $r['property']['leases'][0]['id']);
+        foreach (['private-email', 'private-tax-id', 'private-note', '600111222', 'private-address'] as $secret) {
+            $this->assertStringNotContainsString($secret, json_encode($r));
+        }
+        Http::assertNothingSent();
+    }
+
+    public function test_missing_amount_and_phone_return_domain_questions_without_creating_proposals(): void
+    {
+        $f = $this->fixture();
+        Http::fakeSequence()->push($this->tool('search_properties', ['query' => 'San Nicolás']))
+            ->push($this->tool('propose_expense', ['property_id' => $f['property']->id, 'amount' => null,
+                'category' => 'maintenance', 'description' => 'Fontanero', 'transaction_date' => today()->toDateString(), 'status' => 'pending']))
+            ->push($this->tool('search_contacts', ['query' => 'María López', 'property_id' => null]))
+            ->push($this->tool('propose_contact_phone', ['contact_id' => $f['contact']->id, 'phone' => null]));
+        $r = $this->send($f, 'Apunta el gasto del fontanero en San Nicolás')->assertOk();
+        $this->assertStringContainsString('importe', $r->json('assistant_message.content'));
+        $r = $this->send($f, 'Cambia el móvil de María López')->assertOk();
+        $this->assertStringContainsString('número de teléfono', $r->json('assistant_message.content'));
+        $this->assertDatabaseCount('ai_action_proposals', 0);
+        $this->assertDatabaseCount('transactions', 0);
+        Http::assertSentCount(4);
+    }
+
+    public function test_user_negative_amount_cannot_be_silently_proposed_as_positive_or_recalled_on_a_later_turn(): void
+    {
+        $f = $this->fixture();
+        $expense = ['property_id' => $f['property']->id, 'amount' => '84.00', 'category' => 'other',
+            'description' => 'Gasto', 'transaction_date' => today()->toDateString(), 'status' => 'pending'];
+        $sequence = Http::fakeSequence();
+        for ($i = 0; $i < 5; $i++) {
+            $sequence->push($this->tool('search_properties', ['query' => 'San Nicolás']))
+                ->push($this->tool('propose_expense', $expense));
+        }
+        foreach (['-84 €', '−84 euros', 'menos 84 euros'] as $negative) {
+            $r = $this->send($f, 'Apunta un gasto de '.$negative.' en San Nicolás')->assertOk();
+            $this->assertStringContainsString('negativo', $r->json('assistant_message.content'));
+            $this->assertSame('negative_money', $r->json('assistant_message.metadata.clarification_code'));
+            $this->assertDatabaseCount('ai_action_proposals', 0);
+        }
+        $this->send($f, 'del fontanero')->assertOk()->assertJsonPath('assistant_message.metadata.clarification_code', 'negative_money');
+        $this->assertDatabaseCount('ai_action_proposals', 0);
+        $this->send($f, '84 euros positivos, con fecha '.today()->toDateString())->assertOk()->assertJsonPath('assistant_message.metadata.proposals.0.type', 'expense');
+        $this->assertDatabaseCount('transactions', 0);
+    }
+
+    public function test_zero_pending_balance_of_one_property_is_not_replaced_with_another_propertys_debt(): void
+    {
+        $f = $this->fixture();
+        $empty = $f['portfolio']->properties()->create(['name' => 'Trastero', 'type' => 'storage', 'address_line' => 'Synthetic']);
+        Http::fakeSequence()->push($this->tool('get_financial_summary', ['property_id' => $empty->id,
+            'property_query' => null, 'time_scope' => 'all_time', 'from' => null, 'to' => null]))
+            ->push(['output' => [['type' => 'message', 'content' => [['type' => 'output_text', 'text' => json_encode([
+                'kind' => 'answer', 'basis' => 'portfolio_data', 'content' => 'No hay alquileres pendientes registrados del Trastero.',
+            ])]]]], 'usage' => ['input_tokens' => 20, 'output_tokens' => 5]]);
+        $this->send($f, '¿Hay pendientes del Trastero?')->assertOk()
+            ->assertJsonPath('assistant_message.content', 'No hay alquileres pendientes registrados del Trastero.');
+        $this->assertSame('600.00', app(AssistantLeasingQueries::class)->pendingRentSummary($f['portfolio'])['remaining_amount']);
+    }
+
+    public function test_rent_charge_absence_guard_respects_property_period_and_paid_only_scope(): void
+    {
+        $f = $this->fixture();
+        $empty = $f['portfolio']->properties()->create(['name' => 'Trastero', 'type' => 'storage', 'address_line' => 'Synthetic']);
+        $answer = ['output' => [['type' => 'message', 'content' => [['type' => 'output_text', 'text' => json_encode([
+            'kind' => 'answer', 'basis' => 'portfolio_data', 'content' => 'No hay alquileres pendientes.',
+        ])]]]], 'usage' => ['input_tokens' => 20, 'output_tokens' => 5]];
+        Http::fakeSequence()
+            ->push($this->tool('list_rent_charges', ['property_id' => $empty->id, 'lease_id' => null, 'period' => null, 'status' => 'pending']))->push($answer)
+            ->push($this->tool('list_rent_charges', ['property_id' => $f['property']->id, 'lease_id' => null, 'period' => today()->format('Y-m'), 'status' => 'pending']))->push($answer)
+            ->push($this->tool('list_rent_charges', ['property_id' => $f['property']->id, 'lease_id' => null, 'period' => null, 'status' => 'paid']))->push($answer);
+        $this->send($f, 'Pendientes del Trastero')->assertOk()->assertJsonPath('assistant_message.content', 'No hay alquileres pendientes.');
+        $content = $this->send($f, 'Pendientes de San Nicolás este mes')->assertOk()->json('assistant_message.content');
+        $this->assertStringContainsString('600,00 EUR', $content);
+        $this->assertStringContainsString('del periodo '.today()->format('Y-m'), $content);
+        $this->assertStringNotContainsString('de todos los periodos', $content);
+        $content = $this->send($f, 'Mensualidades pagadas de San Nicolás')->assertOk()->json('assistant_message.content');
+        $this->assertStringContainsString('No he comprobado los saldos', $content);
+        $this->assertStringNotContainsString('600', $content);
+    }
+
     public function test_same_names_require_clarification_and_property_filter_disambiguates(): void
     {
         $f = $this->fixture();
@@ -130,6 +219,8 @@ class AssistantLeasingToolsTest extends TestCase
         $this->assertCount(20, $r['charges']);
         $this->assertTrue($r['truncated']);
         $this->assertSame('14800.00', $r['summary']['remaining_amount']);
+        $this->assertSame('14800.00', $r['lease_balances'][0]['remaining_amount']);
+        $this->assertSame(25, $r['lease_balances'][0]['count']);
         $this->assertSame('María López', $r['charges'][0]['tenants'][0]['name']);
         $this->assertSame(1, $r['charges'][0]['tenant_count']);
         $this->assertSame('María López', app(PortfolioAssistantTools::class)->execute($f['portfolio'], 'get_pending_items', ['kind' => 'rents'])['rents'][0]['tenants'][0]['name']);
@@ -172,7 +263,7 @@ class AssistantLeasingToolsTest extends TestCase
             [$summary, $queries] = $this->measureQueries(fn () => app(AssistantLeasingQueries::class)->pendingRentSummary($f['portfolio'], $propertyId));
             $this->assertSame($full['summary'], $summary);
             $this->assertCount($propertyId === null ? 1 : 2, $queries);
-            $this->assertSame(4, count($fullQueries) - count($queries));
+            $this->assertSame(5, count($fullQueries) - count($queries)); // Additional deterministic per-contract totals.
             $this->assertStringNotContainsString('"contacts"', implode(' ', array_column($queries, 'query')));
             $this->assertSame(25, $summary['count']);
             $this->assertTrue($full['truncated']);

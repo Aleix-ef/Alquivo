@@ -3,6 +3,7 @@
 namespace Tests\Support;
 
 use App\Domain\Assistant\Contracts\AIProviderInterface;
+use App\Domain\Assistant\Services\AICostCalculator;
 use RuntimeException;
 
 /**
@@ -13,7 +14,11 @@ final class ProductionAiBudgetProvider implements AIProviderInterface
 {
     private array $trace = [];
 
+    private array $contracts = [];
+
     private string $caseId = '';
+
+    private bool $budgetExhausted = false;
 
     public function __construct(
         private readonly AIProviderInterface $inner,
@@ -25,6 +30,7 @@ final class ProductionAiBudgetProvider implements AIProviderInterface
     {
         $this->caseId = $id;
         $this->trace = [];
+        $this->contracts = [];
     }
 
     public function trace(): array
@@ -32,9 +38,19 @@ final class ProductionAiBudgetProvider implements AIProviderInterface
         return $this->trace;
     }
 
+    public function contracts(): array
+    {
+        return $this->contracts;
+    }
+
     public function spentNano(): int
     {
         return $this->locked(fn (array $state) => (int) $state['spent_nano']);
+    }
+
+    public function budgetExhausted(): bool
+    {
+        return $this->budgetExhausted;
     }
 
     public function generate(array $request, float $timeout): array
@@ -47,7 +63,8 @@ final class ProductionAiBudgetProvider implements AIProviderInterface
         if (! is_array($rates) || ! isset($rates['input'], $rates['cache_write'], $rates['output'])) {
             throw new RuntimeException('Model pricing unavailable.');
         }
-        if (($request['store'] ?? null) !== false || isset($request['tools'][0]['type']) && $request['tools'][0]['type'] !== 'function') {
+        if (($request['store'] ?? null) !== false || ! is_array($request['tools'] ?? [])
+            || collect($request['tools'] ?? [])->contains(fn ($tool) => ! is_array($tool) || ($tool['type'] ?? null) !== 'function')) {
             throw new RuntimeException('Unsafe provider request.');
         }
         $bytes = strlen(json_encode($request, JSON_THROW_ON_ERROR));
@@ -55,6 +72,7 @@ final class ProductionAiBudgetProvider implements AIProviderInterface
             + (int) ($request['max_output_tokens'] ?? 0) * (int) $rates['output'];
         $this->locked(function (array &$state) use ($reserve): void {
             if ($this->limitNano < $state['spent_nano'] + $reserve) {
+                $this->budgetExhausted = true;
                 throw new RuntimeException('Phase budget exhausted before provider call.');
             }
             $state['spent_nano'] += $reserve;
@@ -62,11 +80,17 @@ final class ProductionAiBudgetProvider implements AIProviderInterface
         }, true);
         fprintf(STDERR, "[Alquivo eval] calls=%d cumulative_reserved_or_spent_usd=%.6f / %.6f\n",
             $this->calls(), $this->spentNano() / 1_000_000_000, $this->limitNano / 1_000_000_000);
+        $this->contracts[] = ['model' => $request['model'],
+            'instructions_sha256' => hash('sha256', (string) ($request['instructions'] ?? '')),
+            'tools_sha256' => hash('sha256', json_encode($request['tools'] ?? [], JSON_THROW_ON_ERROR)),
+            'format_sha256' => hash('sha256', json_encode($request['text'] ?? [], JSON_THROW_ON_ERROR)),
+            'store' => $request['store'], 'max_output_tokens' => $request['max_output_tokens'] ?? null];
 
         $response = $this->inner->generate($request, $timeout);
         $usage = $response['usage'] ?? null;
-        if (is_array($usage) && isset($usage['input_tokens'], $usage['output_tokens'])) {
-            $actual = (int) $usage['input_tokens'] * (int) $rates['input']
+        if (is_array($usage) && app(AICostCalculator::class)->validUsage($usage)) {
+            // Conservative upper bound includes cache-write pricing, not only uncached input.
+            $actual = (int) $usage['input_tokens'] * max((int) $rates['input'], (int) $rates['cache_write'])
                 + (int) $usage['output_tokens'] * (int) $rates['output'];
             $this->locked(function (array &$state) use ($reserve, $actual): void {
                 $state['spent_nano'] += $actual - $reserve;

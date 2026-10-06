@@ -2,7 +2,7 @@
 
 return [
     'enabled' => (bool) env('ASSISTANT_ENABLED', true),
-    'notice_version' => '2026-10-01',
+    'notice_version' => '2026-10-05',
     'retention_days' => 30,
     'max_conversations' => 20,
     'max_messages' => 100,

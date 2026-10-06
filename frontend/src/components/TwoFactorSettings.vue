@@ -1,6 +1,7 @@
 <script setup>
 import { onMounted, ref } from "vue";
 import api from "../api";
+import PasswordInput from "./PasswordInput.vue";
 
 const status = ref(null),
   devices = ref([]),
@@ -169,9 +170,8 @@ onMounted(async () => {
             autenticador.
           </p>
           <label
-            >Contraseña actual<input
+            >Contraseña actual<PasswordInput
               v-model="methodPassword"
-              type="password"
               autocomplete="current-password"
               required
           /></label>
@@ -301,9 +301,8 @@ onMounted(async () => {
           terminar.
         </p>
         <label
-          >Tu contraseña actual<input
+          >Tu contraseña actual<PasswordInput
             v-model="password"
-            type="password"
             autocomplete="current-password"
             required
         /></label>

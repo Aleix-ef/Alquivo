@@ -9,18 +9,14 @@ use App\Domain\Documents\Services\PrivateFileDeletion;
 use App\Domain\Finance\Models\RecurringRule;
 use App\Domain\Finance\Models\Transaction;
 use App\Domain\Leasing\Models\Lease;
-use App\Domain\Portfolio\Models\Portfolio;
-use App\Domain\Portfolio\Services\PlanService;
+use App\Domain\Properties\Actions\CreateProperty;
 use App\Domain\Properties\Models\Property;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\Rule;
 
 class PropertyController extends Controller
 {
-    public function __construct(private readonly PlanService $plans) {}
-
     private function portfolio(Request $request)
     {
         return $request->user()->portfolio();
@@ -33,19 +29,7 @@ class PropertyController extends Controller
 
     public function store(Request $request)
     {
-        $data = $request->validate($this->rules());
-        $property = DB::transaction(function () use ($request, $data) {
-            $portfolio = Portfolio::whereKey($this->portfolio($request)->id)->lockForUpdate()->firstOrFail();
-            $this->plans->assertCanCreateProperty($portfolio);
-            $property = $portfolio->properties()->create($data);
-            if (isset($data['current_value'])) {
-                $property->valuations()->create([
-                    'amount' => $data['current_value'], 'valued_at' => $data['valuation_date'] ?? today(), 'source' => 'owner',
-                ]);
-            }
-
-            return $property;
-        });
+        $property = app(CreateProperty::class)->execute($this->portfolio($request), $request->user(), $request->all());
 
         return response()->json($property, 201);
     }
@@ -104,18 +88,6 @@ class PropertyController extends Controller
 
     private function rules(bool $partial = false): array
     {
-        $required = $partial ? 'sometimes' : 'required';
-
-        return [
-            'name' => [$required, 'string', 'max:120'],
-            'type' => [$required, Rule::in(['housing', 'commercial', 'office', 'garage', 'storage', 'land', 'building', 'other'])],
-            'address_line' => [$required, 'string', 'max:255'],
-            'postal_code' => ['nullable', 'string', 'max:12'], 'city' => ['nullable', 'string', 'max:100'],
-            'province' => ['nullable', 'string', 'max:100'], 'purchase_date' => ['nullable', 'date'],
-            'purchase_price' => ['nullable', 'numeric', 'min:0'], 'acquisition_costs' => ['nullable', 'numeric', 'min:0'],
-            'current_value' => ['nullable', 'numeric', 'min:0'], 'valuation_date' => ['nullable', 'date'],
-            'outstanding_debt' => ['nullable', 'numeric', 'min:0'], 'area' => ['nullable', 'numeric', 'min:0'],
-            'bedrooms' => ['nullable', 'integer', 'min:0'], 'bathrooms' => ['nullable', 'integer', 'min:0'], 'notes' => ['nullable', 'string', 'max:10000'],
-        ];
+        return CreateProperty::rules($partial);
     }
 }

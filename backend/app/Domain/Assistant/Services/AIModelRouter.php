@@ -20,10 +20,15 @@ final class AIModelRouter
         if (! $pricing && ! app()->environment('testing')) {
             throw new RuntimeException('Configura la tarifa del modelo antes de utilizarlo.');
         }
+        $effort = $profile === 'fast' ? config('ai.chat_reasoning_effort') : null;
+        if ($effort !== null && ($model !== 'gpt-6-luna' || ! in_array($effort, ['low', 'medium'], true))) {
+            throw new RuntimeException('Nivel de razonamiento del chat no admitido.');
+        }
 
         return [
             'provider' => 'openai', 'model' => $model, 'profile' => $profile,
             'max_output_tokens' => (int) config('assistant.max_output_tokens'), 'pricing' => $pricing,
+            'reasoning_effort' => $effort,
         ];
     }
 }

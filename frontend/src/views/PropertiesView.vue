@@ -146,8 +146,18 @@ async function save() {
     saving.value = false;
   }
 }
-onMounted(load);
-onBeforeUnmount(() => loadController?.abort());
+function onPropertyCreated() {
+  load();
+  planAccess.load(planAccess.owner);
+}
+onMounted(() => {
+  window.addEventListener("alquivo:properties-changed", onPropertyCreated);
+  load();
+});
+onBeforeUnmount(() => {
+  window.removeEventListener("alquivo:properties-changed", onPropertyCreated);
+  loadController?.abort();
+});
 </script>
 
 <template>

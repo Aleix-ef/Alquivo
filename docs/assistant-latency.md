@@ -2,7 +2,29 @@
 
 Actualizado: 5 de octubre de 2026. Este bloque no incorpora capacidades nuevas ni autoriza la apertura de la beta.
 
-## Qué se ha cambiado
+## Comparación posterior autorizada: reducir rondas, no comprobaciones
+
+Se hicieron 103 ejecuciones exclusivamente sintéticas a través del HTTP/orquestador de Laravel, bajo una envolvente común de 0,20 USD. Se detuvo en **0,196722125 USD reservados/conocidos conservadores**; las reservas de errores técnicos no se liberaron. 222 intentos de proveedor, tokens conocidos 914.426/16.819. No es el coste exacto facturado.
+
+Se descarta el ajuste `low` de Luna: ahorró generación, pero perdió los tres cobros parciales de su muestra. Se mantiene el razonamiento original. La mejora aplicada permite que Laravel resuelva la referencia humana de inmueble y ejecute el resumen financiero o consulta de mensualidades en una misma tool, con los resolvedores/cálculos actuales. No se quitan autorización, unicidad, límites ni confirmación. Cambian solo los schemas de dos lecturas; catálogo y operaciones iguales. No se añade memoria ni se transmiten datos reales de usuarios.
+
+Comparación emparejada de seis casos con tres repeticiones por variante:
+
+| Métrica | Original | Composición elegida |
+| --- | ---: | ---: |
+| Ejecuciones | 18 | 18 |
+| PASS dirigidos | 14 | 18 |
+| Mediana por turno | 5.641,58 ms | 4.648,775 ms |
+| p95 por turno | 12.271,38 ms | 6.992,86 ms |
+| Llamadas al modelo | 49 | 34 |
+
+**−17,6 % de mediana y −30,6 % de llamadas en esta muestra**, sin garantía de un segundo, de todas las preguntas o de cargas de producción. La validación amplia se detuvo en 31/101 ejecuciones por presupuesto, incluyendo un fallo técnico Luna/Sol; no se da por completa. No se alteraron prompt, historial, store, streaming, cuatro rondas, budgets o flags globales. Confirmación e idempotencia siguen cubiertas por tests HTTP simulados. No abrir beta automáticamente.
+
+La [guía de function calling](https://developers.openai.com/api/docs/guides/function-calling) respalda componer funciones siempre consecutivas y resolver en código argumentos conocidos. Su aplicación aquí no cambia la decisión de negocio ni permite al modelo calcular deuda o ejecutar escrituras.
+
+La suite ordinaria final tiene **480 correctas/3.243 aserciones y dos skips live**, más 64 correctas/499 aserciones y un skip en PostgreSQL temporal aislado. Clasificaciones, discrepancias grader/Codex, revisión humana pendiente, límites y artefactos están en [revisión completa de esta comparación](ai-latency-review-20261005.md). Los apartados siguientes documentan **el primer bloque previo, sin inferencias**, cuyos números no son los de esta comparación.
+
+## Primer bloque: qué se cambió antes de la comparación
 
 Los resúmenes financieros y la comprobación de afirmaciones sobre alquileres pendientes llamaban a `list_rent_charges` para quedarse únicamente con `summary`. Esa llamada calculaba los saldos y después cargaba hasta veinte mensualidades, contratos, inmuebles y participantes que se descartaban. Los detalles de un contrato hacían una carga similar para su resumen.
 
@@ -23,7 +45,7 @@ Benchmark sintético de 25 mensualidades, un contrato y un pago parcial: diez re
 
 La mejora elimina trabajo innecesario, pero **no justifica prometer segundos de aceleración**. El efecto observado aquí es de unos pocos milisegundos. Depende del tamaño de cartera, la base de datos y su infraestructura; no extrapolar estos números a cincuenta inmuebles o al servidor de producción.
 
-Los informes sintéticos existentes ofrecen únicamente una referencia histórica: las 47 ejecuciones con código final del 1 de octubre tenían mediana de 4.065,5 ms, p95 de 8.828,61 ms y máximo de 10.987,03 ms; las cinco del 2 de octubre, mediana de 6.553 ms. No son un antes/después de este cambio ni permiten atribuir todo el tiempo a una fase concreta. No se han realizado nuevas inferencias para comparar.
+Los informes sintéticos existentes ofrecen únicamente una referencia histórica: las 47 ejecuciones con código final del 1 de octubre tenían mediana de 4.065,5 ms, p95 de 8.828,61 ms y máximo de 10.987,03 ms; las cinco del 2 de octubre, mediana de 6.553 ms. No son un antes/después de este cambio ni permiten atribuir todo el tiempo a una fase concreta. En este primer bloque no se habían realizado nuevas inferencias para comparar; la comparación posterior está documentada arriba.
 
 Repetir el benchmark sin proveedor, desde `backend/`:
 

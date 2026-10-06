@@ -30,6 +30,8 @@ class AssistantReplyTest extends TestCase
             'ambiguous_property_or_lease' => 'inmueble y contrato',
             'missing_contract_end' => 'fecha de fin', 'missing_valuation' => 'valoración',
             'document_unavailable' => 'No puedo leer', 'missing_contact' => 'No encuentro',
+            'future_income_unavailable' => 'No puedo saber', 'stored_contact_details_unavailable' => 'no teléfonos',
+            'missing_property_reference' => '¿De qué inmueble',
         ] as $code => $expected) {
             $reply = AssistantReply::parse($this->providerOutput(['kind' => 'insufficient_data', 'basis' => 'none', 'content' => $code]), true);
             $this->assertStringContainsString($expected, $reply['content']);
@@ -44,11 +46,26 @@ class AssistantReplyTest extends TestCase
         $this->assertSame(AssistantReply::FALLBACKS['insufficient_data'], $untrusted['content']);
     }
 
+    public function test_disabled_creations_and_chat_confirmation_have_precise_trusted_messages(): void
+    {
+        $output = $this->providerOutput(['kind' => 'read_only', 'basis' => 'none', 'content' => 'creation_unavailable']);
+        $this->assertStringContainsString('en revisión', AssistantReply::parse($output, false, true, false)['content']);
+        $this->assertSame(AssistantReply::FALLBACKS['read_only'], AssistantReply::parse($output, false, true, true)['content']);
+        $output = $this->providerOutput(['kind' => 'read_only', 'basis' => 'none', 'content' => 'confirmation_required']);
+        $this->assertStringContainsString('no la confirma', AssistantReply::parse($output, false, true)['content']);
+    }
+
     public function test_personal_data_answer_without_tool_evidence_is_replaced(): void
     {
         $reply = AssistantReply::parse($this->providerOutput(['kind' => 'answer', 'basis' => 'portfolio_data', 'content' => 'Tu cartera vale un millón.']), false);
         $this->assertSame('insufficient_data', $reply['metadata']['kind']);
         $this->assertStringNotContainsString('millón', $reply['content']);
+    }
+
+    public function test_literal_newlines_in_a_natural_language_answer_are_rendered_as_line_breaks(): void
+    {
+        $reply = AssistantReply::parse($this->providerOutput(['kind' => 'answer', 'basis' => 'portfolio_data', 'content' => 'Ingresos: 300 euros.\\nGastos: 129 euros.']), true);
+        $this->assertSame("Ingresos: 300 euros.\nGastos: 129 euros.", $reply['content']);
     }
 
     public function test_app_help_does_not_require_access_to_portfolio_data(): void

@@ -36,6 +36,16 @@ final class AssistantReply
         'missing_valuation' => 'Ese inmueble no tiene una valoración actual registrada. Puedes revisarlo en Inmuebles.',
         'document_unavailable' => 'No puedo leer el contenido de ese documento desde este chat. Revísalo en Documentos.',
         'missing_contact' => 'No encuentro ese contacto en Personas. Indícame el nombre con el que lo guardaste.',
+        'missing_operation' => '¿Quieres registrar un gasto o añadir una nota? Si es un gasto, dime el importe; si es una nota, dime qué quieres dejar apuntado.',
+        'movement_details_unavailable' => 'Desde este chat puedo consultar fechas, importes y categorías de movimientos pagados, pero no sus conceptos o descripciones. No puedo identificar con seguridad ese gasto por el proveedor. Puedes revisar el detalle en [Finanzas](/finance).',
+        'missing_property_reference' => '¿De qué inmueble hablamos? Indícame su nombre y, si hay varios con el mismo nombre, su ciudad. Si todavía no lo has añadido, sus datos no estarán disponibles en el chat.',
+        'stored_contact_details_unavailable' => 'El chat puede consultar nombres y contratos asociados, pero no teléfonos ni correos guardados. Puedes ver esos datos en [Personas](/contacts). Para cambiar un teléfono, indícame el contacto y el número nuevo.',
+        'future_income_unavailable' => 'No puedo saber cuánto cobrarás exactamente en el futuro. Puedo consultar lo cobrado, las rentas registradas y las mensualidades pendientes, pero no garantizar ingresos ni calcular previsiones desde este chat.',
+    ];
+
+    private const UNAVAILABLE = [
+        'creation_unavailable' => 'Las altas de inmuebles, contactos y contratos con IA todavía están en revisión para esta cuenta. Puedes crearlos en [Inmuebles](/properties), [Personas](/contacts) o [Alquileres](/leases). No he guardado ningún dato.',
+        'confirmation_required' => 'Para guardar una propuesta, revisa su tarjeta y pulsa el botón de confirmación. Un «sí» escrito aquí no la confirma. No he guardado ningún dato.',
     ];
 
     public const FALLBACKS = [
@@ -61,7 +71,12 @@ final class AssistantReply
         ];
     }
 
-    public static function parse(array $output, bool $hasEvidence, bool $canProposeExpenses = false): array
+    public static function clarification(string $code): string
+    {
+        return self::CLARIFICATIONS[$code] ?? throw new \InvalidArgumentException('Código de aclaración no permitido.');
+    }
+
+    public static function parse(array $output, bool $hasEvidence, bool $canProposeExpenses = false, bool $canCreate = false): array
     {
         $parts = collect($output)->where('type', 'message')->flatMap(fn (array $item) => $item['content'] ?? []);
         if ($parts->contains('type', 'refusal')) {
@@ -78,13 +93,18 @@ final class AssistantReply
             throw new RuntimeException('Formato de respuesta no válido.');
         }
         if ($reply['kind'] !== 'answer') {
+            $unavailable = trim($reply['content']);
+            if ($reply['kind'] === 'read_only' && isset(self::UNAVAILABLE[$unavailable])
+                && ($unavailable !== 'creation_unavailable' || ! $canCreate)) {
+                return ['content' => self::UNAVAILABLE[$unavailable], 'metadata' => ['kind' => 'read_only']];
+            }
             if ($reply['kind'] === 'insufficient_data' && isset(self::CLARIFICATIONS[trim($reply['content'])])) {
                 $code = trim($reply['content']);
                 if (in_array($code, ['missing_contract_end', 'missing_valuation', 'missing_contact'], true) && ! $hasEvidence) {
                     return self::fallback('insufficient_data');
                 }
 
-                return ['content' => self::CLARIFICATIONS[$code], 'metadata' => ['kind' => 'insufficient_data']];
+                return ['content' => self::clarification($code), 'metadata' => ['kind' => 'insufficient_data']];
             }
 
             return self::fallback($reply['kind']);
@@ -96,6 +116,9 @@ final class AssistantReply
             $content = self::APP_HELP[trim($reply['content'])] ?? null;
             if (trim($reply['content']) === 'capabilities' && $canProposeExpenses) {
                 $content = 'Puedo consultar tu patrimonio, contratos y mensualidades, localizar contactos y comparar ingresos y gastos. También puedo preparar gastos, cobros de alquiler, cambios de teléfono y notas de inmuebles. Sólo se guardarán cuando revises la propuesta y pulses su botón de confirmación. No ejecuto acciones por mi cuenta, no tengo Internet ni leo el contenido de archivos. Revisa siempre los datos importantes.';
+                if ($canCreate) {
+                    $content .= ' En esta vista previa puedo preparar inmuebles, contactos y contratos en borrador. No activo alquileres ni genero mensualidades al crear esos borradores.';
+                }
             }
 
             return $content === null
@@ -106,7 +129,7 @@ final class AssistantReply
             throw new RuntimeException('Respuesta vacía.');
         }
 
-        return ['content' => trim($reply['content']), 'metadata' => ['kind' => 'answer']];
+        return ['content' => str_replace(['\\r\\n', '\\n'], "\n", trim($reply['content'])), 'metadata' => ['kind' => 'answer']];
     }
 
     private static function fallback(string $kind): array

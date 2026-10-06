@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, watch } from "vue";
+import { ref, computed, onMounted, onBeforeUnmount, watch } from "vue";
 import { KeyRound, Plus } from "@lucide/vue";
 import { useRoute, useRouter } from "vue-router";
 import api from "../api";
@@ -123,7 +123,13 @@ async function endLease(lease) {
       exception.response?.data?.message || "No se pudo finalizar el alquiler.";
   }
 }
-onMounted(load);
+onMounted(() => {
+  window.addEventListener("alquivo:leases-changed", load);
+  load();
+});
+onBeforeUnmount(() =>
+  window.removeEventListener("alquivo:leases-changed", load),
+);
 </script>
 <template>
   <main class="page">

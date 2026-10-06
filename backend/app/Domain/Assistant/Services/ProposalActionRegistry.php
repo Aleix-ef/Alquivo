@@ -34,14 +34,19 @@ final class ProposalActionRegistry
 
     public function supports(string $type): bool
     {
-        return isset(self::FIELDS[$type]);
+        return isset(self::FIELDS[$type]) || isset(CreationProposalActions::FIELDS[$type]);
     }
 
     public function editableFields(string $type): array
     {
         $this->assertSupported($type);
 
-        return array_values(array_diff(self::FIELDS[$type], ['property_id', 'contact_id', 'rent_charge_id']));
+        $locked = ['property_id', 'contact_id', 'rent_charge_id', 'contact_ids'];
+        if ($type === 'lease_create') {
+            $locked[] = 'status';
+        }
+
+        return array_values(array_diff(self::FIELDS[$type] ?? CreationProposalActions::FIELDS[$type], $locked));
     }
 
     public function assertFields(array $input, array $allowed): void
@@ -54,6 +59,9 @@ final class ProposalActionRegistry
     public function validatedData(string $type, Portfolio $portfolio, User $user, array $input): array
     {
         $this->assertSupported($type);
+        if (isset(CreationProposalActions::FIELDS[$type])) {
+            return app(CreationProposalActions::class)->validatedData($type, $portfolio, $user, $input);
+        }
         $this->assertFields($input, self::FIELDS[$type]);
         $rules = match ($type) {
             'expense' => [
@@ -94,6 +102,9 @@ final class ProposalActionRegistry
     public function snapshot(string $type, Portfolio $portfolio, array $payload): array
     {
         $this->assertSupported($type);
+        if (isset(CreationProposalActions::FIELDS[$type])) {
+            return app(CreationProposalActions::class)->snapshot($type, $portfolio, $payload);
+        }
         if ($type === 'contact_phone') {
             $contact = Contact::query()->where('portfolio_id', $portfolio->id)->lockForUpdate()->findOrFail($payload['contact_id']);
 
@@ -123,6 +134,9 @@ final class ProposalActionRegistry
     public function preview(string $type, array $payload, array $snapshot): array
     {
         $this->assertSupported($type);
+        if (isset(CreationProposalActions::FIELDS[$type])) {
+            return app(CreationProposalActions::class)->preview($type, $payload, $snapshot);
+        }
 
         return match ($type) {
             'expense' => [
@@ -154,6 +168,9 @@ final class ProposalActionRegistry
     public function execute(string $type, Portfolio $portfolio, User $user, array $payload): array
     {
         $this->assertSupported($type);
+        if (isset(CreationProposalActions::FIELDS[$type])) {
+            return app(CreationProposalActions::class)->execute($type, $portfolio, $user, $payload);
+        }
         if ($type === 'expense') {
             $transaction = $this->expense->execute($portfolio, $user, $payload);
 

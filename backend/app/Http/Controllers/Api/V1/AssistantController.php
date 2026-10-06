@@ -8,6 +8,7 @@ use App\Domain\Assistant\Models\AiDocumentExtraction;
 use App\Domain\Assistant\Models\AiRun;
 use App\Domain\Assistant\Services\ActionProposalService;
 use App\Domain\Assistant\Services\AiCapabilities;
+use App\Domain\Assistant\Services\AssistantConversationContext;
 use App\Domain\Assistant\Services\AssistantOrchestrator;
 use App\Domain\Assistant\Services\AssistantUsageService;
 use App\Domain\Identity\Services\LegalEvidence;
@@ -139,6 +140,7 @@ class AssistantController extends Controller
         $history = $conversation->messages()->where('created_at', '>=', now()->subDays(config('assistant.retention_days')))->latest('id')->limit((int) config('assistant.history_messages'))->get()->reverse()->values();
         try {
             $answer = $this->assistant->answer($portfolio, $request->user(), $history, $data['property_id'] ?? null, $run);
+            $answer['metadata']['property_reference_id'] = app(AssistantConversationContext::class)->currentProperty($run);
             $request->user()->refresh();
             abort_unless($this->enabled($request) && AiConversation::whereKey($conversation->id)->exists(), 403);
             DB::transaction(function () use ($conversation, $answer, $run) {

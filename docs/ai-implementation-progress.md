@@ -1,6 +1,53 @@
 # Alquivo AI — progreso de implementación
 
-Última actualización: 2026-10-05. Documento de reanudación; distingue código implementado, comprobaciones realizadas y tareas pendientes. No representa autorización de lanzamiento.
+Última actualización: 2026-10-06. Documento de reanudación; distingue código implementado, comprobaciones realizadas y tareas pendientes. No representa autorización de lanzamiento.
+
+## Checkpoint actual: naturalidad y primera entrega beta
+
+379 escenarios/repeticiones sintéticos, 429 turnos y 773 intentos de proveedor; envolvente compartida de 1 USD detenida en **0,92584525 USD conocidos/reservados conservadores**. No liberar reservas ni repetir inferencias por crear la etiqueta beta. Batería intermedia de 167 completada; pasada posterior parcial 120/182. Detalle y discrepancias en [evaluaciones](ai-evaluations.md).
+
+Corregidos: homónimos nuevos tras historial, importes negativos transformados en positivos, confusión de saldo de inmueble con cartera global. Añadidos contratos de proyección/saldos por alquiler y preguntas concretas ante datos ausentes. Negativos y inmueble sin pendientes: 3/3 repeticiones posteriores correctas. No se relajan escritura/confirmación, cifrado, cartera, presupuesto o MFA. Se mantiene Luna y Sol técnico; Document AI simulada. Las altas continúan restringidas, sin cambios de roles ni flags públicos.
+
+Tests técnicos: 512 backend correctos/3.528 aserciones, dos skips live; subconjunto PostgreSQL aislado 96 correctos/803 aserciones, un skip. App local reconstruida y salud 200. El titular solicita conservar esta versión como `v0.1.0-beta.1` y añadir visibilidad de contraseñas; no equivale a publicar la aplicación ni a dar por completos proveedores/textos legales.
+
+Pendientes de IA reales: repetir casos finales de altas/memoria, investigar fallos técnicos del proveedor, mejorar el cobro parcial que no filtró periodo (rechazado sin escritura) y revisión humana independiente. No continuar con coste sin nueva decisión. El comparador de confirmación de nota se corrigió para aceptar mayúscula inicial legítima; no se realizó otra inferencia tras esa corrección. Los checkpoints anteriores describen su fecha, no el estado actual.
+
+## Checkpoint de primera ampliación y memoria breve (2026-10-05)
+
+Autorizado continuar tras la optimización: propuestas cerradas `propose_property`, `propose_contact` y `propose_lease`. Reutilizan `CreateProperty`/`CreateContact`/`CreateLease` y el ciclo común de propuestas. Creación solo por botón/endpoint, revisión editable, permisos/cuotas/snapshots revalidados, recibo idempotente y contratos exclusivamente en borrador sin mensualidades. No hay paridad CRUD completa. **Nuevas altas en preview de administrador local**, `ai.actions.creation_enabled=false` para público.
+
+Referencia breve de inmueble ligada al último turno completado del mismo chat/usuario/cartera, caduca para uso a los 30 minutos. Metadata cifrada, comprobación de existencia/autorización, sin cifras recordadas ni memoria entre chats. Cada dato se consulta de nuevo; la referencia no rompe empates ni acredita resolución de una escritura. Un inmueble propuesto no se recuerda como creado hasta su confirmación separada. `store=false` intacto, sin persistencia conversacional nueva en el proveedor.
+
+**0 llamadas/tokens/USD reales adicionales.** 23 regresiones nuevas/200 aserciones; suite completa **503 correctas/3.443 aserciones y dos skips live**, frontend **183**, build/SEO correctos. Incluye invalidación de contexto antiguo tras un turno fallido/interrumpido. Los tests usan datos/proveedor sintéticos; no son PASS semánticos de Luna. Pendientes PostgreSQL/aplicación local porque Docker Desktop no responde, revisión visual y evaluación real con presupuesto nuevo. No debilitar MFA ni usar cuentas/documentos reales para completarlas.
+
+Aviso de chat y revisión legal `2026-10-05` archivados como borrador; reaceptación solo de IA, sin bloqueo del acceso manual ni consentimientos fabricados. `.env`, flags globales, modelos/routing, cuatro rondas, presupuestos, cifrado y Document AI simulada conservados. [Alcance, pruebas y siguiente evaluación](assistant-expansion.md). No declarar lista ni abrir beta; la evaluación amplia anterior también está incompleta.
+
+## Orden acordado antes de la ampliación (histórico, 2026-10-05)
+
+Primero optimizar y evaluar el chat actual; después ampliar las operaciones disponibles. El propietario autoriza hasta **0,20 USD adicionales en total** para la comparación sintética de latencia de este bloque, con presupuesto persistente compartido entre comparación y validación. No autoriza activar globalmente la beta, cambiar los modelos, quitar validaciones o aumentar las rondas.
+
+**Requisito de la ampliación, implementado técnicamente arriba; evaluación real pendiente:** memoria breve de referencias dentro del mismo chat. Ejemplo: «He cobrado 550 de Piso Centro» → «¿Quiénes son los inquilinos?» debe reutilizar el inmueble recién identificado si es único, autorizado y no existe una referencia posterior incompatible. Ya se envía historial acotado de mensajes; eso no garantiza una resolución fiable de referencias ni sustituye un estado de contexto validado por Laravel.
+
+- Contexto acotado a conversación, usuario y cartera; nunca compartido con otros chats o usuarios. Guardar sólo referencias mínimas validadas, no una copia del patrimonio/documentos.
+- Una coincidencia ambigua o una referencia caducada/eliminada/no autorizada exige aclaración; no elegir por aproximación ni reutilizar indiscriminadamente «el último piso».
+- Volver a consultar inquilinos, saldos y contratos en cada turno. Recordar un inmueble no equivale a recordar cifras como hechos actuales.
+- No dar por cobrado un alquiler porque se escribió en el chat: una propuesta no es una operación confirmada. Conservar la confirmación exclusivamente por endpoint/botón.
+- Para escrituras, volver a verificar resolución, importe, periodo, permisos y estado al preparar/confirmar. La memoria no puede eludir la prueba de resolución ni completar silenciosamente datos ambiguos.
+- Regresiones futuras: seguimiento de inmueble → inquilinos; cambio explícito de inmueble; dos inmuebles homónimos; referencias no resueltas; nuevo chat sin contexto heredado; revocación/eliminación; datos actualizados entre turnos; propuesta pendiente frente a cobro realmente confirmado.
+
+La restricción de no añadir operaciones correspondía al bloque de rendimiento, ya terminado. El primer bloque de ampliación autorizado está descrito arriba; Document AI no se amplía.
+
+## Checkpoint de comparación real y optimización elegida (2026-10-05)
+
+**Terminada la comparación dirigida, no la validación amplia ni la apertura a beta.** Presupuesto máximo compartido 0,20 USD: 103 ejecuciones/222 intentos de proveedor, 914.426 tokens de entrada y 16.819 de salida conocidos. Envolvente persistente consumida/reservada **0,196722125 USD**; incluye dos llamadas fallidas con coste desconocido y se detuvo antes de la siguiente petición. No hay permiso para más inferencias ni para liberar esas reservas. Un único intento Sol fue fallback técnico de Luna; Astra no se utilizó.
+
+Se descarta configurar Luna con `reasoning.effort=low`: los cobros parciales de esa variante fallaron 3/3 de forma segura. Se conserva la solicitud original, sin parámetro de razonamiento cuando `AI_CHAT_REASONING_EFFORT` está sin definir. El override existe para comparaciones controladas, limitado a low/medium en la ruta Luna; no se hereda al fallback o a documentos. Se registra reasoning tokens validado como parte de salida, sin doble facturación ni contenido nuevo de conversaciones.
+
+Optimización elegida: `ToolRegistry` compone la búsqueda autorizada existente con `get_financial_summary`/`list_rent_charges` mediante `property_query` nullable. Evita otra ronda solo para localizar un ID, conserva cálculos e información autorizada y rechaza nombre+ID contradictorios. Varias coincidencias generan aclaración; una búsqueda de mensualidad ambigua invalida evidencia anterior. Los schemas de esas dos tools cambian, pero no sus operaciones ni el catálogo. `ai.resolve_property_references=true` local; puede ponerse false para la comparación/rollback sin modificar flags globales.
+
+Comparación emparejada: variante elegida **18/18 PASS** (tres repeticiones de seis casos), original 14 PASS/4 SAFE FAILURE; mediana **5,64→4,65 s (−17,6 %)**, 49→34 llamadas. No prometer un segundo. Validación amplia: **31/101 ejecuciones**, parada por presupuesto; revisión Codex 27 PASS/4 SAFE FAILURE/0 DANGEROUS FAILURE. En total, incluyendo variantes descartadas, grader 85 PASS/13 SAFE/5 DANGEROUS; Codex 91 PASS/12 SAFE/0 DANGEROUS. Se preservan seis desacuerdos y la revisión humana sigue pendiente. Detalles, fallos técnicos, tools, estabilidad y artefactos: [evaluaciones](ai-evaluations.md) y [revisión de latencia](ai-latency-review-20261005.md).
+
+Regresión ordinaria: **480 pruebas backend correctas/3.243 aserciones, dos skips live**; PostgreSQL temporal sin Internet 64 correctas/499 aserciones y un skip, subconjunto repetido y recurso retirado. No cambia frontend, prompt, historial, cuatro rondas, límites, MFA, consentimiento, cifrado, aislamiento, confirmación ni idempotencia. `.env` privado/flags globales conservados; Document AI simulada. No se ejecutan datos reales de usuarios. No declarar la IA lista para beta por los casos dirigidos; falta completar y revisar la evaluación amplia con presupuesto adicional autorizado y recorrido HTTPS.
 
 ## Checkpoint de latencia conservadora (2026-10-05)
 

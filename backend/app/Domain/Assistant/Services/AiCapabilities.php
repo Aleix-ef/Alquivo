@@ -15,6 +15,7 @@ final class AiCapabilities
         return [
             'chat' => app(ProductFeatures::class)->assistant($user),
             'actions' => $this->allowsActions($portfolio, $user),
+            'creation_actions' => $this->allowsCreations($portfolio, $user),
             'documents' => app(DocumentAiAccess::class)->available($user, $portfolio),
             'intelligence' => false, 'automation' => false,
         ];
@@ -36,5 +37,17 @@ final class AiCapabilities
     public function assertActions(Portfolio $portfolio, User $user): void
     {
         abort_unless($this->allowsActions($portfolio, $user), 403, 'Las acciones del asistente no están disponibles para esta cuenta.');
+    }
+
+    public function allowsCreations(Portfolio $portfolio, User $user): bool
+    {
+        // Unvalidated new writes stay in local admin preview; tests opt in explicitly.
+        return $this->allowsActions($portfolio, $user)
+            && ($user->local_admin || config('ai.actions.creation_enabled', false));
+    }
+
+    public function assertCreations(Portfolio $portfolio, User $user): void
+    {
+        abort_unless($this->allowsCreations($portfolio, $user), 403, 'La creación con IA todavía está en revisión. Utiliza los formularios de Alquivo.');
     }
 }

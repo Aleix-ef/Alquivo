@@ -5,6 +5,7 @@ import { useI18n } from "vue-i18n";
 import { useSession } from "../session";
 import BrandLogo from "../components/BrandLogo.vue";
 import PrivacyNotice from "../components/PrivacyNotice.vue";
+import PasswordInput from "../components/PasswordInput.vue";
 import { legalVersion } from "../content/legal.js";
 import { safeReturnPath } from "../authNavigation";
 import api from "../api";
@@ -246,9 +247,8 @@ async function resendCode() {
               required /></label
           ><label
             >{{ $t("common.password")
-            }}<input
+            }}<PasswordInput
               v-model="form.password"
-              type="password"
               :autocomplete="isRegister ? 'new-password' : 'current-password'"
               :minlength="isRegister ? 8 : undefined"
               required /></label
@@ -259,9 +259,8 @@ async function resendCode() {
             >{{ $t("auth.forgotPassword") }}</RouterLink
           ><label v-if="isRegister"
             >{{ $t("common.confirmPassword")
-            }}<input
+            }}<PasswordInput
               v-model="form.password_confirmation"
-              type="password"
               autocomplete="new-password"
               required /></label
           ><PrivacyNotice v-if="isRegister" />

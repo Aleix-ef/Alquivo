@@ -1,5 +1,25 @@
 # Alquivo
 
+## Primera versión beta — 6 de octubre de 2026
+
+Entrega `v0.1.0-beta.1` en la rama `release/alquivo-beta-validation`. Incluye «Mostrar/Ocultar» con ojo en todos los campos de contraseña y los cambios pendientes del asistente. Es una referencia de código en GitHub, no el despliegue de la aplicación. Los textos legales definitivos, infraestructura y comprobaciones HTTPS se cerrarán después. [Contenido y recuperación de esta versión](docs/beta-0.1.0.md).
+
+La evaluación de naturalidad utilizó **379 escenarios/repeticiones y 773 intentos de proveedor**, con datos exclusivamente sintéticos. Control acumulado **0,92584525 USD conocidos/reservados conservadores**, dentro de 1 USD; no es la factura exacta. Una batería intermedia de 167 escenarios se completó; la pasada posterior quedó en 120 de 182 por errores técnicos y protección de presupuesto. No confundir tests técnicos correctos con validación semántica final completa. [Estado y límites actuales](docs/ai-evaluations.md).
+
+## Primera ampliación de Alquivo AI — 5 de octubre de 2026
+
+Preparadas propuestas de **inmuebles, contactos y contratos en borrador**, con edición y confirmación separada. Reutilizan las validaciones manuales; un borrador no activa alquiler ni emite mensualidades. Las altas nuevas quedan en **revisión del administrador local**, no habilitadas para cuentas públicas.
+
+Añadida referencia breve del inmueble dentro del mismo chat (30 minutos), aislada y revalidada, para continuaciones como «¿y quiénes son sus inquilinos?». Se consulta de nuevo cada dato y nunca se cuenta una propuesta como pago confirmado. Sin memoria entre cuentas ni almacenamiento conversacional nuevo en OpenAI. Aviso/revisión legal `2026-10-05`; reaceptación del asistente, no bloqueo del acceso manual.
+
+**503 pruebas backend correctas/3.443 aserciones, dos skips live; 183 frontend; build/SEO correctos. Cero USD nuevos.** Pendientes PostgreSQL/Docker local, revisión visual y evaluación sintética real antes de abrir estas altas. [Alcance, límites y siguiente validación](docs/assistant-expansion.md).
+
+## Optimización de Alquivo AI — 5 de octubre de 2026
+
+Se mantiene el razonamiento original de Luna: el ajuste más rápido `low` empeoró los cobros parciales y se descartó. La mejora aplicada compone en Laravel la búsqueda autorizada de inmueble con consultas financieras/mensualidades existentes, conservando unicidad y confirmación. En seis casos × tres repeticiones: **18/18 PASS dirigidos; mediana 5,64→4,65 s (−17,6 %), 49→34 llamadas**. No garantiza respuestas de un segundo.
+
+Bloque total: 103 ejecuciones sintéticas/222 intentos de proveedor, **0,196722125 USD reservados/conocidos conservadores (<0,20 USD)**. La validación amplia se detuvo en **31/101**, por presupuesto y tras errores técnicos; no está completa ni autoriza beta. Suite ordinaria de esa optimización: **480 correctas/3.243 aserciones y dos skips live**. No se activan flags globales, no se modifica el entorno privado ni se usan datos reales. [Resultados, discrepancias y pendientes](docs/ai-latency-review-20261005.md). La memoria breve se incorpora en el bloque posterior descrito arriba, sin nuevas inferencias.
+
 ## Importes con céntimos — 5 de octubre de 2026
 
 Corregidos los campos de renta y fianza al crear un alquiler: el navegador exigía enteros porque faltaba `step="0.01"`, aunque la API ya aceptaba decimales. Creación, edición y renovación admiten céntimos; se añade teclado decimal en alquileres, movimientos/cobros y costes de incidencias. Precios, valoraciones, gastos de adquisición, deuda y superficie ya admitían centésimas y quedan cubiertos por regresiones. Días de cobro, dormitorios y baños conservan su validación de enteros. No cambian las validaciones de servidor ni los datos existentes.

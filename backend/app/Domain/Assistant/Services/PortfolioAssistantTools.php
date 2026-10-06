@@ -125,6 +125,7 @@ class PortfolioAssistantTools
             'current_month' => ['from' => now()->startOfMonth()->toDateString(), 'to' => today()->toDateString(), 'recorded_transaction_count' => $transactions->count(), 'income' => $income, 'expenses' => $expenses, 'net' => round($income - $expenses, 2)],
             'current_month_basis' => 'Solo movimientos pagados registrados del mes; no incluye mensualidades pendientes.',
             'rent_charges_pending_all_periods' => $this->pendingRentSummary($portfolio),
+            'rent_charges_pending_scope' => ['property_id' => null, 'period' => null],
             'contracted_monthly_rent' => $monthlyRent,
             'gross_yield_percent' => $value > 0 ? round($monthlyRent * 12 / $value * 100, 2) : null,
             'occupancy_percent' => $properties->count() ? round($occupied / $properties->count() * 100, 1) : null,
@@ -152,7 +153,9 @@ class PortfolioAssistantTools
     private function propertyDetails(Portfolio $portfolio, int $propertyId): array
     {
         $property = Property::query()->where('portfolio_id', $portfolio->id)->whereKey($propertyId)
-            ->with(['leases.participants', 'issues' => fn ($query) => $query->whereNotIn('status', ['resolved', 'cancelled'])])
+            ->with(['leases' => fn ($query) => $query->where('portfolio_id', $portfolio->id)
+                ->with(['participants' => fn ($people) => $people->where('contacts.portfolio_id', $portfolio->id)]),
+                'issues' => fn ($query) => $query->where('portfolio_id', $portfolio->id)->whereNotIn('status', ['resolved', 'cancelled'])])
             ->first();
         if (! $property) {
             return ['found' => false, 'message' => 'No existe ese inmueble en la cartera del usuario.'];
@@ -170,9 +173,12 @@ class PortfolioAssistantTools
                 'outstanding_debt' => (float) $property->outstanding_debt,
                 'area' => $property->area !== null ? (float) $property->area : null,
                 'leases' => $property->leases->map(fn (Lease $lease) => [
+                    'id' => $lease->id,
                     'status' => $lease->status, 'start_date' => $lease->start_date->toDateString(),
                     'end_date' => $lease->end_date?->toDateString(), 'monthly_rent' => (float) $lease->monthly_rent,
                     'tenant_count' => $lease->participants->count(),
+                    'participants' => $lease->participants->take(20)->map(fn ($person) => ['id' => $person->id, 'name' => $person->name, 'role' => $person->pivot->role])->all(),
+                    'participants_truncated' => $lease->participants->count() > 20,
                 ])->all(),
                 'open_issues' => $property->issues->map(fn (Issue $issue) => [
                     'title' => $issue->title, 'status' => $issue->status, 'priority' => $issue->priority,
@@ -232,6 +238,7 @@ class PortfolioAssistantTools
                 'expenses' => (float) $groups->where('direction', 'expense')->whereNotIn('status', ['paid', 'cancelled'])->sum('total_amount'),
             ],
             'rent_charges_pending_all_periods' => $this->pendingRentSummary($portfolio, $propertyId),
+            'rent_charges_pending_scope' => ['property_id' => $propertyId, 'period' => null],
             'income_by_category' => $paid->where('direction', 'income')->groupBy('category')->map(fn ($items) => round((float) $items->sum('total_amount'), 2))->all(),
             'expenses_by_category' => $paid->where('direction', 'expense')->groupBy('category')->map(fn ($items) => round((float) $items->sum('total_amount'), 2))->all(),
             'app_path' => '/finance',

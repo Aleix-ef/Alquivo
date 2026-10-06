@@ -2,6 +2,10 @@
 import { computed, onBeforeUnmount, ref, watch } from "vue";
 import api from "../api";
 import {
+  creationLabels,
+  propertyCreationTypes,
+} from "../assistantCreationActions.js";
+import {
   checkedActionProposal,
   actionLabels,
   actionResultPath,
@@ -15,6 +19,7 @@ import {
 const props = defineProps({
   proposalId: { type: String, required: true },
   enabled: { type: Boolean, default: false },
+  creationEnabled: { type: Boolean, default: false },
 });
 const emit = defineEmits(["executed", "navigate"]);
 const proposal = ref(null),
@@ -37,6 +42,7 @@ const status = computed(() =>
 const canAct = computed(
   () =>
     props.enabled &&
+    (!creationLabels[proposal.value?.type] || props.creationEnabled) &&
     verified.value &&
     status.value === "pending" &&
     !busy.value,
@@ -59,6 +65,10 @@ const pendingMessage = computed(
         "No se ha registrado ningún cobro. Un cobro parcial dejará el resto del recibo pendiente.",
       property_note:
         "No se ha añadido ninguna nota. Se añadirá al final, sin sustituir las notas existentes.",
+      property_create: "No se ha creado el inmueble.",
+      contact_create: "No se ha creado el contacto ni vinculado a un alquiler.",
+      lease_create:
+        "Se creará un borrador, sin activar el alquiler ni emitir mensualidades.",
     })[proposal.value?.type],
 );
 const money = (value) =>
@@ -227,7 +237,16 @@ onBeforeUnmount(() => {
     </header>
     <template v-if="proposal">
       <dl class="assistant-action-summary">
-        <div v-if="proposal.type !== 'contact_phone'">
+        <div
+          v-if="
+            [
+              'expense',
+              'rent_payment',
+              'property_note',
+              'lease_create',
+            ].includes(proposal.type)
+          "
+        >
           <dt>Inmueble</dt>
           <dd>
             {{
@@ -235,6 +254,110 @@ onBeforeUnmount(() => {
             }}
           </dd>
         </div>
+        <template
+          v-if="['property_create', 'contact_create'].includes(proposal.type)"
+        >
+          <div>
+            <dt>Nombre</dt>
+            <dd>{{ proposal.preview.name }}</dd>
+          </div>
+          <div v-if="proposal.type === 'property_create'">
+            <dt>Tipo</dt>
+            <dd>
+              {{
+                propertyCreationTypes.find(
+                  (t) => t.value === proposal.preview.type,
+                )?.label
+              }}
+            </dd>
+          </div>
+          <div v-if="proposal.type === 'contact_create'">
+            <dt>Tipo de contacto</dt>
+            <dd>
+              {{ proposal.preview.kind === "company" ? "Empresa" : "Persona" }}
+            </dd>
+          </div>
+        </template>
+        <template v-if="proposal.type === 'property_create'">
+          <div>
+            <dt>Dirección</dt>
+            <dd>{{ proposal.preview.address_line }}</dd>
+          </div>
+          <div>
+            <dt>Ciudad</dt>
+            <dd>{{ proposal.preview.city || "Sin indicar" }}</dd>
+          </div>
+          <div>
+            <dt>Precio de compra</dt>
+            <dd>
+              {{
+                proposal.preview.purchase_price == null
+                  ? "Sin registrar"
+                  : money(proposal.preview.purchase_price)
+              }}
+            </dd>
+          </div>
+          <div>
+            <dt>Valoración actual</dt>
+            <dd>
+              {{
+                proposal.preview.current_value == null
+                  ? "Sin registrar"
+                  : money(proposal.preview.current_value)
+              }}
+            </dd>
+          </div>
+        </template>
+        <template v-if="proposal.type === 'contact_create'">
+          <div>
+            <dt>Correo</dt>
+            <dd>{{ proposal.preview.email || "Sin indicar" }}</dd>
+          </div>
+          <div>
+            <dt>Teléfono</dt>
+            <dd>{{ proposal.preview.phone || "Sin indicar" }}</dd>
+          </div>
+        </template>
+        <template v-if="proposal.type === 'lease_create'">
+          <div>
+            <dt>Inquilinos</dt>
+            <dd>
+              {{ proposal.preview.contacts.map((c) => c.name).join(", ") }}
+            </dd>
+          </div>
+          <div>
+            <dt>Inicio</dt>
+            <dd>{{ date(proposal.preview.start_date) }}</dd>
+          </div>
+          <div>
+            <dt>Fin</dt>
+            <dd>
+              {{
+                proposal.preview.end_date
+                  ? date(proposal.preview.end_date)
+                  : "Sin fecha final"
+              }}
+            </dd>
+          </div>
+          <div>
+            <dt>Renta mensual</dt>
+            <dd class="assistant-action-amount">
+              {{ money(proposal.preview.monthly_rent) }}
+            </dd>
+          </div>
+          <div>
+            <dt>Fianza</dt>
+            <dd>{{ money(proposal.preview.deposit_amount) }}</dd>
+          </div>
+          <div>
+            <dt>Día de cobro</dt>
+            <dd>{{ proposal.preview.payment_day }}</dd>
+          </div>
+          <div>
+            <dt>Estado</dt>
+            <dd>Borrador · no emite mensualidades</dd>
+          </div>
+        </template>
         <template v-if="proposal.type === 'contact_phone'">
           <div>
             <dt>Contacto</dt>
@@ -316,6 +439,116 @@ onBeforeUnmount(() => {
         class="assistant-action-form"
         @submit.prevent="mutate('revise')"
       >
+        <template
+          v-if="['property_create', 'contact_create'].includes(proposal.type)"
+        >
+          <label
+            >Nombre<input
+              v-model="fields.name"
+              required
+              maxlength="120"
+              :disabled="busy"
+          /></label>
+        </template>
+        <template v-if="proposal.type === 'property_create'">
+          <label
+            >Tipo<select v-model="fields.type" :disabled="busy">
+              <option
+                v-for="type in propertyCreationTypes"
+                :key="type.value"
+                :value="type.value"
+              >
+                {{ type.label }}
+              </option>
+            </select></label
+          >
+          <label
+            >Dirección<input
+              v-model="fields.address_line"
+              required
+              maxlength="255"
+              :disabled="busy"
+          /></label>
+          <label
+            >Ciudad (opcional)<input
+              v-model="fields.city"
+              maxlength="100"
+              :disabled="busy"
+          /></label>
+          <label
+            >Precio de compra (opcional)<input
+              v-model="fields.purchase_price"
+              inputmode="decimal"
+              :disabled="busy"
+          /></label>
+          <label
+            >Valoración actual (opcional)<input
+              v-model="fields.current_value"
+              inputmode="decimal"
+              :disabled="busy"
+          /></label>
+        </template>
+        <template v-if="proposal.type === 'contact_create'">
+          <label
+            >Tipo<select v-model="fields.kind" :disabled="busy">
+              <option value="person">Persona</option>
+              <option value="company">Empresa</option>
+            </select></label
+          >
+          <label
+            >Correo (opcional)<input
+              v-model="fields.email"
+              type="email"
+              maxlength="255"
+              :disabled="busy"
+          /></label>
+          <label
+            >Teléfono (opcional)<input
+              v-model="fields.phone"
+              type="tel"
+              maxlength="30"
+              :disabled="busy"
+          /></label>
+        </template>
+        <template v-if="proposal.type === 'lease_create'">
+          <label
+            >Fecha inicial<input
+              v-model="fields.start_date"
+              type="date"
+              required
+              :disabled="busy"
+          /></label>
+          <label
+            >Fecha final (opcional)<input
+              v-model="fields.end_date"
+              type="date"
+              :disabled="busy"
+          /></label>
+          <label
+            >Renta mensual<input
+              v-model="fields.monthly_rent"
+              inputmode="decimal"
+              required
+              :disabled="busy"
+          /></label>
+          <label
+            >Fianza<input
+              v-model="fields.deposit_amount"
+              inputmode="decimal"
+              required
+              :disabled="busy"
+          /></label>
+          <label
+            >Día de cobro<input
+              v-model="fields.payment_day"
+              type="number"
+              step="1"
+              min="1"
+              max="28"
+              required
+              :disabled="busy"
+          /></label>
+        </template>
         <label v-if="['expense', 'rent_payment'].includes(proposal.type)"
           >Importe ({{ proposal.preview.currency }})<input
             v-model="fields.amount"
@@ -380,7 +613,9 @@ onBeforeUnmount(() => {
           ></textarea
           ><small>{{ fields.note.length }}/2.000 caracteres</small></label
         >
-        <p>
+        <p
+          v-if="!['property_create', 'contact_create'].includes(proposal.type)"
+        >
           El contacto, inmueble o recibo de destino no cambia al editar. Para
           elegir otro, cancela esta propuesta y pide una nueva.
         </p>
@@ -404,7 +639,9 @@ onBeforeUnmount(() => {
             actionLabel.confirm
           }}»; escribir «sí» en el chat no lo confirma.
         </p>
-        <p v-if="!enabled">
+        <p
+          v-if="!enabled || (creationLabels[proposal.type] && !creationEnabled)"
+        >
           Las acciones del asistente no están disponibles en este momento.
         </p>
         <div class="assistant-action-buttons">

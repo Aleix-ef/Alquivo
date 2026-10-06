@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Domain\Leasing\Actions\CreateContact;
 use App\Domain\Leasing\Actions\UpdateContactPhone;
 use App\Domain\Leasing\Models\Contact;
 use App\Domain\Portfolio\Models\Portfolio;
@@ -20,14 +21,7 @@ class ContactController extends Controller
 
     public function store(Request $request)
     {
-        $data = $request->validate([
-            'kind' => ['required', Rule::in(['person', 'company'])],
-            'name' => ['required', 'string', 'max:120'],
-            'tax_id' => ['nullable', 'string', 'max:30'], 'email' => ['nullable', 'email', 'max:255'],
-            'phone' => ['nullable', 'string', 'max:30'], 'notes' => ['nullable', 'string', 'max:10000'],
-        ]);
-
-        return response()->json(Contact::create([...$data, 'portfolio_id' => $request->user()->portfolio()->id]), 201);
+        return response()->json(app(CreateContact::class)->execute($request->user()->portfolio(), $request->user(), $request->all()), 201);
     }
 
     public function update(Request $request, Contact $contact, UpdateContactPhone $updatePhone)

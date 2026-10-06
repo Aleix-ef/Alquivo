@@ -4,6 +4,7 @@ import { useRoute } from "vue-router";
 import { useI18n } from "vue-i18n";
 import api, { csrf } from "../api";
 import BrandLogo from "../components/BrandLogo.vue";
+import PasswordInput from "../components/PasswordInput.vue";
 const { t } = useI18n({ useScope: "global" });
 const route = useRoute(),
   reset = computed(() => route.name === "reset"),
@@ -75,17 +76,15 @@ async function submit() {
               required /></label
           ><label v-if="reset"
             >{{ $t("recovery.newPassword")
-            }}<input
+            }}<PasswordInput
               v-model="form.password"
-              type="password"
               autocomplete="new-password"
               minlength="8"
               required /></label
           ><label v-if="reset"
             >{{ $t("common.confirmPassword")
-            }}<input
+            }}<PasswordInput
               v-model="form.password_confirmation"
-              type="password"
               autocomplete="new-password"
               required /></label
           ><button class="button primary full" :disabled="busy">

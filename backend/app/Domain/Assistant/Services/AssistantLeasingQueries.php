@@ -165,16 +165,27 @@ final class AssistantLeasingQueries
         } else {
             $query->where('status', '!=', 'cancelled');
         }
-        $totals = DB::query()->fromSub((clone $query)->select(['amount', 'due_date'])->selectSub(clone $paid, 'recorded_paid'), 'matched')
-            ->selectRaw('COUNT(*) AS total_count, COALESCE(SUM(amount), 0) AS total_amount, COALESCE(SUM(recorded_paid), 0) AS paid_amount, COALESCE(SUM(CASE WHEN amount > recorded_paid THEN amount - recorded_paid ELSE 0 END), 0) AS remaining_amount, COALESCE(SUM(CASE WHEN amount > recorded_paid AND due_date < ? THEN 1 ELSE 0 END), 0) AS overdue_count', [today()->toDateString()])->first();
-        $summary = ['count' => (int) $totals->total_count, 'overdue_count' => (int) $totals->overdue_count, 'amount' => bcadd((string) $totals->total_amount, '0', 2),
-            'paid_amount' => bcadd((string) $totals->paid_amount, '0', 2), 'remaining_amount' => bcadd((string) $totals->remaining_amount, '0', 2)];
+        $matched = DB::query()->fromSub((clone $query)->select(['lease_id', 'amount', 'due_date'])->selectSub(clone $paid, 'recorded_paid'), 'matched');
+        $aggregate = fn () => (clone $matched)->selectRaw('COUNT(*) AS total_count, COALESCE(SUM(amount), 0) AS total_amount, COALESCE(SUM(recorded_paid), 0) AS paid_amount, COALESCE(SUM(CASE WHEN amount > recorded_paid THEN amount - recorded_paid ELSE 0 END), 0) AS remaining_amount, COALESCE(SUM(CASE WHEN amount > recorded_paid AND due_date < ? THEN 1 ELSE 0 END), 0) AS overdue_count', [today()->toDateString()]);
+        $totals = $aggregate()->first();
+        $summary = $this->balanceProjection($totals);
         if ($summaryOnly) {
             return ['summary' => $summary];
         }
         $charges = $query->select('rent_charges.*')->selectSub($paid, 'recorded_paid')
             ->with(['lease.property', 'lease.participants' => fn ($q) => $q->where('contacts.portfolio_id', $portfolio->id)])
             ->orderBy('due_date')->orderBy('id')->limit(20)->get();
+        // Same recorded-payment source and filters as summary, including rows outside the sample.
+        // Never ask the model to add debts across monthly rows or assign legal liability to a tenant.
+        $byLease = $aggregate()->addSelect('lease_id')->whereIn('lease_id', $charges->pluck('lease_id')->unique())
+            ->groupBy('lease_id')->get()->keyBy('lease_id');
+        $leaseBalances = $charges->unique('lease_id')->map(function ($charge) use ($byLease) {
+            return ['lease_id' => $charge->lease_id,
+                'property' => ['id' => $charge->lease->property_id, 'name' => $charge->lease->property->name],
+                'tenants' => $charge->lease->participants->filter(fn ($person) => $person->pivot->role === 'tenant')
+                    ->take(10)->map(fn ($person) => ['id' => $person->id, 'name' => $person->name])->values()->all(),
+                ...$this->balanceProjection($byLease[$charge->lease_id])];
+        })->values()->all();
 
         return ['charges' => $charges->map(function ($charge) {
             $remaining = bcsub($charge->amount, (string) $charge->recorded_paid, 2);
@@ -188,7 +199,19 @@ final class AssistantLeasingQueries
                 'status' => bccomp($remaining, '0', 2) <= 0 ? 'paid' : ($charge->due_date->lt(today()) ? 'overdue' : (bccomp((string) $charge->recorded_paid, '0', 2) > 0 ? 'partial' : 'pending'))];
         })->all(), 'count' => (int) $totals->total_count, 'truncated' => (int) $totals->total_count > 20, 'currency' => $portfolio->currency,
             'summary' => $summary,
+            'summary_scope' => ['property_id' => $data['property_id'] ?? null, 'lease_id' => $data['lease_id'] ?? null,
+                'period' => $data['period'] ?? null, 'status' => $data['status']],
+            'lease_balances' => $leaseBalances,
+            'lease_balances_basis' => 'Totales deterministas de los contratos presentes en la muestra, sobre TODAS las mensualidades que cumplen los mismos filtros, aunque charges esté truncado. Los nombres indican participantes, no responsabilidad jurídica individual. No sumar mensualidades ni duplicar saldos entre participantes.',
             'app_path' => ! empty($data['lease_id']) ? '/leases/'.$data['lease_id'] : '/finance'];
+    }
+
+    private function balanceProjection(object $totals): array
+    {
+        return ['count' => (int) $totals->total_count, 'overdue_count' => (int) $totals->overdue_count,
+            'amount' => bcadd((string) $totals->total_amount, '0', 2),
+            'paid_amount' => bcadd((string) $totals->paid_amount, '0', 2),
+            'remaining_amount' => bcadd((string) $totals->remaining_amount, '0', 2)];
     }
 
     private function definition(string $name, string $description, array $properties): array

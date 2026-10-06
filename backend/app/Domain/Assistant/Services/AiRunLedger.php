@@ -58,7 +58,8 @@ final class AiRunLedger
             return $run->steps()->create([
                 'kind' => 'provider', 'status' => 'started', 'provider' => $route['provider'], 'model' => $route['model'],
                 'pricing_version' => config('ai.pricing_version'), 'reserved_cost_nano_usd' => $reserve,
-                'metadata' => ['profile' => $route['profile'], 'rates' => $route['pricing']],
+                'metadata' => ['profile' => $route['profile'], 'rates' => $route['pricing'],
+                    'reasoning_effort' => $route['reasoning_effort'] ?? null],
             ]);
         });
     }
@@ -69,7 +70,10 @@ final class AiRunLedger
         $calculator = app(AICostCalculator::class);
         $knownUsage = is_array($response['usage'] ?? null) && $calculator->validUsage($response['usage']);
         $cost = $calculator->atRates($knownUsage ? $response['usage'] : [], $step->metadata['rates'] ?? null, $step->pricing_version);
-        DB::transaction(function () use ($step, $response, $latency, $portfolio, $user, $knownUsage, $cost) {
+        $reasoningTokens = data_get($response, 'usage.output_tokens_details.reasoning_tokens');
+        $reasoningTokens = $knownUsage && is_int($reasoningTokens) && $reasoningTokens >= 0
+            && $reasoningTokens <= $cost['output_tokens'] ? $reasoningTokens : null;
+        DB::transaction(function () use ($step, $response, $latency, $portfolio, $user, $knownUsage, $cost, $reasoningTokens) {
             $month = AiRun::findOrFail($step->run_id)->billing_month->toDateString();
             $global = $this->lockGlobal($month);
             Portfolio::whereKey($portfolio->id)->lockForUpdate()->firstOrFail();
@@ -87,7 +91,8 @@ final class AiRunLedger
                 'cached_input_tokens' => $cost['cached_input_tokens'], 'cache_write_tokens' => $cost['cache_write_tokens'],
                 'estimated_cost_nano_usd' => $settled ? $cost['estimated_cost_nano_usd'] : null,
                 'latency_ms' => $latency,
-                'metadata' => [...$step->metadata, 'reported_model' => $response['model'] ?? $step->model, 'usage_known' => $knownUsage],
+                'metadata' => [...$step->metadata, 'reported_model' => $response['model'] ?? $step->model,
+                    'usage_known' => $knownUsage, 'reasoning_tokens' => $reasoningTokens],
             ]);
             $run->update([
                 'input_tokens' => $run->input_tokens + $cost['input_tokens'],
