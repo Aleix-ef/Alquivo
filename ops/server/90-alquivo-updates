@@ -1,0 +1,4 @@
+// Keep Ubuntu's security-origin policy; do not add third-party origins here.
+APT::Periodic::Update-Package-Lists "1";
+APT::Periodic::Unattended-Upgrade "1";
+Unattended-Upgrade::Automatic-Reboot "false";

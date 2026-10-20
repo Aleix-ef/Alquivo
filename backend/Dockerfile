@@ -9,7 +9,7 @@ RUN mkdir -p bootstrap/cache storage/framework/cache/data storage/framework/sess
 
 FROM php:8.3-fpm-alpine
 RUN apk add --no-cache icu-dev libpq-dev libzip-dev poppler-utils util-linux \
-    && docker-php-ext-install bcmath intl opcache pcntl pdo_pgsql zip
+    && docker-php-ext-install -j2 bcmath intl opcache pcntl pdo_pgsql zip
 WORKDIR /app
 COPY --from=vendor /app /app
 COPY docker/uploads.ini /usr/local/etc/php/conf.d/99-uploads.ini

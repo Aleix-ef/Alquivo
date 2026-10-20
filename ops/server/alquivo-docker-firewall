@@ -1,0 +1,66 @@
+#!/usr/bin/env bash
+# Initial single-VPS validation: HTTP for ACME, HTTPS for one tester IPv4 only.
+# Install as root; Docker must require the companion systemd service at boot.
+set -Eeuo pipefail
+[[ $EUID -eq 0 ]] || { printf 'Run as root.\n' >&2; exit 1; }
+: "${ALQUIVO_PUBLIC_INTERFACE:?Set the actual public interface}"
+: "${ALQUIVO_TEST_IPV4:?Set the tester IPv4 (without CIDR)}"
+: "${ALQUIVO_PROXY_IPV4:?Set the fixed Compose proxy IPv4}"
+[[ $ALQUIVO_PUBLIC_INTERFACE =~ ^[a-zA-Z0-9_.:-]{1,15}$ ]] || exit 1
+ip link show dev "$ALQUIVO_PUBLIC_INTERFACE" >/dev/null
+validate_ipv4() {
+    local value=$1 octet
+    local -a octets
+    [[ $value =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]] || return 1
+    IFS=. read -r -a octets <<< "$value"
+    for octet in "${octets[@]}"; do
+        (( 10#$octet <= 255 )) || return 1
+    done
+}
+validate_ipv4 "$ALQUIVO_TEST_IPV4"
+validate_ipv4 "$ALQUIVO_PROXY_IPV4"
+[[ $ALQUIVO_TEST_IPV4 != 0.0.0.0 ]] || exit 1
+
+# Change only our own chain, atomically per address family. Never flush Docker,
+# UFW, the global ruleset or another application's rules.
+for table in iptables ip6tables; do
+    if ! "$table" -w 5 -n -L DOCKER-USER >/dev/null 2>&1; then
+        "$table" -w 5 -N DOCKER-USER
+    fi
+done
+
+iptables-restore --wait 5 --noflush <<RULES
+*filter
+:ALQUIVO-INGRESS - [0:0]
+-F ALQUIVO-INGRESS
+-A ALQUIVO-INGRESS -m conntrack --ctstate ESTABLISHED,RELATED -j RETURN
+-A ALQUIVO-INGRESS -i $ALQUIVO_PUBLIC_INTERFACE -d $ALQUIVO_PROXY_IPV4/32 -p tcp --dport 80 -m conntrack --ctstate DNAT --ctorigdstport 80 -j RETURN
+-A ALQUIVO-INGRESS -i $ALQUIVO_PUBLIC_INTERFACE -s $ALQUIVO_TEST_IPV4/32 -d $ALQUIVO_PROXY_IPV4/32 -p tcp --dport 443 -m conntrack --ctstate DNAT --ctorigdstport 443 -j RETURN
+-A ALQUIVO-INGRESS -i $ALQUIVO_PUBLIC_INTERFACE -j DROP
+-A ALQUIVO-INGRESS -j RETURN
+COMMIT
+RULES
+
+# No public IPv6 application access during validation (and no DNS AAAA).
+# Replies to connections initiated by containers must remain possible.
+ip6tables-restore --wait 5 --noflush <<RULES
+*filter
+:ALQUIVO-INGRESS - [0:0]
+-F ALQUIVO-INGRESS
+-A ALQUIVO-INGRESS -m conntrack --ctstate ESTABLISHED,RELATED -j RETURN
+-A ALQUIVO-INGRESS -i $ALQUIVO_PUBLIC_INTERFACE -j DROP
+-A ALQUIVO-INGRESS -j RETURN
+COMMIT
+RULES
+
+for table in iptables ip6tables; do
+    if ! "$table" -w 5 -C DOCKER-USER -j ALQUIVO-INGRESS 2>/dev/null; then
+        "$table" -w 5 -I DOCKER-USER 1 -j ALQUIVO-INGRESS
+    fi
+    # Also install the jump before dockerd starts on a new boot. Docker uses
+    # the same DOCKER-USER chain; its startup must not precede this protection.
+    if ! "$table" -w 5 -C FORWARD -j DOCKER-USER 2>/dev/null; then
+        "$table" -w 5 -I FORWARD 1 -j DOCKER-USER
+    fi
+done
+printf 'Docker ingress validation policy applied (IPv4 and IPv6).\n'

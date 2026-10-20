@@ -1,0 +1,15 @@
+[Unit]
+Description=Alquivo restricted Docker ingress for deployment validation
+Wants=network-online.target
+After=network-online.target ufw.service
+Before=docker.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+EnvironmentFile=/etc/alquivo/network.env
+ExecStart=/usr/local/sbin/alquivo-docker-firewall
+ExecReload=/usr/local/sbin/alquivo-docker-firewall
+
+[Install]
+WantedBy=multi-user.target
