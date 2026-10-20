@@ -20,6 +20,27 @@ contenedor se eliminó automáticamente. Cero contenedores de aplicación. No se
 modificaron DNS, correo, landing, secretos de desarrollo ni flags públicos de IA.
 Estos resultados son del host vacío, no una validación del despliegue de Alquivo.
 
+## Empaquetado de versiones
+
+Para copiar una versión desde Git sin archivos privados, usar
+`git -c tar.umask=022 archive --format=tar COMMIT` y extraerla en su directorio de
+release con `tar --extract --preserve-permissions --no-same-owner`. Mantener el
+directorio exterior en 750 y el archivo de entorno compartido en 600. Una
+extracción con máscara 027 sin preservar permisos deja código 640/directorios
+750; al copiarlo como root a una imagen, el usuario no privilegiado del runtime
+ya no puede leerlo. No resolverlo ejecutando PHP como root ni con permisos 777.
+Antes de inicializar comprobar que ese usuario puede leer `artisan`,
+`public/index.php` y `vendor/autoload.php`, y no puede escribir el código.
+
+Al ejecutar comandos Compose `run` desde un script enviado por la entrada de
+SSH, añadir `-T` y redirigir su entrada desde `/dev/null`. De lo contrario, el
+contenedor puede consumir el resto del script y dejar pasos sin ejecutar. Exigir
+éxito explícito del control de producción, migraciones y verificación del vault.
+
+El Caddyfile usa HTTP-01 para emitir/renovar el certificado sin abrir HTTPS al
+público durante la prueba. No desactivar la validación TLS ni usar certificado
+autofirmado para simular una comprobación de HTTPS de producción.
+
 ## Orden de preparación
 
 1. Confirmar identidad/huella del servidor y acceso de recuperación en OVHcloud.

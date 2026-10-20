@@ -4,6 +4,13 @@
 }
 
 {$PUBLIC_DOMAIN} {
+    # HTTP-01 allows certificate issuance while HTTPS stays IP-restricted.
+    # Keep port 80 available for automatic renewals; it redirects other traffic.
+    tls {
+        issuer acme {
+            disable_tlsalpn_challenge
+        }
+    }
     encode zstd gzip
     header Strict-Transport-Security "max-age=31536000"
     request_body {
