@@ -3,6 +3,13 @@ import assert from "node:assert/strict";
 import { seoSettings, pageSeo, publicPages, renderHead } from "../src/seo.js";
 import { guides } from "../src/content/guides.js";
 
+test("the app home shares the concise public brand title", () => {
+  assert.equal(
+    pageSeo("/", { origin: "https://alquivo.com", indexable: true }).title,
+    "Alquivo | Tus alquileres en orden",
+  );
+});
+
 test("SEO is opt-in and refuses local, placeholder or unsafe canonical origins", () => {
   assert.deepEqual(seoSettings(), { origin: "", indexable: false });
   assert.throws(() => seoSettings({ VITE_SEO_INDEXABLE: "true" }));

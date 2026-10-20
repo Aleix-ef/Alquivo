@@ -2,6 +2,20 @@
 
 Actualizado el 3 de octubre de 2026. Esta guía **sustituye la anterior con Tally y ZIP**.
 
+## Revisión de captación del 20 de octubre de 2026
+
+Preparada en el código, todavía sin publicación confirmada. El título de portada, Open Graph y Twitter pasa a **«Alquivo | Tus alquileres en orden»**, sin la coletilla de IA. La promesa visible es **«Tus alquileres, en orden. Tus números, claros.»**: cobros, pendientes y gastos concretos, no una promesa genérica de resolver cualquier duda.
+
+El recorrido de la landing independiente queda en: presentación → formulario temprano → ejemplo ilustrativo de IA → tres beneficios → condiciones de la beta → preguntas frecuentes → cierre. Se eliminan del HTML de la landing los bloques duplicados de proceso, tranquilidad y descripción extensa, sin eliminarlos de la portada de la aplicación. Los botones de captación pasan a «Apuntarme a la beta»; los enlaces de retorno desde páginas legales conservan «Avísame cuando abra», sin reescribir sus fuentes ya archivadas.
+
+El titular ha confirmado que `brand/alquivo-logo-redes.png` es el logo de Instagram. Se conserva el mismo nombre vectorial completo, en blanco en la cabecera y el pie de la landing; no se usa la imagen cuadrada como logo de cabecera ni se cambia globalmente la identidad de la app. Se reduce la ornamentación de las vistas previas, se mantiene el tema oscuro y se refuerza el contraste de la maqueta de escritorio. Los tamaños legibles y el formulario accesible se mantienen en móvil.
+
+No se crean cuentas ni accesos inmediatos; no se publica fecha de apertura, precio futuro, escasez ficticia o testimonios no verificados. La beta conserva 50 inmuebles, 5 GB y límites de IA. No cambian el consentimiento, el contrato del servidor, D1, Turnstile, conservación, pagos ni activación global de IA. No se incorpora seguimiento de conversiones: la efectividad comercial del nuevo texto requiere validación con interesados reales, no se garantiza por este cambio.
+
+El cambio del título necesita despliegue y posterior rastreo de Google; no modifica por sí solo un resultado ya indexado. La vista previa local mantiene `noindex` y el envío desactivado.
+
+Comprobación local de esta revisión: 193 pruebas de frontend aprobadas, incluidas 109 de la landing (guardado y recorrido HTTP sintéticos, Turnstile simulado); compilación de vista previa de las cuatro páginas independientes; compilación ordinaria de la app y verificación SEO de sus diez páginas; formato y archivo legal comprobados. Sin llamadas a OpenAI, envío de correos ni consulta/escritura de solicitudes reales. No hay un navegador conectado para verificar visualmente la composición móvil/escritorio: esa revisión y la publicación en Pages siguen pendientes. El logo confirmado reutiliza el recurso existente, con las mismas letras que la exportación de redes.
+
 ## Estado y coste
 
 Implementado: formulario nativo con el diseño de Alquivo; email obligatorio, nombre y rango de inmuebles opcionales; consentimiento específico sin premarcar; confirmación en la misma página solo cuando el servidor confirma el guardado. Sin cuentas, pagos, documentos, anuncios, tracking ni acceso inmediato a la beta.

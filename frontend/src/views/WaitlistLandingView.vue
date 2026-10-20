@@ -1,5 +1,6 @@
 <script setup>
 import MarketingView from "./MarketingView.vue";
+import { ArrowRight, Check } from "@lucide/vue";
 import { legalOperator } from "../content/legalOperator.js";
 import {
   waitlistConsent,
@@ -15,28 +16,33 @@ defineProps({ settings: { type: Object, required: true } });
     <template #signup>
       <section class="waitlist-section" aria-labelledby="waitlist-form-title">
         <div class="waitlist-intro">
-          <p class="marketing-eyebrow">Sé de los primeros en probar Alquivo</p>
+          <p class="marketing-eyebrow">
+            Para quien lleva sus propios alquileres
+          </p>
           <h2 id="waitlist-title">
-            Menos Excel.<br />Más control de tus alquileres.
+            Menos tiempo buscando.<br />Más control de tus inmuebles.
           </h2>
           <p>
-            Deja tu email y te avisaremos cuando puedas entrar en la beta
-            gratuita.
+            Si hoy repartes cobros, gastos y contratos entre hojas de cálculo,
+            carpetas y mensajes, Alquivo está pensado para ti.
           </p>
           <ul>
-            <li>Hasta 50 inmuebles y 5 GB de documentos y fotos.</li>
-            <li>Gestión de alquileres y ayuda de Alquivo AI.</li>
-            <li>Sin tarjeta ni compromiso de compra.</li>
+            <li>Revisa tus alquileres desde un mismo lugar.</li>
+            <li>Consulta tus registros con ayuda de Alquivo AI.</li>
+            <li>Cuéntanos qué mejorarías durante la beta.</li>
           </ul>
           <p class="waitlist-note">
-            Es una versión en pruebas: queremos escuchar qué te ayuda y qué
-            debemos mejorar.
+            Estamos preparando una primera versión. Tu experiencia nos ayudará a
+            decidir qué mejorar.
           </p>
         </div>
         <div id="solicitud" class="waitlist-card" tabindex="-1">
-          <h2 id="waitlist-form-title">Te avisamos cuando abra</h2>
+          <p class="waitlist-form-eyebrow">
+            Próxima beta · Gratis y sin tarjeta
+          </p>
+          <h2 id="waitlist-form-title">Recibe tu invitación</h2>
           <p>
-            Deja tu correo para recibir la invitación a la beta gratuita.
+            Déjanos tu correo y te avisaremos cuando puedas probar Alquivo.
             Apuntarte no crea una cuenta ni da acceso inmediato.
           </p>
           <form
@@ -144,7 +150,7 @@ defineProps({ settings: { type: Object, required: true } });
                 type="submit"
                 :disabled="settings.preview"
               >
-                Avísame cuando abra
+                Apuntarme a la beta
               </button>
               <p id="waitlist-form-note" class="waitlist-form-note">
                 {{
@@ -193,15 +199,67 @@ defineProps({ settings: { type: Object, required: true } });
         </div>
       </section>
     </template>
+    <template #beta>
+      <section
+        id="planes"
+        class="plans-section waitlist-beta"
+        aria-labelledby="waitlist-beta-title"
+      >
+        <div class="waitlist-beta-heading">
+          <p class="marketing-eyebrow">Una beta, sin compromiso de compra</p>
+          <h2 id="waitlist-beta-title">
+            Gratis para probarla.<br />Tú decides después.
+          </h2>
+          <p>
+            Usa las funciones disponibles al abrir la beta y dinos qué te ayuda.
+            Es una versión en pruebas: habrá cosas que mejorar.
+          </p>
+          <a class="button button-large" href="/#solicitud">
+            Apuntarme a la beta <ArrowRight :size="18" aria-hidden="true" />
+          </a>
+        </div>
+        <div class="waitlist-beta-details">
+          <dl class="waitlist-beta-limits">
+            <div>
+              <dt>Inmuebles</dt>
+              <dd>Hasta 50 inmuebles</dd>
+            </div>
+            <div>
+              <dt>Almacenamiento</dt>
+              <dd>5 GB de documentos y fotos</dd>
+            </div>
+          </dl>
+          <ul>
+            <li>
+              <Check :size="18" aria-hidden="true" />Sin tarjeta ni cobros
+              durante la beta.
+            </li>
+            <li>
+              <Check :size="18" aria-hidden="true" />Consulta y exportación de
+              tus datos registrados.
+            </li>
+            <li>
+              <Check :size="18" aria-hidden="true" />Te avisaremos antes de que
+              termine. Sin cobros automáticos.
+            </li>
+          </ul>
+          <p class="waitlist-beta-note">
+            La IA tendrá límites de uso. Apuntarte no da acceso inmediato.
+          </p>
+        </div>
+      </section>
+    </template>
     <template #closing>
       <section
         class="waitlist-closing"
         aria-labelledby="waitlist-closing-title"
       >
-        <h2 id="waitlist-closing-title">¿Quieres probar Alquivo?</h2>
-        <p>La beta será gratuita. Te avisamos cuando puedas entrar.</p>
+        <h2 id="waitlist-closing-title">Pon tus alquileres en orden.</h2>
+        <p>
+          Apúntate a la beta gratuita. Te escribiremos cuando puedas entrar.
+        </p>
         <a class="button button-large" href="/#solicitud"
-          >Avísame cuando abra</a
+          >Apuntarme a la beta</a
         >
       </section>
     </template>
@@ -218,7 +276,7 @@ defineProps({ settings: { type: Object, required: true } });
     href="/#solicitud"
     hidden
   >
-    Avísame cuando abra
+    Apuntarme a la beta
   </a>
   <a
     class="waitlist-support"

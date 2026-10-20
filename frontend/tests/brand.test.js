@@ -121,6 +121,15 @@ test("the shared artwork is font-independent, local and passive", async () => {
     "utf8",
   );
   assert.equal(exported, source, "social/app wordmarks share the same source");
+  const social = await readFile(
+    file("../../brand/alquivo-logo-redes.svg"),
+    "utf8",
+  );
+  const wordmark = source.match(/<g id="wordmark"[\s\S]*<\/g>/)?.[0];
+  assert.ok(
+    wordmark && social.includes(wordmark),
+    "Instagram and the landing retain identical letter shapes",
+  );
 });
 
 test("social and browser PNGs have the expected dimensions and valid signatures", async () => {

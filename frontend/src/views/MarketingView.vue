@@ -90,10 +90,12 @@ onMounted(async () => {
   >
     <header class="marketing-header">
       <RouterLink class="marketing-logo" to="/" aria-label="Alquivo, inicio">
-        <BrandLogo />
+        <BrandLogo :light="waitlistMode" />
       </RouterLink>
       <nav :aria-label="$t('marketing.mainNav')">
-        <a href="#como-funciona">{{ $t("marketing.how") }}</a>
+        <a v-if="!waitlistMode" href="#como-funciona">{{
+          $t("marketing.how")
+        }}</a>
         <a href="#asistente">{{ $t("marketing.assistant") }}</a>
         <a href="#funciones">{{ $t("marketing.features") }}</a>
         <a href="#planes">{{ $t("marketing.plans") }}</a>
@@ -123,12 +125,14 @@ onMounted(async () => {
               ? $t("marketing.freeBeta")
               : $t("marketing.freePlan")
           }}
-          ·
-          {{
-            product.features.assistant
-              ? $t("marketing.assistantAvailable")
-              : $t("marketing.assistantSoon")
-          }}
+          <template v-if="!waitlistMode">
+            ·
+            {{
+              product.features.assistant
+                ? $t("marketing.assistantAvailable")
+                : $t("marketing.assistantSoon")
+            }}
+          </template>
         </p>
         <h1>
           {{ $t("marketing.heroFirst") }}
@@ -305,7 +309,11 @@ onMounted(async () => {
       </div>
     </section>
 
-    <section id="como-funciona" class="simple-section process-section">
+    <section
+      v-if="!waitlistMode"
+      id="como-funciona"
+      class="simple-section process-section"
+    >
       <div class="section-heading">
         <p class="marketing-eyebrow">
           {{ $t("marketing.lessSpreadsheets") }}
@@ -346,7 +354,10 @@ onMounted(async () => {
         <h2>{{ $t("marketing.madeForInvestors") }}</h2>
       </div>
       <div class="feature-grid">
-        <article class="feature-card feature-card-large waitlist-extra-feature">
+        <article
+          v-if="!waitlistMode"
+          class="feature-card feature-card-large waitlist-extra-feature"
+        >
           <div class="feature-icon"><BarChart3 /></div>
           <h3>{{ $t("marketing.oneView") }}</h3>
           <p>
@@ -379,7 +390,10 @@ onMounted(async () => {
             {{ $t("marketing.documentsPlaceBody") }}
           </p>
         </article>
-        <article class="feature-card waitlist-extra-feature">
+        <article
+          v-if="!waitlistMode"
+          class="feature-card waitlist-extra-feature"
+        >
           <div class="feature-icon"><BellRing /></div>
           <h3>{{ $t("marketing.attendImportant") }}</h3>
           <p>
@@ -389,7 +403,7 @@ onMounted(async () => {
       </div>
     </section>
 
-    <section class="calm-section">
+    <section v-if="!waitlistMode" class="calm-section">
       <div>
         <p class="marketing-eyebrow">{{ $t("marketing.peaceOfMind") }}</p>
         <h2>{{ $t("marketing.yourData") }}</h2>
@@ -401,77 +415,82 @@ onMounted(async () => {
       </div>
     </section>
 
-    <section id="planes" class="plans-section">
-      <div class="section-heading centered">
-        <p class="marketing-eyebrow">{{ $t("marketing.startGently") }}</p>
-        <h2>
-          {{
-            product.features.beta_program
-              ? $t("marketing.betaFree")
-              : $t("marketing.planGrows")
-          }}
-        </h2>
-        <p v-if="product.features.beta_program">
-          {{ $t("marketing.betaDetails") }}
-        </p>
-        <p v-else>
-          {{ $t("marketing.freeDetails") }}
-        </p>
-        <p
-          v-if="
-            !product.features.beta_program && !product.features.billing_enabled
-          "
-        >
-          {{ $t("marketing.priceInformative") }}
-        </p>
-      </div>
-      <div
-        class="marketing-plans"
-        :class="{ 'beta-only': product.features.beta_program }"
-      >
-        <article
-          v-for="plan in visiblePlans"
-          :key="plan.code"
-          class="marketing-plan"
-          :class="{ featured: plan.code === 'founder' || plan.code === 'beta' }"
-        >
-          <span v-if="plan.code === 'beta'" class="plan-label">{{
-            $t("marketing.betaAccess")
-          }}</span>
-          <span v-else-if="plan.code === 'founder'" class="plan-label">{{
-            $t("marketing.founderPrice")
-          }}</span>
-          <p class="plan-name">{{ planName(plan) }}</p>
-          <div class="plan-price">
-            <template v-if="plan.price_monthly"
-              ><strong>{{ money(plan.price_monthly) }}</strong
-              ><span>{{ $t("marketing.perMonth") }}</span></template
-            ><strong v-else>{{ $t("marketing.free") }}</strong>
-          </div>
-          <p class="plan-description">
+    <slot name="beta">
+      <section id="planes" class="plans-section">
+        <div class="section-heading centered">
+          <p class="marketing-eyebrow">{{ $t("marketing.startGently") }}</p>
+          <h2>
             {{
-              plan.property_limit === 1
-                ? $t("marketing.forOne")
-                : $t("marketing.forUpTo", { count: plan.property_limit })
+              product.features.beta_program
+                ? $t("marketing.betaFree")
+                : $t("marketing.planGrows")
             }}
+          </h2>
+          <p v-if="product.features.beta_program">
+            {{ $t("marketing.betaDetails") }}
           </p>
-          <RouterLink
-            class="button"
-            :class="{ 'button-quiet': plan.code === 'free' }"
-            :to="signupTarget"
-            >{{ $t("marketing.startFree") }}</RouterLink
+          <p v-else>
+            {{ $t("marketing.freeDetails") }}
+          </p>
+          <p
+            v-if="
+              !product.features.beta_program &&
+              !product.features.billing_enabled
+            "
           >
-          <ul>
-            <li v-for="feature in plan.features" :key="feature">
-              <Check :size="16" />{{ featureLabel(feature) }}
-            </li>
-          </ul>
-          <small v-if="plan.price_yearly">{{
-            $t("marketing.yearlyPrice", { price: money(plan.price_yearly) })
-          }}</small>
-        </article>
-      </div>
-    </section>
+            {{ $t("marketing.priceInformative") }}
+          </p>
+        </div>
+        <div
+          class="marketing-plans"
+          :class="{ 'beta-only': product.features.beta_program }"
+        >
+          <article
+            v-for="plan in visiblePlans"
+            :key="plan.code"
+            class="marketing-plan"
+            :class="{
+              featured: plan.code === 'founder' || plan.code === 'beta',
+            }"
+          >
+            <span v-if="plan.code === 'beta'" class="plan-label">{{
+              $t("marketing.betaAccess")
+            }}</span>
+            <span v-else-if="plan.code === 'founder'" class="plan-label">{{
+              $t("marketing.founderPrice")
+            }}</span>
+            <p class="plan-name">{{ planName(plan) }}</p>
+            <div class="plan-price">
+              <template v-if="plan.price_monthly"
+                ><strong>{{ money(plan.price_monthly) }}</strong
+                ><span>{{ $t("marketing.perMonth") }}</span></template
+              ><strong v-else>{{ $t("marketing.free") }}</strong>
+            </div>
+            <p class="plan-description">
+              {{
+                plan.property_limit === 1
+                  ? $t("marketing.forOne")
+                  : $t("marketing.forUpTo", { count: plan.property_limit })
+              }}
+            </p>
+            <RouterLink
+              class="button"
+              :class="{ 'button-quiet': plan.code === 'free' }"
+              :to="signupTarget"
+              >{{ $t("marketing.startFree") }}</RouterLink
+            >
+            <ul>
+              <li v-for="feature in plan.features" :key="feature">
+                <Check :size="16" />{{ featureLabel(feature) }}
+              </li>
+            </ul>
+            <small v-if="plan.price_yearly">{{
+              $t("marketing.yearlyPrice", { price: money(plan.price_yearly) })
+            }}</small>
+          </article>
+        </div>
+      </section>
+    </slot>
 
     <section class="faq-section">
       <div class="section-heading">
@@ -536,6 +555,7 @@ onMounted(async () => {
     </section>
 
     <section
+      v-if="!waitlistMode"
       class="simple-section about-section"
       aria-labelledby="about-alquivo"
       itemscope
@@ -605,7 +625,7 @@ onMounted(async () => {
     </slot>
 
     <footer class="marketing-footer">
-      <BrandLogo />
+      <BrandLogo :light="waitlistMode" />
       <p>{{ $t("marketing.footer") }}</p>
       <div v-if="!waitlistMode">
         <RouterLink to="/guias">{{ $t("marketing.ownerGuides") }}</RouterLink

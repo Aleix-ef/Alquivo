@@ -35,22 +35,31 @@ export function waitlistSettings(env = {}, { preview = false } = {}) {
 }
 
 export const waitlistCopy = {
-  common: { startFree: "Avísame cuando abra" },
+  common: { startFree: "Apuntarme a la beta" },
   marketing: {
-    plans: "Beta gratuita",
-    freeBeta: "Próxima beta gratuita",
+    assistant: "Ver un ejemplo",
+    features: "Qué puedes hacer",
+    plans: "Cómo es la beta",
+    freeBeta: "Beta gratuita para propietarios",
     assistantSoon: "Con Alquivo AI",
     heroFirst: "Tus alquileres, en orden.",
-    heroSecond: "Tus dudas, con respuesta.",
+    heroSecond: "Tus números, claros.",
     heroWithoutAI:
-      "Organiza tus cobros, gastos y contratos. Pregunta a Alquivo AI sobre tus inmuebles.",
-    tryBeta: "Avísame cuando abra",
-    startBeta: "Avísame cuando abra",
-    startFree: "Avísame cuando abra",
+      "Ten claro qué has cobrado, qué te deben y cuánto gastas. Tus inmuebles, contratos y documentos, juntos y con ayuda de IA.",
+    tryBeta: "Apuntarme a la beta",
+    startBeta: "Apuntarme a la beta",
+    startFree: "Apuntarme a la beta",
+    learnAssistant: "Ver cómo te ayuda",
+    simpleQuestion: "Pregunta por tus alquileres.",
+    contextualAnswer: "Sin buscar entre carpetas.",
     inPreparation: "En la próxima beta",
     assistantDetailOff:
-      "Pregunta cuánto has cobrado, qué alquileres tienes pendientes o cuándo termina un contrato. Alquivo AI consulta los datos que hayas registrado y te ayuda a preparar cambios que tú revisas y confirmas.",
-    noInventing: "Si falta información, te la pedirá",
+      "«¿Qué alquileres tengo pendientes?» Alquivo AI consulta los datos que hayas registrado para ayudarte a encontrar la información. También prepara cambios que tú revisas y confirmas.",
+    basedOnRecords: "Consulta la información de tus inmuebles",
+    clearAmounts: "Revisa los importes y las fechas",
+    noInventing: "Tú confirmas antes de cambiar un dato",
+    fullView: "Menos información dispersa",
+    madeForInvestors: "Lo que necesitas, en un solo lugar.",
     paymentsControl: "Cobros y gastos, claros.",
     paymentsControlBody:
       "Consulta qué has cobrado, qué falta por pagar y cuánto has gastado.",
@@ -60,9 +69,10 @@ export const waitlistCopy = {
     documentsPlace: "Tus documentos, a mano.",
     documentsPlaceBody:
       "Encuentra contratos, facturas y fotos asociados a cada inmueble.",
-    exampleAnswerTitle: "Por ejemplo, con estos datos ficticios",
+    exampleQuestion: "¿Qué alquileres tengo pendientes?",
+    exampleAnswerTitle: "En este ejemplo",
     exampleAnswer:
-      "Tienes 550 € pendientes del alquiler de septiembre de San Nicolás. El contrato de Marina termina el 31 de octubre. Puedes revisar ambos registros antes de decidir qué hacer.",
+      "En San Nicolás quedan 550 € pendientes del alquiler de septiembre. Puedes revisar la mensualidad en el registro de cobros.",
     topics: "Ejemplos de consultas",
     noCardToStart: "Beta gratuita, sin tarjeta",
     betaFree: "Pruébalo gratis durante la beta.",
@@ -77,18 +87,20 @@ export const waitlistCopy = {
       "Te escribiremos cuando podamos darte acceso a la beta. Aún no anunciamos una fecha: estamos revisando el producto y sus respuestas de IA. Apuntarte no crea una cuenta ni da acceso inmediato.",
     faqAfterBetaAnswer:
       "Te avisaremos antes de terminar la beta y te explicaremos las opciones para continuar. Tú decidirás; no habrá ningún cobro automático y podrás exportar tus datos.",
+    faqEyebrow: "Antes de apuntarte",
+    faqTitle: "Sin letra pequeña.",
     faqTypesAnswer:
       "Podrás registrar viviendas, locales, oficinas, garajes, trasteros, terrenos y edificios. La gestión detallada por habitaciones o unidades de un edificio llegará más adelante.",
-    footer: "Gestión de alquileres con IA · Próxima beta gratuita",
+    footer: "Tus alquileres en orden · Próxima beta gratuita",
   },
 };
 
 export const waitlistPages = [
   {
     path: "/",
-    title: "Alquivo | Tus alquileres en orden, con ayuda de IA",
+    title: "Alquivo | Tus alquileres en orden",
     description:
-      "Organiza inmuebles, cobros, gastos y contratos. Pregunta a Alquivo AI por tus datos. Solicita acceso a la próxima beta gratuita, sin tarjeta.",
+      "Controla cobros, gastos y contratos de tus alquileres en un solo lugar. Apúntate a la próxima beta gratuita de Alquivo, sin tarjeta ni compromiso de compra.",
   },
   {
     path: "/privacidad",

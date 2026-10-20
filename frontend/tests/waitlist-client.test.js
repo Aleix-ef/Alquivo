@@ -47,7 +47,7 @@ function client({
       },
     ]),
   );
-  elements["waitlist-submit"].textContent = "Avísame cuando abra";
+  elements["waitlist-submit"].textContent = "Apuntarme a la beta";
   elements["waitlist-challenge"] = { clientWidth: challengeWidth };
   const form = {
     hidden: false,
@@ -295,7 +295,7 @@ for (const options of [
     assert.equal(ui.elements["waitlist-fields"].disabled, false);
     assert.equal(
       ui.elements["waitlist-submit"].textContent,
-      "Avísame cuando abra",
+      "Apuntarme a la beta",
     );
     assert.equal(ui.elements["waitlist-error"].disabledAtFocus, false);
     assert.equal(ui.resets, 1);

@@ -14,7 +14,11 @@ import { createHash } from "node:crypto";
 import { waitlistConsent } from "../src/waitlist/contract.js";
 import { legalOperator } from "../src/content/legalOperator.js";
 import { escapeHtml } from "../src/seo.js";
-import { waitlistSettings, waitlistPages } from "../src/waitlist/settings.js";
+import {
+  waitlistSettings,
+  waitlistPages,
+  waitlistCopy,
+} from "../src/waitlist/settings.js";
 import {
   buildWaitlist,
   landingHeaders,
@@ -89,7 +93,7 @@ for (const url of [
 test("production includes the beta request, but no account or immediate access", async () => {
   const page = await html(production.output);
   assert.match(page, /Tus alquileres, en orden/);
-  assert.match(page, /Avísame cuando abra/);
+  assert.match(page, /Apuntarme a la beta/);
   assert.match(page, /id="solicitud"/);
   assert.match(page, /href="\/#solicitud"/);
   assert.match(page, /Apuntarte no crea una cuenta ni da acceso inmediato/);
@@ -127,13 +131,60 @@ test("every signup CTA targets the form card, not its preceding introduction", a
     assert.match(target[0], /tabindex="-1"/);
     assert.match(
       page,
-      /<h2 id="waitlist-form-title">Te avisamos cuando abra<\/h2>/,
+      /<h2 id="waitlist-form-title">Recibe tu invitación<\/h2>/,
     );
     const card = page.slice(page.indexOf(target[0]));
     assert.ok(card.indexOf('id="waitlist-form"') > 0);
     assert.ok(card.indexOf('id="waitlist-email"') > 0);
     assert.doesNotMatch(card, /Menos Excel/);
     assert.ok(Array.from(page.matchAll(/href="\/#solicitud"/g)).length >= 3);
+  }
+});
+test("search and social titles use the short owner-focused promise", async () => {
+  for (const output of [production.output, preview.output]) {
+    const page = await html(output);
+    const title = "Alquivo | Tus alquileres en orden";
+    assert.ok(page.includes(`<title>${title}</title>`));
+    assert.ok(page.includes(`property="og:title" content="${title}"`));
+    assert.ok(page.includes(`name="twitter:title" content="${title}"`));
+    assert.match(page, /Tus números, claros/);
+    assert.doesNotMatch(
+      page,
+      /Tus dudas, con respuesta|en orden, con ayuda de IA/,
+    );
+  }
+});
+test("the signup funnel uses one action and removes repeated product sections", async () => {
+  for (const output of [production.output, preview.output]) {
+    const page = await html(output);
+    const form = page.indexOf('id="solicitud"');
+    const example = page.indexOf('id="asistente"');
+    const benefits = page.indexOf('id="funciones"');
+    const beta = page.indexOf('id="planes"');
+    const faq = page.indexOf('class="faq-section"');
+    assert.ok(form > 0 && form < example);
+    assert.ok(example < benefits && benefits < beta && beta < faq);
+    assert.equal(
+      (page.match(/<article class="feature-card"/g) || []).length,
+      3,
+    );
+    assert.doesNotMatch(
+      page,
+      /id="como-funciona"|class="calm-section"|about-alquivo/,
+    );
+    assert.match(page, /Gratis para probarla/);
+    assert.match(page, /Tú decides después/);
+    assert.match(page, /Es una versión en pruebas/);
+    const ctas = Array.from(
+      page.matchAll(/<a\b[^>]*href="\/#solicitud"[^>]*>([\s\S]*?)<\/a>/g),
+    );
+    assert.ok(ctas.length >= 3);
+    for (const [, content] of ctas)
+      assert.ok(content.includes(waitlistCopy.common.startFree));
+    assert.doesNotMatch(
+      page,
+      /últimas plazas|solo quedan|gratis para siempre|IA ilimitada/i,
+    );
   }
 });
 test("one early form preserves optional fields behind a native disclosure", async () => {
@@ -200,6 +251,14 @@ test("mobile compaction is scoped to the waitlist and preserves the form and cor
 test("the existing logo, dark theme and local fonts are reused", async () => {
   const page = await html(production.output);
   assert.match(page, /data-theme="dark"/);
+  assert.match(
+    page,
+    /class="[^"]*\bmarketing-logo\b[^"]*"[^>]*>[\s\S]*?class="alquivo-brand light"/,
+  );
+  assert.match(
+    page,
+    /class="marketing-footer">[\s\S]*?class="alquivo-brand light"/,
+  );
   assert.match(page, /\/brand\/alquivo-wordmark.svg#wordmark/);
   assert.match(page, /\/favicon.svg\?v=wordmark-1#mark/);
   const assets = await readdir(join(production.output, "assets"));

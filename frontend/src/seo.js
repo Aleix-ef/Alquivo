@@ -4,7 +4,7 @@ import { legalPages } from "./content/legal.js";
 export const publicPages = [
   {
     path: "/",
-    title: "Alquivo | Gestión inmobiliaria y asistente IA para propietarios",
+    title: "Alquivo | Tus alquileres en orden",
     description:
       "Organiza inmuebles, alquileres, cobros y contratos con Alquivo. Beta gratuita para propietarios; el asistente de IA está en preparación.",
   },

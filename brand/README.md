@@ -2,6 +2,8 @@
 
 El nombre completo es el logo principal. El monograma **AL** se reserva para favicon, accesos pequeños y lugares donde no cabe el nombre.
 
+Confirmado por el titular el **20 de octubre de 2026**: `alquivo-logo-redes.png` es el logo utilizado en Instagram. La landing usa las mismas letras vectoriales en blanco sobre su fondo oscuro, sin insertar el lienzo cuadrado del avatar en la cabecera ni en el pie. No se crea una segunda identidad de marca.
+
 ## Archivos actuales
 
 - `alquivo-logo-redes.png`: nombre completo blanco sobre azul petróleo; 1080 × 1080, listo para el perfil de redes y con margen para recorte circular.

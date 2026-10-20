@@ -18,11 +18,136 @@ html {
 .waitlist-page [id] {
   scroll-margin-top: 2rem;
 }
+.waitlist-page .marketing-header {
+  min-height: 88px;
+}
+.waitlist-page .marketing-header .alquivo-wordmark {
+  width: 180px;
+}
+.waitlist-page .marketing-header nav a {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+}
+.waitlist-page .hero-section {
+  min-height: 0;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: clamp(2rem, 4vw, 4rem);
+  padding-block: 3.5rem 4rem;
+}
+.waitlist-page .hero-copy {
+  padding-top: 0;
+}
+.waitlist-page .hero-copy h1 {
+  font-size: clamp(2.75rem, 4.7vw, 3.75rem);
+  line-height: 1.12;
+  text-wrap: balance;
+}
+.waitlist-page .hero-copy h1 em {
+  display: block;
+  margin-top: 0.15em;
+}
+.waitlist-page .marketing-eyebrow {
+  font-size: 0.9375rem;
+  letter-spacing: 0.035em;
+  line-height: 1.6;
+}
+.waitlist-page .hero-lead {
+  margin-block: 1.5rem;
+}
+.waitlist-page .product-preview::before {
+  background: #54c9b310;
+}
+.waitlist-page .preview-window,
+.waitlist-page .preview-cards div {
+  background: var(--surface);
+  border-color: var(--line);
+}
+.waitlist-page .preview-sidebar {
+  background: var(--canvas);
+  border-color: var(--line);
+}
+.waitlist-page .preview-main > p,
+.waitlist-page .preview-cards small,
+.waitlist-page .preview-cards span,
+.waitlist-page .chart-heading span,
+.waitlist-page .preview-events p {
+  color: var(--muted);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+.waitlist-page .preview-value,
+.waitlist-page .preview-cards strong,
+.waitlist-page .chart-heading,
+.waitlist-page .preview-events strong {
+  color: var(--ink);
+}
+.waitlist-page .preview-cards strong {
+  font-size: 1rem;
+}
+.waitlist-page .preview-value small,
+.waitlist-page .preview-cards .up {
+  color: var(--green);
+}
+.waitlist-page .preview-value small,
+.waitlist-page .chart-heading,
+.waitlist-page .preview-events strong {
+  font-size: 0.8125rem;
+}
+.waitlist-page .preview-chart,
+.waitlist-page .preview-events {
+  border-color: var(--line);
+}
+.waitlist-page .preview-lower {
+  grid-template-columns: 1fr;
+}
+.waitlist-page .preview-events {
+  display: none;
+}
+.waitlist-page .preview-note {
+  background: var(--surface-soft);
+  border: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 0.875rem;
+  position: relative;
+  bottom: auto;
+  right: auto;
+  margin: 0.75rem 0 0;
+  padding: 0.65rem 1rem;
+  width: fit-content;
+}
+.waitlist-page .ai-preview-section,
+.waitlist-page .feature-section,
+.waitlist-page .plans-section,
+.waitlist-page .faq-section {
+  padding-block: 4rem;
+}
+.waitlist-page .feature-section {
+  background: var(--canvas);
+}
+.waitlist-page .feature-card {
+  min-height: 0;
+}
+.waitlist-page .ai-preview-card {
+  background: var(--surface);
+  box-shadow: var(--shadow-raised);
+}
+.waitlist-page .ai-preview-card::before {
+  display: none;
+}
+.waitlist-page .ai-answer {
+  background: var(--surface-soft);
+  border-color: var(--line);
+  color: var(--ink);
+}
+.waitlist-page .ai-answer strong {
+  color: var(--green);
+}
 .waitlist-section {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: clamp(2rem, 5vw, 5rem);
-  padding: 6rem max(1.5rem, calc((100vw - 1184px) / 2));
+  padding: 4rem max(1.5rem, calc((100vw - 1184px) / 2));
   background: var(--surface-soft);
   border-block: 1px solid var(--line);
 }
@@ -69,6 +194,12 @@ html {
   font-size: 1rem;
   line-height: 1.8;
   color: var(--muted);
+}
+.waitlist-card .waitlist-form-eyebrow {
+  color: var(--green);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  margin: 0 0 0.5rem;
 }
 .waitlist-card a:not(.button) {
   color: var(--green);
@@ -247,6 +378,76 @@ html {
 .waitlist-support:hover {
   border-color: var(--green);
 }
+.waitlist-page .waitlist-beta {
+  align-items: center;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: clamp(2rem, 5vw, 5rem);
+  padding-inline: max(1.5rem, calc((100vw - 1184px) / 2));
+  background: var(--surface-soft);
+  border-block: 1px solid var(--line);
+}
+.waitlist-beta h2 {
+  font: 400 clamp(2rem, 4vw, 3rem)/1.2 var(--display);
+  letter-spacing: -0.035em;
+  margin: 0;
+}
+.waitlist-beta-heading > p:not(.marketing-eyebrow) {
+  color: var(--muted);
+  font-size: 1.125rem;
+  line-height: 1.75;
+  margin: 1.25rem 0 1.5rem;
+}
+.waitlist-beta-details {
+  min-width: 0;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 1.25rem;
+  padding: clamp(1.25rem, 3vw, 2rem);
+}
+.waitlist-beta-limits {
+  display: grid;
+  gap: 1.25rem;
+  margin: 0 0 1.5rem;
+}
+.waitlist-beta-limits dt {
+  color: var(--muted);
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+}
+.waitlist-beta-limits dd {
+  color: var(--ink);
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0;
+}
+.waitlist-beta-details ul {
+  list-style: none;
+  display: grid;
+  gap: 1rem;
+  padding: 1.5rem 0 0;
+  margin: 0;
+  border-top: 1px solid var(--line);
+}
+.waitlist-beta-details li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  color: var(--ink);
+  font-size: 1rem;
+  line-height: 1.7;
+}
+.waitlist-beta-details li svg {
+  color: var(--green);
+  flex: 0 0 auto;
+  margin-top: 0.3rem;
+}
+.waitlist-beta-note {
+  color: var(--muted);
+  font-size: 0.9375rem;
+  line-height: 1.7;
+  margin-bottom: 0;
+}
 .waitlist-closing {
   padding: 3rem 1.5rem;
   text-align: center;
@@ -277,7 +478,18 @@ html {
   font-size: 1rem;
   padding-block: 0.8rem;
 }
+@media (max-width: 1000px) {
+  .waitlist-page .marketing-header nav {
+    display: none;
+  }
+}
 @media (max-width: 820px) {
+  .waitlist-page .hero-section {
+    display: block;
+  }
+  .waitlist-page .waitlist-beta {
+    grid-template-columns: minmax(0, 1fr);
+  }
   .waitlist-section {
     grid-template-columns: minmax(0, 1fr);
     padding-block: 4rem;
@@ -324,6 +536,9 @@ html {
   }
   .waitlist-page .marketing-header {
     min-height: 64px;
+  }
+  .waitlist-page .marketing-header .alquivo-wordmark {
+    width: 160px;
   }
   .waitlist-page .hero-copy h1 {
     font-size: clamp(2.125rem, 8vw, 2.75rem);
@@ -430,6 +645,13 @@ html {
   }
   .waitlist-page .ai-preview-points,
   .waitlist-page .ai-preview-topics {
+    display: none;
+  }
+  .waitlist-page .waitlist-beta {
+    padding-inline: 1.25rem;
+    gap: 1.5rem;
+  }
+  .waitlist-beta-heading .button {
     display: none;
   }
   .waitlist-closing {
