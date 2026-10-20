@@ -147,11 +147,24 @@ test("search and social titles use the short owner-focused promise", async () =>
     assert.ok(page.includes(`<title>${title}</title>`));
     assert.ok(page.includes(`property="og:title" content="${title}"`));
     assert.ok(page.includes(`name="twitter:title" content="${title}"`));
+    assert.match(
+      page,
+      /rel="icon" type="image\/png" sizes="180x180" href="\/apple-touch-icon.png"/,
+    );
     assert.match(page, /Tus números, claros/);
     assert.doesNotMatch(
       page,
       /Tus dudas, con respuesta|en orden, con ayuda de IA/,
     );
+  }
+});
+test("the first mockup has no floating disclaimer and keeps a short preview label", async () => {
+  for (const output of [production.output, preview.output]) {
+    const page = await html(output);
+    assert.match(page, /class="preview-label">Vista previa<\/strong>/);
+    assert.doesNotMatch(page, /class="preview-note"/);
+    assert.doesNotMatch(page, /Ejemplo ilustrativo con datos ficticios\./);
+    assert.match(page, /Ejemplo ilustrativo · Sin datos reales/);
   }
 });
 test("the signup funnel uses one action and removes repeated product sections", async () => {

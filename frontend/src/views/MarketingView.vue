@@ -192,7 +192,12 @@ onMounted(async () => {
             <span class="preview-nav"></span>
           </div>
           <div class="preview-main">
-            <div class="preview-top"><span></span><i></i></div>
+            <div class="preview-top">
+              <strong v-if="waitlistMode" class="preview-label"
+                >Vista previa</strong
+              >
+              <span v-else></span><i></i>
+            </div>
             <p>{{ $t("marketing.previewPortfolio") }}</p>
             <div class="preview-value">
               248.500 € <small>{{ $t("marketing.thisYear") }}</small>
@@ -231,7 +236,9 @@ onMounted(async () => {
             </div>
           </div>
         </div>
-        <div class="preview-note">{{ $t("marketing.sampleDisclaimer") }}</div>
+        <div v-if="!waitlistMode" class="preview-note">
+          {{ $t("marketing.sampleDisclaimer") }}
+        </div>
       </div>
     </section>
 

@@ -104,17 +104,11 @@ html {
 .waitlist-page .preview-events {
   display: none;
 }
-.waitlist-page .preview-note {
-  background: var(--surface-soft);
-  border: 1px solid var(--line);
+.waitlist-page .preview-label {
   color: var(--muted);
   font-size: 0.875rem;
-  position: relative;
-  bottom: auto;
-  right: auto;
-  margin: 0.75rem 0 0;
-  padding: 0.65rem 1rem;
-  width: fit-content;
+  font-weight: 500;
+  line-height: 1.5;
 }
 .waitlist-page .ai-preview-section,
 .waitlist-page .feature-section,
@@ -379,6 +373,10 @@ html {
   border-color: var(--green);
 }
 .waitlist-page .waitlist-beta {
+  /* Override .plans-section's 1240px cap before using viewport-based gutters.
+     Otherwise large screens leave too little space for the two columns. */
+  max-width: none;
+  width: 100%;
   align-items: center;
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
@@ -386,6 +384,9 @@ html {
   padding-inline: max(1.5rem, calc((100vw - 1184px) / 2));
   background: var(--surface-soft);
   border-block: 1px solid var(--line);
+}
+.waitlist-beta-heading {
+  min-width: 0;
 }
 .waitlist-beta h2 {
   font: 400 clamp(2rem, 4vw, 3rem)/1.2 var(--display);

@@ -79,3 +79,13 @@ Referencias oficiales revisadas:
 - [Vue: renderizado del lado del servidor](https://vuejs.org/guide/scaling-up/ssr.html).
 
 El código prepara la base técnica. Autoridad, competencia, utilidad del contenido y tiempo de rastreo influyen en los resultados; no hay promesa de primera posición ni de menciones en asistentes.
+
+## Landing pública: título y favicon (20 de octubre de 2026)
+
+La landing independiente de Cloudflare (`build:landing`, no `build`) publica el título **«Alquivo | Tus alquileres en orden»**. Los cambios no actualizan inmediatamente el resultado almacenado por Google: su documentación indica un nuevo rastreo y procesamiento, que puede tardar días o semanas. Search Console → Inspección de URLs → `https://alquivo.com/` → Solicitar indexación. No repetir solicitudes como supuesto acelerador ni usar la API de indexación destinada a otros tipos de contenido. No se ha enviado una solicitud desde esta tarea.
+
+El icono pequeño es el monograma AL, no la palabra completa. La landing declara además el PNG AL de **180 × 180** que ya existía en `/apple-touch-icon.png`, como `rel="icon"` PNG y como icono Apple. Se conserva una URL estable, el SVG y el PNG de 32 px; no se generan imágenes nuevas ni se promete que Google lo muestre. Comprobar que el archivo devuelve 200 y no está bloqueado para el rastreo. El nombre completo blanco se utiliza dentro de la landing.
+
+La primera maqueta elimina el cartel de datos ficticios y conserva únicamente «Vista previa» en su cabecera; el ejemplo de conversación de IA mantiene su identificación ilustrativa. Se corrige también el bloque de beta: no debe heredar el límite de 1240 px de `.plans-section` mientras usa márgenes calculados sobre el viewport, porque en pantallas anchas comprime y alarga sus columnas. Se fija el contenedor a ancho completo, con columnas flexibles y una sola columna hasta 820 px.
+
+Referencias: [Google: enlaces de título](https://developers.google.com/search/docs/appearance/title-link?hl=es), [Google: favicon](https://developers.google.com/search/docs/appearance/favicon-in-search?hl=es), [Google: solicitar un nuevo rastreo](https://developers.google.com/search/docs/crawling-indexing/ask-google-to-recrawl?hl=es).

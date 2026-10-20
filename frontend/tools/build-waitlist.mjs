@@ -101,6 +101,7 @@ export async function buildWaitlist({ preview = false, env, outputDir } = {}) {
 <meta name="theme-color" content="#0b1420">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=wordmark-1">
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+<link rel="icon" type="image/png" sizes="180x180" href="/apple-touch-icon.png">
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
 ${head}
 ${styleFiles.map((name) => `<link rel="stylesheet" href="/assets/${escapeHtml(name)}">`).join("\n")}
