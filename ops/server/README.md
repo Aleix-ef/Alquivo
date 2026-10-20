@@ -41,6 +41,14 @@ El Caddyfile usa HTTP-01 para emitir/renovar el certificado sin abrir HTTPS al
 público durante la prueba. No desactivar la validación TLS ni usar certificado
 autofirmado para simular una comprobación de HTTPS de producción.
 
+El healthcheck de PostgreSQL debe autenticar con la cuenta de la aplicación y
+ejecutar una consulta real. `pg_isready` por sí solo no acredita que existan el
+usuario o la base ni que funcione su contraseña. Si falla el primer init por un
+archivo SQL ilegible, corregir el empaquetado y diagnosticar el estado antes de
+seguir: un reinicio del contenedor no vuelve a ejecutar los scripts del volumen
+ya inicializado. No borrar el volumen ni rotar contraseñas como atajo. El entorno
+de PHP y sus workers tampoco recibe la contraseña de administrador de PostgreSQL.
+
 ## Orden de preparación
 
 1. Confirmar identidad/huella del servidor y acceso de recuperación en OVHcloud.

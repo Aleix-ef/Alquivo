@@ -8,6 +8,8 @@ x-runtime: &runtime
   environment:
     APP_ENV: production
     APP_DEBUG: "false"
+    # Only PostgreSQL needs the administrator credential, never PHP/workers.
+    DATABASE_ADMIN_PASSWORD: ""
   volumes:
     - private_storage:/app/storage/app
     - document_keys:/app/storage/app/keys
@@ -88,7 +90,9 @@ services:
       - postgres_data:/var/lib/postgresql/data
       - ./ops/init-database.sql:/docker-entrypoint-initdb.d/10-alquivo.sql:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d alquivo"]
+      # pg_isready succeeds even when the requested database/role is missing.
+      # Authenticate as the actual app user without putting the password in argv.
+      test: ["CMD-SHELL", "PGPASSWORD=\"$${DB_PASSWORD}\" psql -h 127.0.0.1 -U alquivo -d alquivo -X -qAt -v ON_ERROR_STOP=1 -c 'SELECT 1' > /dev/null"]
       interval: 5s
       timeout: 3s
       retries: 20
