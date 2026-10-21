@@ -104,6 +104,36 @@ siguiente paso del titular.
 
 ## Pendiente obligatorio: custodiar secretos fuera del VPS
 
+Avance del 21/10: el titular ha creado el paquete cifrado de recuperación. Se ha
+descargado a `~/Descargas/Alquivo-recuperacion/` con permisos 600, dentro de una
+carpeta 700, fuera del repositorio Git. Sus 10.422 bytes y SHA-256 coinciden con
+el VPS (`31723b4ac4b0da0146aa99273d947ec6aca28687c38f6121e762069b356a95b3`).
+No quedaron temporales de exportación en `/run`. **Todavía no se ha descifrado
+esa copia local: el titular conserva en exclusiva su contraseña.**
+
+Preparado `comprobar-copia.sh` junto al paquete. La herramienta age procede del
+paquete autenticado de los repositorios de Ubuntu (`1.0.0-1ubuntu0.1`), extraído
+en `herramientas/`, sin instalar paquetes del sistema del ordenador. El
+verificador usa age para pedir la contraseña en la terminal, comprueba los
+cuatro hashes del contenido, rechaza rutas/entradas inesperadas, duplicados y
+enlaces, y elimina sus temporales de memoria. No usa red ni muestra claves.
+Solo escribe una evidencia `.verified` con la huella del archivo cifrado si
+termina correctamente. Seis regresiones sintéticas verifican éxito, contenido
+alterado, entradas extra, enlaces, fallo al descifrar y rechazo de temporales
+fuera de memoria. **Estas regresiones no descifran ni validan por sí mismas el
+paquete real**.
+
+En la terminal del **ordenador**, no en el VPS:
+
+```bash
+bash ~/Descargas/Alquivo-recuperacion/comprobar-copia.sh
+```
+
+Debe pedir la contraseña del paquete (no la de SSH/Hetzner) y terminar con
+`VERIFICACIÓN CORRECTA`. Después custodiar otra copia fuera del ordenador y la
+contraseña en el gestor. Las instrucciones siguientes se conservan para futuras
+exportaciones; no hace falta generar otro paquete para completar esta prueba.
+
 En una sesión SSH interactiva, el titular ejecuta:
 
 ```bash
