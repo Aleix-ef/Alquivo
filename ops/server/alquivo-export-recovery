@@ -6,7 +6,7 @@ umask 077
 [[ -t 0 && -t 1 ]] || { echo 'Ejecuta este comando en tu terminal SSH interactiva.' >&2; exit 1; }
 command -v age >/dev/null
 stage=$(mktemp -d /run/alquivo-recovery-secrets.XXXXXX)
-output="/opt/alquivo/shared/alquivo-recovery-$(date -u +%Y%m%dT%H%M%SZ)-${RANDOM}.tar.age"
+output=$(mktemp "/opt/alquivo/shared/alquivo-recovery-$(date -u +%Y%m%dT%H%M%SZ).XXXXXX.tar.age")
 complete=false
 cleanup() {
   rm -rf -- "$stage"
