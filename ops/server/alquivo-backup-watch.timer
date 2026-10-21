@@ -1,0 +1,10 @@
+[Unit]
+Description=Hourly Alquivo off-site backup freshness check
+
+[Timer]
+OnBootSec=20min
+OnUnitActiveSec=1h
+Unit=alquivo-backup-watch.service
+
+[Install]
+WantedBy=timers.target

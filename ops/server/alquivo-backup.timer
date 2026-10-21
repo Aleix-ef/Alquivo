@@ -1,0 +1,11 @@
+[Unit]
+Description=Daily Alquivo off-site backup
+
+[Timer]
+OnCalendar=*-*-* 03:15:00 Europe/Madrid
+RandomizedDelaySec=5min
+Persistent=true
+Unit=alquivo-backup.service
+
+[Install]
+WantedBy=timers.target

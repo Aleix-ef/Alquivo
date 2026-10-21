@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+# Interactive encryption: the passphrase is entered into age, never passed to us.
+set -Eeuo pipefail
+umask 077
+[[ $EUID -eq 0 ]] || { echo 'Ejecuta este comando con sudo.' >&2; exit 1; }
+[[ -t 0 && -t 1 ]] || { echo 'Ejecuta este comando en tu terminal SSH interactiva.' >&2; exit 1; }
+command -v age >/dev/null
+stage=$(mktemp -d /run/alquivo-recovery-secrets.XXXXXX)
+output="/opt/alquivo/shared/alquivo-recovery-$(date -u +%Y%m%dT%H%M%SZ)-${RANDOM}.tar.age"
+complete=false
+cleanup() {
+  rm -rf -- "$stage"
+  if [[ "$complete" != true ]]; then rm -f -- "$output"; fi
+}
+trap cleanup EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
+cp -- /opt/alquivo/shared/.env.production "$stage/production.env"
+cp -- /opt/alquivo/shared/secrets/backup.password "$stage/backup.password"
+cp -- /etc/alquivo/storagebox.credentials "$stage/storagebox.credentials"
+docker exec -u root alquivo-production-backend-1 cat /app/storage/app/keys/documents.json > "$stage/documents.json"
+[[ -s "$stage/documents.json" ]]
+(cd "$stage" && sha256sum production.env backup.password storagebox.credentials documents.json > SHA256SUMS)
+echo 'Elige una contraseña larga NUEVA para cifrar el paquete de recuperación.'
+echo 'Guárdala en tu gestor de contraseñas. No la compartas por chat.'
+tar -C "$stage" -cf - . | age --passphrase --output "$output"
+chown ubuntu:ubuntu -- "$output"
+chmod 600 -- "$output"
+complete=true
+echo 'Paquete cifrado creado. Aún debes descargarlo y conservarlo FUERA del VPS:'
+printf '%s\n' "$output"
+echo 'Contiene secretos de producción; no subirlo a Git ni enviarlo por correo.'

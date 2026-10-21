@@ -1,0 +1,17 @@
+# Install as the name returned by:
+# systemd-escape --path --suffix=mount /mnt/alquivo-backups
+# Replace only the non-secret Storage Box hostname before installation.
+[Unit]
+Description=Alquivo encrypted external backup storage
+Wants=network-online.target
+After=network-online.target
+
+[Mount]
+What=//u123456.your-storagebox.de/backup
+Where=/mnt/alquivo-backups
+Type=cifs
+Options=credentials=/etc/alquivo/storagebox.credentials,vers=3.1.1,seal,uid=0,gid=0,forceuid,forcegid,file_mode=0600,dir_mode=0700,nosuid,nodev,noexec
+TimeoutSec=45
+
+[Install]
+WantedBy=multi-user.target

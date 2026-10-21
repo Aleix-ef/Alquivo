@@ -142,3 +142,28 @@ datos reales. La plantilla no sustituye el inventario o la copia de secretos.
 Fuentes: [Docker en Ubuntu](https://docs.docker.com/engine/install/ubuntu/),
 [SSH en Ubuntu](https://documentation.ubuntu.com/server/how-to/security/openssh-server/),
 [actualizaciones automáticas](https://documentation.ubuntu.com/server/how-to/software/automatic-updates/).
+
+## Preparar el acceso a una Storage Box externa
+
+Instalar `alquivo-storagebox-credentials` como
+`/usr/local/sbin/alquivo-storagebox-credentials`, propietario root y permisos 700.
+El directorio `/etc/alquivo` debe pertenecer a root y no permitir escritura a
+grupo/otros. El titular lo ejecuta en una sesión SSH interactiva:
+
+```bash
+sudo /usr/local/sbin/alquivo-storagebox-credentials u123456
+```
+
+Pide la contraseña dos veces sin eco y crea
+`/etc/alquivo/storagebox.credentials` con permisos 600. No pasar contraseñas como
+argumentos, variables de entorno, mensajes del chat ni archivos versionados. El
+comando rechaza sobrescribir credenciales existentes; no monta almacenamiento,
+programa copias ni acredita que la autenticación funcione.
+
+Antes de configurar el montaje, confirmar ubicación europea y activar SMB y
+External Reachability en Hetzner. La conexión desde OVH necesita salida TCP/445,
+**no** abrir ese puerto de entrada en el VPS. Exigir cifrado de transporte SMB3
+(`seal`), credenciales privadas y comprobación de montaje real, sin caer en un
+directorio local si el almacenamiento externo no está disponible. Continuar con
+copia cifrada, recuperación independiente de claves, alertas y restauración
+aislada antes de dar este bloque por completado.

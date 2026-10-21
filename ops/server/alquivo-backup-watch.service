@@ -1,0 +1,8 @@
+[Unit]
+Description=Check Alquivo off-site backup freshness
+After=docker.service
+OnFailure=alquivo-backup-alert@%n.service
+
+[Service]
+Type=oneshot
+ExecStart=/bin/bash /opt/alquivo/current/tools/backup-watch.sh

@@ -1,0 +1,23 @@
+[Unit]
+Description=Alquivo consistent encrypted off-site backup
+Wants=network-online.target
+After=network-online.target docker.service
+Requires=docker.service
+RequiresMountsFor=/mnt/alquivo-backups
+OnFailure=alquivo-backup-alert@%n.service
+
+[Service]
+Type=oneshot
+UMask=0077
+Environment=COMPOSE_FILE=docker-compose.production.yml
+Environment=BACKUP_EXTERNAL_MOUNT=/mnt/alquivo-backups
+Environment=BACKUP_WORK_DIR=/opt/alquivo/shared/backups
+Environment=BACKUP_PASSWORD_FILE=/opt/alquivo/shared/secrets/backup.password
+Environment=BACKUP_RETENTION_DAYS=30
+ExecStart=/bin/bash /opt/alquivo/current/tools/backup-external.sh
+ExecStopPost=/bin/bash /opt/alquivo/current/tools/backup.sh --resume-only
+TimeoutStartSec=2h
+TimeoutStopSec=5min
+Nice=10
+IOSchedulingClass=best-effort
+IOSchedulingPriority=7

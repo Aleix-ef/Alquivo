@@ -20,6 +20,7 @@ services:
     environment:
       APP_ENV: local
       APP_DEBUG: "false"
+      DATABASE_ADMIN_PASSWORD: ""
       DB_CONNECTION: pgsql
       DB_HOST: postgres
       DB_PORT: 5432
@@ -28,12 +29,18 @@ services:
       DB_PASSWORD: restore-drill-local-only
       DB_SSLMODE: disable
       MAIL_MAILER: array
+      QUEUE_CONNECTION: sync
       BILLING_ENABLED: "false"
       ASSISTANT_ENABLED: "false"
+      ASSISTANT_VALIDATED: "false"
+      DOCUMENT_AI_ENABLED: "false"
+      DOCUMENT_ENCRYPTION_KEY: ""
       DOCUMENT_KEY_FILE: /recovery/documents.json
     volumes:
       - recovered_files:/app/storage/app/private
       - ${RECOVERY_DIRECTORY:?Set the isolated recovery directory}:/recovery:ro
+    security_opt:
+      - no-new-privileges:true
 volumes:
   recovered_files:
 networks:

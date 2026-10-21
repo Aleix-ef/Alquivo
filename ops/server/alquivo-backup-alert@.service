@@ -1,0 +1,9 @@
+[Unit]
+Description=Notify Alquivo backup failure (%i)
+After=docker.service network-online.target
+
+[Service]
+Type=oneshot
+UMask=0077
+ExecStart=/bin/bash /opt/alquivo/current/tools/backup-alert.sh %i
+TimeoutStartSec=60
