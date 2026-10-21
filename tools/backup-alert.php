@@ -3,7 +3,7 @@
 // Infrastructure notification only. Never include logs, secrets or user records.
 require '/app/vendor/autoload.php';
 $source = $argv[1] ?? '';
-if (! in_array($source, ['alquivo-backup.service', 'alquivo-backup-watch.service', 'alquivo-backup-test.service'], true)) {
+if (! in_array($source, ['alquivo-backup.service', 'alquivo-backup-watch.service', 'alquivo-backup-resume.service', 'alquivo-backup-test.service'], true)) {
     exit(1);
 }
 $env = Dotenv\Dotenv::createArrayBacked('/run', 'production.env')->load();

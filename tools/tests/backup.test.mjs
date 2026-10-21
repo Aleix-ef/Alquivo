@@ -130,6 +130,26 @@ test('recovery Compose isolates data, credentials and providers, with no product
   assert.match(compose, /DOCUMENT_ENCRYPTION_KEY: ""/);
   assert.match(compose, /MAIL_MAILER: array/);
   assert.match(compose, /ASSISTANT_ENABLED: "false"/);
+  assert.match(compose, /mem_limit: 768m/);
+  assert.match(compose, /mem_limit: 512m/);
+  assert.match(compose, /data:size=512m/);
   assert.doesNotMatch(compose, /^\s+(ports|external|container_name):/m);
   assert.doesNotMatch(compose, /alquivo-production|postgres_data|private_storage|document_keys/);
+});
+
+test('backup failures recover immediately and a power-loss journal is also handled on boot', async () => {
+  const service = await readFile(resolve(root, 'ops/server/alquivo-backup.service'), 'utf8');
+  const resume = await readFile(resolve(root, 'ops/server/alquivo-backup-resume.service'), 'utf8');
+  assert.match(service, /ExecStopPost=.*backup\.sh --resume-only/);
+  assert.match(resume, /ConditionPathExists=\/opt\/alquivo\/shared\/backups\/paused-services/);
+  assert.match(resume, /ExecStart=.*backup\.sh --resume-only/);
+  assert.match(resume, /WantedBy=multi-user.target/);
+});
+
+test('notification sidecar does not need app, queue or root capabilities to read the private env', async () => {
+  const alert = await readFile(script('backup-alert.sh'), 'utf8');
+  assert.match(alert, /owner=\$\(stat -c '%u:%g'/);
+  assert.match(alert, /--user "\$owner"/);
+  assert.match(alert, /--read-only --cap-drop ALL/);
+  assert.doesNotMatch(alert, /--env-file|--user root/);
 });

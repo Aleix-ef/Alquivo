@@ -2,7 +2,7 @@
 set -Eeuo pipefail
 ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 case "${1:-}" in
-  alquivo-backup.service|alquivo-backup-watch.service|alquivo-backup-test.service) ;;
+  alquivo-backup.service|alquivo-backup-watch.service|alquivo-backup-resume.service|alquivo-backup-test.service) ;;
   *) echo 'Invalid backup notification source.' >&2; exit 1 ;;
 esac
 image=$(docker inspect --format '{{.Image}}' alquivo-production-backend-1)

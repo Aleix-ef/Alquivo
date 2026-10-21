@@ -1,0 +1,18 @@
+[Unit]
+Description=Resume Alquivo if power loss interrupted backup staging
+Requires=docker.service
+After=docker.service
+Before=alquivo-backup.service
+ConditionPathExists=/opt/alquivo/shared/backups/paused-services
+OnFailure=alquivo-backup-alert@%n.service
+
+[Service]
+Type=oneshot
+UMask=0077
+Environment=COMPOSE_FILE=docker-compose.production.yml
+Environment=BACKUP_WORK_DIR=/opt/alquivo/shared/backups
+ExecStart=/bin/bash /opt/alquivo/current/tools/backup.sh --resume-only
+TimeoutStartSec=5min
+
+[Install]
+WantedBy=multi-user.target
