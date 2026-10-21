@@ -1,4 +1,4 @@
-# Despliegue restringido de Alquivo — 20/10/2026
+# Despliegue restringido de Alquivo — 20–21/10/2026
 
 ## Estado actual
 
@@ -11,6 +11,8 @@ cambiado su DNS, correo ni lista de espera.
 
 - VPS-2 OVHcloud, ubicación contratada Gravelines (Francia), Ubuntu 26.04 amd64.
 - Versión de aplicación: `b831c76a855f6495f711400f46b7f7f1ac0f33cb`.
+- Release operativa actual: `7c471ff9d8349e9938cf88b04c32671a45e2fdd5`, con
+  scripts de copias actualizados y las mismas imágenes de aplicación.
 - Código: `/opt/alquivo/releases/<commit>`; enlace estable `/opt/alquivo/current`.
 - Entorno privado: `/opt/alquivo/shared/.env.production`, propietario `ubuntu`,
   permisos 600; enlaces desde cada versión. Claves nuevas, no importadas del PC.
@@ -88,10 +90,23 @@ cambios posteriores de este bloque son infraestructura, no funciones nuevas.
 
 ## Pendiente antes de admitir datos reales
 
+Actualización del 21/10/2026: Storage Box de 1 TB en Falkenstein (Alemania),
+autenticada y montada con SMB 3.1.1 cifrado. Snapshot externo `502b0768` verificado
+con lectura de integridad y restaurado en un entorno aislado, incluidas las 37
+migraciones y un canario cifrado con las dos claves. Se repitió el ensayo con
+límites de recursos. Cero archivos privados de usuario referenciados en la copia;
+no se usaron documentos reales. Copia diaria 03:15–03:20 Europe/Madrid, retención
+de 30 días/última copia y control horario activos. Alerta recibida en Zimbra,
+confirmada por el titular. App/landing HTTPS 200 y control de seguridad correctos.
+**Falta custodiar y probar las claves fuera del VPS** y la monitorización externa
+de ausencia de copias/caída total. Detalles y límites en
+[copias externas y recuperación](offsite-backups.md).
+
 - Copia cifrada externa de base **y archivos**, recuperación independiente de
   `APP_KEY`/llavero de documentos/secreto Restic y restauración de prueba. El
-  backup Standard del VPS no cierra este punto. **No existe aún destino externo
-  contratado, tarea de copia, alerta ni restauración externa validada.**
+  backup Standard del VPS no cierra este punto. **Copia, programación y ensayo
+  aislado correctos; pendiente custodia/descifrado independiente de secretos y
+  recorrido con documentos sintéticos subidos desde la app.**
 - Registro con consentimiento y una cuenta propia de prueba: verificar correo,
   recuperación, MFA y dispositivos, onboarding, documentos/aislamiento entre
   cuentas, contratos/cobros/gastos, tickets, exportación y eliminación.

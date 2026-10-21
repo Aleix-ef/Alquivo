@@ -167,3 +167,9 @@ External Reachability en Hetzner. La conexión desde OVH necesita salida TCP/445
 directorio local si el almacenamiento externo no está disponible. Continuar con
 copia cifrada, recuperación independiente de claves, alertas y restauración
 aislada antes de dar este bloque por completado.
+
+La configuración aplicada, las unidades de copia/alerta, los límites y las tareas
+del titular están recogidos en [copias externas y recuperación](../../docs/offsite-backups.md).
+Los scripts y el estado usan rutas persistentes en `/opt/alquivo/shared`, no
+secretos ni temporales dentro de cada release. El montaje de ejemplo necesita
+nombre escapado con `systemd-escape` y el hostname real; no contiene contraseñas.
