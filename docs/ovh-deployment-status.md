@@ -98,15 +98,19 @@ límites de recursos. Cero archivos privados de usuario referenciados en la copi
 no se usaron documentos reales. Copia diaria 03:15–03:20 Europe/Madrid, retención
 de 30 días/última copia y control horario activos. Alerta recibida en Zimbra,
 confirmada por el titular. App/landing HTTPS 200 y control de seguridad correctos.
-**Falta custodiar y probar las claves fuera del VPS** y la monitorización externa
-de ausencia de copias/caída total. Detalles y límites en
+**Copia de claves descargada y descifrada fuera del VPS**, con evidencia local
+comprobada el 21/10 a las 19:02 CEST y huella coincidente con el original. Sin
+confirmar una segunda custodia fuera del ordenador y el almacenamiento de su
+contraseña en el gestor. Sigue pendiente la monitorización externa de ausencia
+de copias/caída total. Detalles y límites en
 [copias externas y recuperación](offsite-backups.md).
 
 - Copia cifrada externa de base **y archivos**, recuperación independiente de
   `APP_KEY`/llavero de documentos/secreto Restic y restauración de prueba. El
   backup Standard del VPS no cierra este punto. **Copia, programación y ensayo
-  aislado correctos; pendiente custodia/descifrado independiente de secretos y
-  recorrido con documentos sintéticos subidos desde la app.**
+  aislado correctos; copia de secretos descargada y descifrada fuera del VPS.
+  Sin confirmar segunda custodia fuera del ordenador; pendiente recorrido con
+  documentos sintéticos subidos desde la app.**
 - Registro con consentimiento y una cuenta propia de prueba: verificar correo,
   recuperación, MFA y dispositivos, onboarding, documentos/aislamiento entre
   cuentas, contratos/cobros/gastos, tickets, exportación y eliminación.

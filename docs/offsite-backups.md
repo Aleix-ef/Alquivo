@@ -99,17 +99,23 @@ sudo env \
 ```
 
 Este comando usa el llavero conservado en el propio VPS. **No demuestra por sí
-solo que se podría recuperar tras perder completamente ese VPS**: falta el
-siguiente paso del titular.
+solo que se podría recuperar tras perder completamente ese VPS**. La copia
+independiente de secretos sí se descargó y verificó posteriormente como se
+describe a continuación; falta confirmar su segunda custodia fuera del ordenador.
 
-## Pendiente obligatorio: custodiar secretos fuera del VPS
+## Custodia y verificación de secretos fuera del VPS
 
 Avance del 21/10: el titular ha creado el paquete cifrado de recuperación. Se ha
 descargado a `~/Descargas/Alquivo-recuperacion/` con permisos 600, dentro de una
 carpeta 700, fuera del repositorio Git. Sus 10.422 bytes y SHA-256 coinciden con
 el VPS (`31723b4ac4b0da0146aa99273d947ec6aca28687c38f6121e762069b356a95b3`).
-No quedaron temporales de exportación en `/run`. **Todavía no se ha descifrado
-esa copia local: el titular conserva en exclusiva su contraseña.**
+No quedaron temporales de exportación en `/run`. **El titular ha descifrado y
+verificado la copia local**, conservando en exclusiva su contraseña. Se comprobó
+la evidencia `.verified` del **21/10/2026 a las 19:02:26 CEST (17:02:26 UTC)**:
+su huella coincide tanto con el archivo local como con la huella original del
+VPS. Archivo y evidencia tienen permisos 600, dentro de una carpeta 700. No se
+encontraron temporales del verificador en el directorio de memoria del usuario
+ni en `/dev/shm`. Esta comprobación no leyó ni mostró las claves.
 
 Preparado `comprobar-copia.sh` junto al paquete. La herramienta age procede del
 paquete autenticado de los repositorios de Ubuntu (`1.0.0-1ubuntu0.1`), extraído
@@ -130,9 +136,10 @@ bash ~/Descargas/Alquivo-recuperacion/comprobar-copia.sh
 ```
 
 Debe pedir la contraseña del paquete (no la de SSH/Hetzner) y terminar con
-`VERIFICACIÓN CORRECTA`. Después custodiar otra copia fuera del ordenador y la
-contraseña en el gestor. Las instrucciones siguientes se conservan para futuras
-exportaciones; no hace falta generar otro paquete para completar esta prueba.
+`VERIFICACIÓN CORRECTA`. Este paso ya se completó el 21/10. **Queda sin confirmar
+la segunda copia fuera del ordenador y la custodia de la contraseña en el
+gestor.** Las instrucciones siguientes se conservan para futuras exportaciones;
+no hace falta generar otro paquete para completar esta prueba.
 
 En una sesión SSH interactiva, el titular ejecuta:
 
@@ -155,10 +162,11 @@ archivo descargado se descifra y que coinciden sus SHA-256, sin mostrar los
 valores de los secretos ni dejar la extracción sin cifrar en disco. Conservar
 el acceso a OVH/Hetzner y los medios de recuperación de sus cuentas por separado.
 
-Hasta confirmar descarga, custodia y descifrado de ese paquete, **la recuperación
-independiente de claves sigue pendiente**. Regenerarlo y probarlo después de
-cambios de claves, credenciales o configuración importante; no borrar versiones
-antiguas necesarias para recuperar snapshots retenidos.
+La descarga y el descifrado íntegro del paquete **fuera del VPS están
+comprobados**. No confundirlo con una segunda custodia fuera del ordenador, aún
+sin confirmar, ni con un ensayo completo en un VPS de reemplazo. Regenerarlo y
+probarlo después de cambios de claves, credenciales o configuración importante;
+no borrar versiones antiguas necesarias para recuperar snapshots retenidos.
 
 ## Límites que no hay que confundir con tareas terminadas
 
