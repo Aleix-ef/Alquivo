@@ -1,6 +1,7 @@
 import { defineStore } from "pinia";
 import api, { csrf } from "./api";
 import { forceSpanish, syncLocaleForSession } from "./i18n.js";
+import { readTwoFactorResult } from "./authChallenge";
 import {
   clearSessionStorage,
   persistSession,
@@ -61,8 +62,9 @@ export const useSession = defineStore("session", {
         method,
         remember_device: rememberDevice,
       });
-      if (!data.challenge_complete) {
-        this.twoFactorMethods = data.methods_remaining || [];
+      const result = readTwoFactorResult(data);
+      if (!result.complete) {
+        this.twoFactorMethods = result.remaining;
         return false;
       }
       this.twoFactorMethods = [];

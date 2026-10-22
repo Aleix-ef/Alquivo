@@ -77,7 +77,10 @@ Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
     Route::delete('/account/two-factor/devices', [TwoFactorController::class, 'revokeDevices']);
     Route::delete('/account/two-factor/devices/{device}', [TwoFactorController::class, 'revokeDevice'])->whereNumber('device');
     Route::post('/account/two-factor/setup', [TwoFactorController::class, 'setup'])->middleware('throttle:two-factor-settings');
+    Route::post('/account/two-factor/setup/resend', [TwoFactorController::class, 'resendSetup'])->middleware('throttle:two-factor-settings');
+    Route::delete('/account/two-factor/setup', [TwoFactorController::class, 'cancelSetup'])->middleware('throttle:two-factor-settings');
     Route::post('/account/two-factor/confirm', [TwoFactorController::class, 'confirm'])->middleware('throttle:two-factor-settings');
+    Route::post('/account/two-factor/security-code', [TwoFactorController::class, 'securityCode'])->middleware('throttle:two-factor-settings');
     Route::delete('/account/two-factor', [TwoFactorController::class, 'disable'])->middleware('throttle:two-factor-settings');
     Route::post('/auth/logout', [AuthController::class, 'logout']);
     Route::post('/auth/email/resend', [AuthController::class, 'resendVerification'])->middleware('throttle:6,1');

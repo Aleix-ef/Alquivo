@@ -78,7 +78,7 @@ class TwoFactorTest extends TestCase
     {
         $user = User::factory()->create(['password' => 'password123']);
         $this->withHeader('Origin', config('app.url'))->actingAs($user)->postJson('/api/v1/account/two-factor/setup', ['current_password' => 'wrong'])->assertUnprocessable();
-        $secret = $this->postJson('/api/v1/account/two-factor/setup', ['current_password' => 'password123'])->assertOk()->json('secret');
+        $secret = $this->postJson('/api/v1/account/two-factor/setup', ['current_password' => 'password123', 'method' => 'authenticator'])->assertOk()->json('secret');
         $this->assertNull($user->fresh()->two_factor_confirmed_at);
         $this->postJson('/api/v1/account/two-factor/confirm', ['code' => 'invalid'])->assertUnprocessable();
         $codes = $this->postJson('/api/v1/account/two-factor/confirm', ['code' => (new Google2FA)->oathTotp($secret, intdiv(now()->timestamp, 30))])->assertOk()->json('recovery_codes');

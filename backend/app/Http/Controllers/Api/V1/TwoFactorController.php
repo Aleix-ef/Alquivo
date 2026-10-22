@@ -6,6 +6,7 @@ use App\Domain\Identity\Models\TrustedDevice;
 use App\Domain\Identity\Services\RevokeSessions;
 use App\Domain\Identity\Services\TrustedDevices;
 use App\Domain\Identity\Services\TwoFactor;
+use App\Domain\Identity\Services\TwoFactorEmailCodes;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Notifications\TwoFactorCodeNotification;
@@ -22,36 +23,72 @@ class TwoFactorController extends Controller
 {
     public function status(Request $request): array
     {
-        return ['enabled' => (bool) $request->user()->two_factor_confirmed_at, 'method' => $request->user()->two_factor_method ?: 'authenticator', 'email_verified' => $request->user()->hasVerifiedEmail(), 'email_delivery_available' => app(TwoFactor::class)->emailDeliveryAvailable(), 'email_hint' => $this->maskedEmail($request->user()->email), 'recovery_codes_remaining' => count($request->user()->two_factor_recovery_codes ?? [])];
+        return ['enabled' => (bool) $request->user()->two_factor_confirmed_at,
+            'method' => $request->user()->two_factor_confirmed_at ? ($request->user()->two_factor_method ?: 'authenticator') : 'email',
+            'authenticator_configured' => filled($request->user()->two_factor_secret),
+            'email_verified' => $request->user()->hasVerifiedEmail(), 'email_delivery_available' => app(TwoFactor::class)->emailDeliveryAvailable(),
+            'email_hint' => $this->maskedEmail($request->user()->email), 'recovery_codes_remaining' => count($request->user()->two_factor_recovery_codes ?? [])];
     }
 
     public function setup(Request $request): array
     {
         abort_unless($request->hasSession(), 422, 'Utiliza la sesión de navegador para configurar el doble factor.');
-        $request->validate(['current_password' => ['required', 'current_password:web']]);
-        abort_if($request->user()->two_factor_confirmed_at, 409, 'El doble factor ya está activo.');
-        $secret = (new Google2FA)->generateSecretKey();
-        $request->session()->put('two_factor_setup', ['secret' => $secret, 'user_id' => $request->user()->id, 'password' => hash('sha256', $request->user()->getAuthPassword()), 'expires' => now()->addMinutes(10)->timestamp]);
+        $request->validate(['current_password' => ['required', 'current_password:web'], 'method' => ['sometimes', 'in:email,authenticator,both'], 'code' => ['nullable', 'string', 'max:40']]);
+        $method = $request->input('method', 'email');
+        if ($request->user()->two_factor_confirmed_at) {
+            app(TwoFactor::class)->throttle($request->user()->id);
+        }
+        $pending = DB::transaction(function () use ($request, $method) {
+            $user = User::whereKey($request->user()->id)->lockForUpdate()->firstOrFail();
+            abort_unless(Hash::check($request->input('current_password'), $user->password), 422);
+            if (in_array($method, ['email', 'both'], true)) {
+                abort_unless($user->hasVerifiedEmail(), 422, 'Confirma primero el correo de tu cuenta.');
+                abort_unless(app(TwoFactor::class)->emailDeliveryAvailable(), 503, 'El envío de códigos por correo no está disponible.');
+            }
+            $adding = (bool) $user->two_factor_confirmed_at;
+            if ($adding) {
+                abort_unless(! filled($user->two_factor_secret) && in_array($method, ['authenticator', 'both'], true), 409, 'El doble factor ya está activo.');
+                app(TwoFactor::class)->consumeForSecurity($user, $request, 'change_method:'.$method, trim((string) $request->input('code')));
+            }
+            $emailRequired = $method === 'email' || ($method === 'both' && ! $adding);
+            if ($emailRequired) {
+                app(TwoFactorEmailCodes::class)->issue($user, $request, 'setup');
+            }
 
-        // Never send this secret to an external QR service.
-        return ['secret' => $secret];
+            return ['secret' => $method === 'email' ? null : (new Google2FA)->generateSecretKey(),
+                'user_id' => $user->id, 'binding' => app(TwoFactor::class)->binding($user), 'method' => $method,
+                'adding' => $adding, 'email_required' => $emailRequired, 'expires' => now()->addMinutes(10)->timestamp];
+        });
+        $request->session()->put('two_factor_setup', $pending);
+
+        return ['method' => $method, 'secret' => $pending['secret'], 'email_confirmation_required' => $pending['email_required'],
+            'email_hint' => $this->maskedEmail($request->user()->email)];
     }
 
-    public function confirm(Request $request): array
+    public function confirm(Request $request)
     {
         abort_unless($request->hasSession(), 422, 'Utiliza la sesión de navegador para confirmar el doble factor.');
-        $request->validate(['code' => ['required', 'string', 'regex:/^\d{6}$/D']]);
+        $request->validate(['code' => ['required', 'string', 'regex:/^\d{6}$/D'], 'email_code' => ['nullable', 'string', 'regex:/^\d{6}$/D'], 'remember_device' => ['sometimes', 'boolean']]);
         $pending = $request->session()->get('two_factor_setup');
         abort_unless($pending && $pending['expires'] > now()->timestamp && $pending['user_id'] === $request->user()->id, 422, 'La configuración ha caducado. Empieza de nuevo.');
         app(TwoFactor::class)->throttle($request->user()->id);
         $codes = DB::transaction(function () use ($request, $pending) {
             $user = User::whereKey($request->user()->id)->lockForUpdate()->firstOrFail();
-            abort_unless(hash_equals($pending['password'], hash('sha256', $user->getAuthPassword())), 422, 'Vuelve a confirmar tu contraseña.');
-            abort_if($user->two_factor_confirmed_at, 409, 'El doble factor ya está activo.');
-            $user->two_factor_secret = $pending['secret'];
-            app(TwoFactor::class)->consume($user, $request->string('code')->toString());
+            abort_unless(hash_equals($pending['binding'], app(TwoFactor::class)->binding($user)), 422, 'La cuenta ha cambiado. Empieza de nuevo.');
+            abort_unless((bool) $user->two_factor_confirmed_at === $pending['adding'], 409, 'La configuración de seguridad ha cambiado.');
+            $step = null;
+            if ($pending['method'] !== 'email') {
+                $step = (new Google2FA)->verifyKeyNewer($pending['secret'], $request->input('code'), 0, 1, intdiv(now()->timestamp, 30));
+                abort_unless($step !== false, 422, 'El código del autenticador no es válido.');
+            }
+            if ($pending['email_required']) {
+                app(TwoFactorEmailCodes::class)->consume($user, $request, 'setup',
+                    $pending['method'] === 'email' ? $request->input('code') : (string) $request->input('email_code'));
+            }
             $codes = array_map(fn () => bin2hex(random_bytes(10)), range(1, 8));
-            $user->forceFill(['two_factor_confirmed_at' => now(), 'two_factor_recovery_codes' => array_map(fn ($code) => hash('sha256', $code), $codes)])->save();
+            $user->forceFill(['two_factor_secret' => $pending['secret'], 'two_factor_last_step' => $step,
+                'two_factor_method' => $pending['method'], 'two_factor_confirmed_at' => now(),
+                'two_factor_recovery_codes' => array_map(fn ($code) => hash('sha256', $code), $codes)])->save();
             app(RevokeSessions::class)->execute($user, $request->session()->getId());
 
             return $codes;
@@ -60,7 +97,12 @@ class TwoFactorController extends Controller
         $request->session()->regenerate();
         SecurityAudit::record('account.two_factor_enabled', $request->user()->id);
 
-        return ['recovery_codes' => $codes];
+        $response = response()->json(['recovery_codes' => $codes, 'method' => $pending['method']]);
+        if ($request->boolean('remember_device')) {
+            $response->withCookie(app(TrustedDevices::class)->issue($request->user()->fresh(), $request));
+        }
+
+        return $response;
     }
 
     public function disable(Request $request)
@@ -72,8 +114,8 @@ class TwoFactorController extends Controller
             $user = User::whereKey($request->user()->id)->lockForUpdate()->firstOrFail();
             abort_unless($user->two_factor_confirmed_at, 409, 'El doble factor no está activo.');
             abort_unless(Hash::check($request->input('current_password'), $user->password), 422);
-            app(TwoFactor::class)->consume($user, trim($request->input('code')));
-            $user->forceFill(['two_factor_secret' => null, 'two_factor_confirmed_at' => null, 'two_factor_recovery_codes' => null, 'two_factor_last_step' => null])->save();
+            app(TwoFactor::class)->consumeForSecurity($user, $request, 'disable', trim($request->input('code')));
+            $user->forceFill(['two_factor_secret' => null, 'two_factor_confirmed_at' => null, 'two_factor_recovery_codes' => null, 'two_factor_last_step' => null, 'two_factor_method' => 'email'])->save();
             TrustedDevice::where('user_id', $user->id)->delete();
             app(RevokeSessions::class)->execute($user, $request->session()->getId());
         });
@@ -106,12 +148,14 @@ class TwoFactorController extends Controller
             $pending['email_hash'] = null;
             $pending['verified'][] = 'email';
         } else {
-            $used = DB::transaction(function () use ($request, $pending) {
+            $used = DB::transaction(function () use ($request, $pending, $method) {
                 $locked = User::whereKey($pending['user_id'])->lockForUpdate()->firstOrFail();
                 $factor = app(TwoFactor::class);
                 abort_unless($locked->two_factor_confirmed_at && hash_equals($pending['binding'], $factor->binding($locked)), 422, 'Tu cuenta ha cambiado. Vuelve a iniciar sesión.');
 
-                return $factor->consume($locked, trim($request->input('code')));
+                return $method === 'recovery'
+                    ? $factor->consumeRecovery($locked, trim($request->input('code')))
+                    : $factor->consume($locked, trim($request->input('code')));
             });
             if ($method === 'recovery' || $used === 'recovery') {
                 $pending['verified'] = $pending['methods'];
@@ -128,6 +172,28 @@ class TwoFactorController extends Controller
         }
 
         return $this->completeLogin($request, $user, $pending);
+    }
+
+    public function resendSetup(Request $request): array
+    {
+        abort_unless($request->hasSession(), 422);
+        $pending = $request->session()->get('two_factor_setup');
+        abort_unless($pending && $pending['user_id'] === $request->user()->id && $pending['expires'] > now()->timestamp
+            && $pending['email_required'] && hash_equals($pending['binding'], app(TwoFactor::class)->binding($request->user()->fresh())), 422, 'La configuración ha caducado. Empieza de nuevo.');
+        app(TwoFactorEmailCodes::class)->issue($request->user()->fresh(), $request, 'setup');
+
+        return ['message' => 'Te hemos enviado un código nuevo. El anterior ya no sirve.'];
+    }
+
+    public function cancelSetup(Request $request)
+    {
+        abort_unless($request->hasSession(), 422);
+        $request->session()->forget('two_factor_setup');
+        if ($request->session()->get('two_factor_security_code.purpose') === 'setup') {
+            $request->session()->forget('two_factor_security_code');
+        }
+
+        return response()->noContent();
     }
 
     public function resend(Request $request)
@@ -163,20 +229,41 @@ class TwoFactorController extends Controller
         app(TwoFactor::class)->throttle($request->user()->id);
         $user = DB::transaction(function () use ($request, $data) {
             $user = User::whereKey($request->user()->id)->lockForUpdate()->firstOrFail();
+            abort_unless(Hash::check($data['current_password'], $user->password), 422);
             abort_unless($user->two_factor_confirmed_at, 409, 'Activa primero la verificación en dos pasos.');
             if (in_array($data['method'], ['email', 'both'], true)) {
                 abort_unless($user->hasVerifiedEmail(), 422, 'Confirma primero el correo de tu cuenta para poder recibir códigos.');
                 abort_unless(app(TwoFactor::class)->emailDeliveryAvailable(), 422, 'El envío de correos no está configurado todavía. Elige el autenticador hasta que se configure el correo transaccional.');
             }
-            app(TwoFactor::class)->consume($user, trim($data['code']));
+            abort_unless($data['method'] === 'email' || filled($user->two_factor_secret), 422, 'Configura primero la aplicación de autenticación.');
+            app(TwoFactor::class)->consumeForSecurity($user, $request, 'change_method:'.$data['method'], trim($data['code']));
             $user->forceFill(['two_factor_method' => $data['method']])->save();
-            TrustedDevice::where('user_id', $user->id)->delete();
+            app(RevokeSessions::class)->execute($user, $request->session()->getId());
 
             return $user;
         });
         SecurityAudit::record('account.two_factor_method_changed', $user->id);
+        $request->session()->regenerate();
 
         return response()->json(['method' => $user->two_factor_method, 'message' => 'Método de verificación actualizado. Vuelve a autorizar tus dispositivos de confianza.'])->withCookie(app(TrustedDevices::class)->forgetCookie());
+    }
+
+    public function securityCode(Request $request): array
+    {
+        abort_unless($request->hasSession(), 422, 'Utiliza una sesión de navegador.');
+        $data = $request->validate(['current_password' => ['required', 'current_password:web'],
+            'purpose' => ['required', 'in:change_method,disable,change_email'], 'method' => ['required_if:purpose,change_method', 'in:email,authenticator,both'],
+            'new_email' => ['required_if:purpose,change_email', 'email', 'max:255']]);
+        $user = $request->user()->fresh();
+        abort_unless($user->two_factor_confirmed_at && $user->two_factor_method === 'email', 422, 'Usa tu autenticador o un código de recuperación.');
+        $purpose = match ($data['purpose']) {
+            'change_method' => 'change_method:'.$data['method'],
+            'change_email' => 'change_email:'.hash('sha256', mb_strtolower(trim($data['new_email']))),
+            default => 'disable',
+        };
+        app(TwoFactorEmailCodes::class)->issue($user, $request, $purpose);
+
+        return ['message' => 'Código enviado a tu correo actual. Caduca en 5 minutos y solo sirve para este cambio.'];
     }
 
     public function devices(Request $request): array
@@ -207,7 +294,7 @@ class TwoFactorController extends Controller
         $request->session()->forget('two_factor_login');
         Auth::guard('web')->login($user);
         $request->session()->regenerate();
-        $response = response()->json(['user' => $user, 'portfolio' => $user->portfolio()]);
+        $response = response()->json(['challenge_complete' => true, 'user' => $user, 'portfolio' => $user->portfolio()]);
         if ($pending['remember_device'] ?? false) {
             $response->withCookie(app(TrustedDevices::class)->issue($user, $request));
             SecurityAudit::record('account.trusted_device_added', $user->id);

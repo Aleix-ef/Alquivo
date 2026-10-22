@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Domain\Documents\Services\PrivateFileDeletion;
 use App\Domain\Identity\Services\LegalEvidence;
 use App\Domain\Identity\Services\RevokeSessions;
+use App\Domain\Identity\Services\TwoFactor;
 use App\Domain\Portfolio\Services\PlanService;
 use App\Domain\Portfolio\Services\StorageUsageService;
 use App\Domain\Support\Models\SupportConversation;
@@ -15,6 +16,7 @@ use App\Support\SecurityAudit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 
@@ -24,7 +26,7 @@ class AccountController extends Controller
 
     public function update(Request $request)
     {
-        $user = $request->user();
+        $user = $request->user()->refresh();
         $portfolio = $user->portfolio();
         $request->merge(['email' => mb_strtolower(trim((string) $request->input('email')))]);
         $emailChanged = $request->input('email') !== $user->email;
@@ -36,14 +38,32 @@ class AccountController extends Controller
             'currency' => ['required', Rule::in([$portfolio->currency])],
             'country_code' => ['required', 'string', 'size:2'],
             'current_password' => [Rule::requiredIf($emailChanged), 'nullable', 'current_password:web'],
+            'two_factor_code' => [Rule::requiredIf($emailChanged && (bool) $user->two_factor_confirmed_at), 'nullable', 'string', 'max:40'],
         ]);
 
         $email = strtolower($data['email']);
         $emailChanged = $email !== $user->email;
-        $user->update(['name' => $data['name'], 'email' => $email, 'email_verified_at' => $emailChanged ? null : $user->email_verified_at]);
-        if ($emailChanged && in_array($user->two_factor_method, ['email', 'both'], true)) {
-            $user->forceFill(['two_factor_method' => 'authenticator'])->save();
+        if ($emailChanged && $user->two_factor_confirmed_at) {
+            app(TwoFactor::class)->throttle($user->id);
         }
+        $user = DB::transaction(function () use ($user, $request, $data, $email) {
+            $user = User::whereKey($user->id)->lockForUpdate()->firstOrFail();
+            $changed = $email !== $user->email;
+            if ($changed) {
+                abort_unless(Hash::check($request->input('current_password'), $user->password), 422, 'Confirma tu contraseña actual.');
+            }
+            if ($changed && $user->two_factor_confirmed_at) {
+                app(TwoFactor::class)->consumeForSecurity($user, $request,
+                    'change_email:'.hash('sha256', $email), trim($data['two_factor_code'] ?? ''));
+            }
+            $user->update(['name' => $data['name'], 'email' => $email, 'email_verified_at' => $changed ? null : $user->email_verified_at]);
+            // An email-only account has no TOTP secret: never switch it to an unusable factor.
+            if ($changed && $user->two_factor_method === 'both' && filled($user->two_factor_secret)) {
+                $user->forceFill(['two_factor_method' => 'authenticator'])->save();
+            }
+
+            return $user;
+        });
         if ($emailChanged) {
             app(RevokeSessions::class)->execute($user, $request->hasSession() ? $request->session()->getId() : null);
             SecurityAudit::record('account.email_changed', $user->id);

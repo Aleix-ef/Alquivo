@@ -172,7 +172,7 @@ test("all password forms use the shared control instead of a bare password input
   }
   assert.equal(
     fields,
-    11,
-    "login/register, recovery, settings and two-factor forms",
+    12,
+    "login/register, recovery, settings and two-factor enrollment/method/disable forms",
   );
 });

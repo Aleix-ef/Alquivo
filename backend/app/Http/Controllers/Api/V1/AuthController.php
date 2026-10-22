@@ -106,6 +106,9 @@ class AuthController extends Controller
                 'both' => ['authenticator', 'email'],
                 default => ['authenticator'],
             };
+            if (! $user->hasVerifiedEmail() && in_array('email', $methods, true)) {
+                $methods = $user->two_factor_method === 'both' && filled($user->two_factor_secret) ? ['authenticator'] : ['recovery'];
+            }
             $pending = ['user_id' => $user->id, 'binding' => app(TwoFactor::class)->binding($user), 'expires' => now()->addMinutes(5)->timestamp, 'methods' => $methods, 'verified' => [], 'email_hash' => null, 'email_expires' => null, 'email_attempts' => 0];
             if (in_array('email', $methods, true)) {
                 $pending = $this->sendTwoFactorEmail($user, $pending);
