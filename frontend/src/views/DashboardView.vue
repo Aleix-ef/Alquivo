@@ -16,6 +16,7 @@ import {
 } from "@lucide/vue";
 import api from "../api";
 import { useSession } from "../session";
+import { formatMoney } from "../money";
 import AttentionPanel from "../components/AttentionPanel.vue";
 import { useProduct } from "../stores/product";
 import "../dashboard.css";
@@ -45,12 +46,7 @@ const month = computed(() =>
   ),
 );
 const currency = computed(() => session.portfolio?.currency || "EUR");
-const money = (value) =>
-  new Intl.NumberFormat("es-ES", {
-    style: "currency",
-    currency: currency.value,
-    maximumFractionDigits: 0,
-  }).format(value || 0);
+const money = (value) => formatMoney(value, currency.value);
 const percent = (value) =>
   value == null
     ? "—"

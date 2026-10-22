@@ -25,6 +25,7 @@ import {
 } from "@lucide/vue";
 import { useRoute, useRouter } from "vue-router";
 import api from "../api";
+import { formatMoney as money } from "../money";
 import PropertyImage from "../components/PropertyImage.vue";
 import { useDialog } from "../composables/useDialog";
 import ConfirmDialog from "../components/ConfirmDialog.vue";
@@ -78,12 +79,6 @@ const types = {
   building: "Edificio",
   other: "Otro",
 };
-const money = (value) =>
-  new Intl.NumberFormat("es-ES", {
-    style: "currency",
-    currency: "EUR",
-    maximumFractionDigits: 0,
-  }).format(value || 0);
 const date = (value) =>
   value
     ? new Intl.DateTimeFormat("es-ES", {

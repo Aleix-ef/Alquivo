@@ -138,6 +138,27 @@ class DecimalAmountsApiTest extends TestCase
         Http::assertNothingSent();
     }
 
+    public function test_dashboard_and_report_summaries_preserve_cents(): void
+    {
+        [, $property] = $this->context();
+        foreach (['income' => '62.50', 'expense' => '12.25'] as $direction => $amount) {
+            $this->postJson('/api/v1/transactions', [
+                'property_id' => $property->id, 'direction' => $direction, 'category' => 'other',
+                'description' => 'Synthetic summary cents', 'amount' => $amount,
+                'transaction_date' => today()->toDateString(), 'status' => 'paid',
+            ])->assertCreated()->assertJsonPath('amount', $amount);
+        }
+        $this->getJson('/api/v1/dashboard')->assertOk()
+            ->assertJsonPath('metrics.monthly_income', fn ($value) => (float) $value === 62.50)
+            ->assertJsonPath('metrics.monthly_expenses', fn ($value) => (float) $value === 12.25)
+            ->assertJsonPath('metrics.net_profit', fn ($value) => (float) $value === 50.25);
+        $this->getJson('/api/v1/reports/overview?months=3')->assertOk()
+            ->assertJsonPath('totals.income', fn ($value) => (float) $value === 62.50)
+            ->assertJsonPath('totals.expenses', fn ($value) => (float) $value === 12.25)
+            ->assertJsonPath('totals.net', fn ($value) => (float) $value === 50.25);
+        Http::assertNothingSent();
+    }
+
     public function test_incident_estimates_and_actual_costs_accept_cents(): void
     {
         [, $property] = $this->context();

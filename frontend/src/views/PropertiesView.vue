@@ -12,6 +12,7 @@ import {
 } from "@lucide/vue";
 import { useRoute, useRouter } from "vue-router";
 import api from "../api";
+import { formatMoney as money } from "../money";
 import { usePlanAccess } from "../stores/planAccess";
 const planAccess = usePlanAccess();
 import { fetchAllPages } from "../pagination";
@@ -50,12 +51,6 @@ const types = {
   building: "Edificio",
   other: "Otro",
 };
-const money = (value) =>
-  new Intl.NumberFormat("es-ES", {
-    style: "currency",
-    currency: "EUR",
-    maximumFractionDigits: 0,
-  }).format(value || 0);
 const activeLease = (property) =>
   property.leases?.find((lease) => lease.status === "active");
 const rented = computed(() => items.value.filter(activeLease).length);

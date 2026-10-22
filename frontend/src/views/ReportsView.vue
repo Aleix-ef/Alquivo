@@ -2,6 +2,7 @@
 import { computed, onMounted, ref } from "vue";
 import { Download, TrendingUp } from "@lucide/vue";
 import api from "../api";
+import { formatMoney } from "../money";
 
 const report = ref(null);
 const months = ref(12);
@@ -17,12 +18,7 @@ const maxMovement = computed(() =>
     ]),
   ),
 );
-const money = (value) =>
-  new Intl.NumberFormat("es-ES", {
-    style: "currency",
-    currency: report.value?.currency || "EUR",
-    maximumFractionDigits: 0,
-  }).format(value || 0);
+const money = (value) => formatMoney(value, report.value?.currency || "EUR");
 async function load() {
   loading.value = true;
   error.value = "";
