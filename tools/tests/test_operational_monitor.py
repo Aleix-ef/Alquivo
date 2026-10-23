@@ -211,6 +211,18 @@ class MonitorTest(unittest.TestCase):
     def test_transport_does_not_follow_redirects(self):
         self.assertIsNone(monitor.NoRedirect().redirect_request(None, None, 302, "", {}, "https://evil.example"))
 
+    def test_transport_identifies_the_client_and_preserves_authorization(self):
+        with patch.object(monitor.urllib.request, "build_opener") as opener:
+            response = opener.return_value.open.return_value.__enter__.return_value
+            response.status = 200
+            response.read.return_value = b"OK"
+            self.assertEqual((200, b"OK"), monitor.request("https://api.resend.com/emails", body=b"{}",
+                                                        headers={"Authorization": "Bearer SYNTHETIC_ONLY"}))
+            req = opener.return_value.open.call_args.args[0]
+            self.assertEqual("Alquivo-Monitor/1.0 (+https://alquivo.com)", req.get_header("User-agent"))
+            self.assertEqual("Bearer SYNTHETIC_ONLY", req.get_header("Authorization"))
+            self.assertEqual(b"{}", req.data)
+
     def test_systemd_monitor_does_not_depend_on_docker_or_expose_a_port(self):
         unit = (ROOT / "ops/server/alquivo-monitor.service").read_text()
         self.assertNotIn("\nRequires=docker", unit)

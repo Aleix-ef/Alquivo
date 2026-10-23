@@ -55,7 +55,11 @@ class NoRedirect(urllib.request.HTTPRedirectHandler):
 
 def request(url, *, body=None, headers=None):
     opener = urllib.request.build_opener(urllib.request.ProxyHandler({}), NoRedirect())
-    req = urllib.request.Request(url, data=body, headers=headers or {})
+    # Identify this authorized client explicitly; the default Python user-agent
+    # is rejected by the provider's browser-integrity filter (HTTP 403 / 1010).
+    req = urllib.request.Request(url, data=body, headers={
+        "User-Agent": "Alquivo-Monitor/1.0 (+https://alquivo.com)", **(headers or {}),
+    })
     with opener.open(req, timeout=12) as response:
         return response.status, response.read(1024)
 
