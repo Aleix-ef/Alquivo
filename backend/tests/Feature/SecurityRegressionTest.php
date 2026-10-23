@@ -8,6 +8,7 @@ use App\Domain\Assistant\Services\PortfolioAssistantTools;
 use App\Domain\Documents\Services\PrivateFileDeletion;
 use App\Domain\Portfolio\Models\Portfolio;
 use App\Models\User;
+use App\Support\PhpRuntimeSecurity;
 use App\Support\ProductionReadiness;
 use Illuminate\Filesystem\FilesystemManager;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -203,6 +204,7 @@ class SecurityRegressionTest extends TestCase
 
     public function test_production_check_accepts_complete_configuration(): void
     {
+        $this->mock(PhpRuntimeSecurity::class, fn ($mock) => $mock->shouldReceive('failures')->andReturn([]));
         $database = config('database.default');
         $this->app['env'] = 'production';
         config([

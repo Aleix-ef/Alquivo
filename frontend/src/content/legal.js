@@ -1,8 +1,8 @@
 import { legalOperator } from "./legalOperator.js";
 
 // Keep in sync with backend/config/legal.php. Archive each published revision.
-export const legalVersion = "2026-10-05";
-export const legalUpdatedAt = "2026-10-05";
+export const legalVersion = "2026-10-23-r2";
+export const legalUpdatedAt = "2026-10-23";
 export const operator = legalOperator;
 export const pendingValue = "Pendiente de completar antes de publicar la beta";
 export const legalDraft =
@@ -67,7 +67,7 @@ export const legalPages = [
         title: "3. Contenidos y propiedad intelectual",
         paragraphs: [
           "El software, la identidad visual y los contenidos propios del sitio están protegidos por los derechos que correspondan a su titular. Los componentes y materiales de terceros conservan sus respectivas licencias. Puedes consultar y guardar estos textos para tu uso personal; no se concede por ello una licencia para explotar comercialmente el software o la marca.",
-          "Los datos y documentos que aportes no pasan a ser propiedad de Alquivo. Su tratamiento se limita a prestar el servicio conforme a las condiciones y, cuando corresponda, al acuerdo de encargo.",
+          "Los datos y documentos que aportes no pasan a ser propiedad de Alquivo. Se utilizan para prestar el servicio conforme a las condiciones y, cuando corresponda, al acuerdo de encargo. La participación opcional en la mejora del asistente tiene una finalidad y un permiso separados, descritos en privacidad.",
         ],
       },
       {
@@ -261,6 +261,19 @@ export const legalPages = [
         ],
       },
       {
+        id: "mejora-ia",
+        title: "4 bis. Compartir conversaciones para mejorar Alquivo AI",
+        paragraphs: [
+          "Esta opción solo está disponible cuando aparece su control de activación en Privacidad del asistente. Si no aparece, la función no está habilitada para tu cuenta. La existencia de este apartado no activa la captura ni autoriza revisar conversaciones sin tu elección expresa.",
+          "Puedes autorizar por separado y de forma opcional la revisión de tus nuevas conversaciones para detectar y corregir errores del asistente. El titular de Alquivo es responsable de esta finalidad de mejora. La elección se basa en tu consentimiento, no viene marcada y no es necesaria para utilizar el asistente. No se recuperan conversaciones anteriores a la autorización ni se interpreta la activación del chat como permiso para esta finalidad.",
+          "Si participas, se registran cifrados los mensajes nuevos y su contexto reciente autorizado, las respuestas, las herramientas y los datos consultados necesarios para investigar, junto con errores, modelo, versiones y tiempos. Se limita el tamaño del registro y no se recuperan documentos originales, credenciales del sistema ni razonamientos internos del modelo. Si escribes datos personales o secretos en el chat, pueden quedar incluidos: evita hacerlo. Puede haber registros parciales. No se realizan consultas adicionales al proveedor de IA para crear estos registros.",
+          "Únicamente las personas con autorización específica, correo verificado y doble factor pueden revisar estos registros. Se auditan sus accesos y las preparaciones de exportación. El permiso de soporte ordinario no concede acceso. No se envían automáticamente por correo ni a otros servicios de IA, no se publican y no activan el uso de tus datos para entrenar modelos de OpenAI.",
+          "Los registros caducan como máximo a los 30 días y nunca amplían la conservación de los mensajes que contienen. Puedes retirar el permiso desde Privacidad en el asistente: se eliminan los registros de mejora y cesa la captura, pero puedes seguir usando el chat. También se eliminan los registros afectados al borrar la conversación, desactivar el asistente o eliminar la cuenta. El borrado y restauración de las copias de seguridad sigue las reglas de conservación publicadas. Se conserva por separado la evidencia mínima de aceptación y retirada para acreditar el tratamiento.",
+          "Para conservar casos de prueba se deben sustituir los datos reales por ejemplos ficticios. Las herramientas de depuración de exportaciones son una ayuda y exigen revisión humana: no garantizan anonimato ni autorizan compartir registros identificables con ChatGPT, Codex u otros terceros. La participación del propietario no constituye consentimiento de los inquilinos ni amplía las finalidades legítimas de tratamiento de sus datos; evita incorporar información de terceros innecesaria o sensible. Si aparece, debe excluirse de los ejemplos de mejora y atenderse cualquier solicitud de derechos.",
+        ],
+        links: [links.notice, links.processing],
+      },
+      {
         id: "conservacion",
         title: "5. Cuánto tiempo conservamos los datos",
         table: {
@@ -281,6 +294,10 @@ export const legalPages = [
             [
               "Métricas de uso y coste de IA",
               "12 meses completos más el mes en curso, sin el contenido de los mensajes.",
+            ],
+            [
+              "Registros opcionales de mejora de IA",
+              "Hasta 30 días, sin ampliar la caducidad de los mensajes incluidos; antes al retirar el permiso, borrar la conversación o eliminar la cuenta. Comentarios de revisión con la misma caducidad.",
             ],
             [
               "Evidencia de aceptación de condiciones y permisos de IA",
@@ -471,7 +488,7 @@ export const legalPages = [
         title: "5. Subencargados y ubicación del tratamiento",
         providers: true,
         paragraphs: [
-          "La relación siguiente distingue los servicios actuales de los previstos o pendientes de contratación. Una referencia a un proveedor previsto no significa que ya reciba datos ni autoriza a sustituirlo sin informar. Antes de la apertura pública deben verificarse la entidad contratada, la ubicación relevante del tratamiento y las garantías de cualquier transferencia fuera del Espacio Económico Europeo. La autorización del responsable se limita a los proveedores efectivamente contratados e identificados para las funciones que utilice.",
+          "La relación siguiente identifica el servicio, la entidad conocida, los datos tratados, la ubicación y las garantías de cada proveedor. Distingue los servicios operativos, las funciones opcionales todavía deshabilitadas y los mensajes históricos del buzón anterior. Los enlaces permiten consultar sus documentos públicos; no acreditan por sí solos la incorporación de todos los acuerdos u opciones a una cuenta concreta. La autorización del responsable se limita a los proveedores efectivamente contratados e identificados para las funciones que utilice.",
           "Alquivo impondrá a sus subencargados obligaciones de protección de datos equivalentes a las que correspondan en este acuerdo y seguirá respondiendo ante el responsable por el cumplimiento de sus obligaciones. Informará de las incorporaciones o sustituciones previstas con al menos 15 días de antelación, para que el responsable pueda objetar por razones de protección de datos. Si no se alcanza una solución, podrá dejar de utilizar la función afectada o finalizar el servicio con devolución o supresión de sus datos. No se someterán sus datos al proveedor objetado mientras se resuelve la objeción.",
           "La IA solo interviene cuando la función esté habilitada y el responsable la active tras consultar su aviso. Activar el chat no autoriza enviar archivos originales para análisis documental. No se atribuye al consentimiento del usuario la función de sustituir las garantías legales de una transferencia internacional.",
         ],

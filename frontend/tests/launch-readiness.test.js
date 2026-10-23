@@ -1,5 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { execFile } from "node:child_process";
 import { tmpdir } from "node:os";
@@ -46,23 +47,35 @@ test("external backup refuses missing or unmounted destinations before invoking 
   }
 });
 
-test("provider preparation cannot be mistaken for legal approval or a contracted server", () => {
+test("confirmed hosting and external backups do not imply legal approval", () => {
   assert.equal(legalDraft, true);
   assert.equal(operator.reviewedForPublication, false);
   assert.match(
     operator.providers.find((p) => p.service.startsWith("Alojamiento")).name,
-    /aún no contratado/,
+    /OVH HISPANO S.L./,
   );
   assert.match(
     operator.providers.find((p) => p.service === "Copias de seguridad").name,
-    /pendiente/,
+    /Hetzner Online GmbH/,
   );
   assert.match(
     operator.providers.find((p) => p.service === "Buzón receptor de soporte")
       .name,
-    /Gmail gratuito/,
+    /OVHcloud Zimbra Starter/,
   );
-  assert.match(operator.backupRetention, /no hay todavía copias de producción/);
+  assert.match(operator.backupRetention, /30 días/);
+  assert.match(operator.backupRetention, /última copia válida/);
+  assert.match(operator.backupRetention, /restauración en un entorno aislado/);
+  assert.match(
+    operator.providers.find((p) => p.service.startsWith("Alojamiento"))
+      .location,
+    /Gravelines, Francia/,
+  );
+  assert.match(
+    operator.providers.find((p) => p.service === "Copias de seguridad")
+      .location,
+    /Falkenstein, Alemania/,
+  );
   const processing = legalPages.find((p) => p.name === "data-processing");
   assert.match(
     processing.sections
@@ -70,6 +83,96 @@ test("provider preparation cannot be mistaken for legal approval or a contracted
       .paragraphs.join(" "),
     /efectivamente contratados/,
   );
+});
+
+test("each provider explains its data scope and links to public official conditions without claiming private approval", () => {
+  for (const provider of operator.providers) {
+    assert.ok(provider.data.length > 30);
+    assert.ok(provider.references.length >= 1);
+    for (const reference of provider.references) {
+      const url = new URL(reference.href);
+      assert.equal(url.protocol, "https:");
+      assert.equal(url.username, "");
+      assert.equal(url.password, "");
+    }
+  }
+  const content = legalPages
+    .find((page) => page.name === "data-processing")
+    .sections.find((section) => section.id === "proveedores")
+    .paragraphs.join(" ");
+  assert.match(content, /no acreditan por sí solos/);
+  assert.equal(operator.reviewedForPublication, false);
+});
+
+test("mailbox migration separates current providers from historical copies without inventing contract approval", () => {
+  const cloudflare = operator.providers.find((p) =>
+    p.name.startsWith("Cloudflare"),
+  );
+  assert.doesNotMatch(cloudflare.name, /Email Routing/);
+  assert.doesNotMatch(cloudflare.service, /reenvío/);
+  const mailbox = operator.providers.find(
+    (p) => p.service === "Buzón receptor de soporte",
+  );
+  assert.match(mailbox.name, /OVH HISPANO S.L./);
+  assert.match(mailbox.location, /Francia/);
+  assert.match(mailbox.safeguards, /evidencia de incorporación al pedido/);
+  assert.doesNotMatch(mailbox.name, /Gmail/);
+  const history = operator.providers.find((p) => p.name.startsWith("Google"));
+  assert.match(history.service, /históricos/);
+  assert.match(history.name, /sin recepción nueva/);
+  assert.match(history.safeguards, /ni se da por borrado su historial/);
+  assert.match(operator.mailboxRetention, /Pendiente de aplicar y verificar/);
+  assert.match(operator.mailboxRetention, /sus copias.*Gmail/);
+  assert.equal(operator.reviewedForPublication, false);
+});
+
+test("mailbox legal revision preserves the previous archived terms and captures public waitlist information", async () => {
+  assert.notEqual(legalVersion, "2026-10-05");
+  const previous = JSON.parse(
+    await readFile(
+      new URL("../../docs/legal-revisions/2026-10-05.json", import.meta.url),
+      "utf8",
+    ),
+  );
+  assert.equal(previous.version, "2026-10-05");
+  assert.equal(
+    previous.sha256,
+    "b91826b3b46099ad11329a0b144eefaac2e695af038e265c22783bba5ab8baac",
+  );
+  const { sha256, ...previousPayload } = previous;
+  assert.equal(
+    createHash("sha256").update(JSON.stringify(previousPayload)).digest("hex"),
+    sha256,
+  );
+  assert.match(
+    previous.operator.providers.find(
+      (p) => p.service === "Buzón receptor de soporte",
+    ).name,
+    /Gmail/,
+  );
+  const current = JSON.parse(
+    await readFile(
+      new URL(
+        `../../docs/legal-revisions/${legalVersion}.json`,
+        import.meta.url,
+      ),
+      "utf8",
+    ),
+  );
+  assert.equal(current.draft, true);
+  assert.match(
+    current.sources["frontend/src/views/WaitlistLegalView.vue"],
+    /OVHcloud Zimbra/,
+  );
+  assert.match(
+    current.sources["frontend/src/waitlist/contract.js"],
+    /2026-10-02.waitlist.v1/,
+  );
+  for (const file of [
+    "backend/config/assistant.php",
+    "backend/config/ai_documents.php",
+  ])
+    assert.equal(current.sources[file], previous.sources[file]);
 });
 
 test("AI privacy distinguishes API storage from abuse retention without promising EU-only processing", () => {

@@ -1,0 +1,701 @@
+{
+  "sha256": "f1362e76bc5d3dcab48c86f55b3c45b35e6e566c1f78ab59152128f6df727a15",
+  "version": "2026-10-23-r2",
+  "updatedAt": "2026-10-23",
+  "draft": true,
+  "operator": {
+    "name": "Aleix Escañuela Fresneda",
+    "legalForm": "Trabajador autónomo (persona física)",
+    "taxId": "21807679E",
+    "address": "C/ Vistabella, 8, 2.º B, 03802 Alcoy (Alicante), España",
+    "registry": "",
+    "email": "soporte@alquivo.com",
+    "reviewedForPublication": false,
+    "backupRetention": "Copias externas diarias cifradas de la base de datos y los archivos, en Alemania, con una ventana de conservación de 30 días. Se conserva además la última copia válida si se interrumpe la generación de copias nuevas; esa excepción puede superar la ventana mientras se resuelve la incidencia. La eliminación en la aplicación no borra inmediatamente las copias: no se usan como archivo ordinario y, al restaurarlas, deben reaplicarse las bajas y caducidades. Se ha comprobado la restauración en un entorno aislado. Las copias técnicas del proveedor de alojamiento se rigen por las condiciones de ese servicio.",
+    "mailboxRetention": "Política prevista: consultas hasta 12 meses después de su cierre, salvo información concreta que deba conservarse por obligación legal o reclamación, con acceso restringido. Pendiente de aplicar y verificar en OVHcloud, sus copias y los mensajes históricos que puedan seguir en Gmail; cambiar de buzón no acredita su borrado.",
+    "infrastructureLogRetention": "Los registros diarios de la aplicación tienen una rotación configurada de 14 días y los de auditoría de seguridad, de 30 días; la limpieza depende de las ejecuciones de rotación. Los registros operativos de los contenedores se limitan por tamaño, no por antigüedad: queda pendiente establecer y comprobar su plazo máximo. No deben incluir cuerpos de mensajes, documentos ni credenciales. Los registros propios de cada proveedor se rigen por sus condiciones, no por estos plazos.",
+    "providers": [
+      {
+        "service": "Alojamiento y almacenamiento de documentos",
+        "name": "OVH HISPANO S.L. (OVHcloud VPS)",
+        "data": "Datos de cuenta y cartera, contratos, contactos, movimientos, documentos y registros necesarios para prestar y proteger la aplicación.",
+        "references": [
+          {
+            "label": "Condiciones y acuerdo de tratamiento de OVHcloud",
+            "href": "https://www.ovhcloud.com/es-es/terms-and-conditions/contracts/"
+          }
+        ],
+        "location": "Servidor y almacenamiento principal en Gravelines, Francia (Unión Europea). No se afirma que todos los accesos de soporte o subencargados del proveedor estén limitados a ese país.",
+        "safeguards": "Acuerdo de tratamiento de OVHcloud y condiciones del VPS, con obligaciones de confidencialidad, seguridad y asistencia. El servidor limita los accesos y los documentos de la aplicación se almacenan privados y cifrados. No se atribuye cifrado de extremo a extremo ni acceso exclusivo europeo al conjunto del servicio."
+      },
+      {
+        "service": "Copias de seguridad",
+        "name": "Hetzner Online GmbH (Storage Box)",
+        "data": "Copias cifradas de la base de datos y archivos privados. Las claves de recuperación se custodian separadas del destino de copias.",
+        "references": [
+          {
+            "label": "Protección de datos de Hetzner",
+            "href": "https://www.hetzner.com/legal/privacy-policy/"
+          }
+        ],
+        "location": "Falkenstein, Alemania (Unión Europea), separado del servidor principal en Francia.",
+        "safeguards": "Copias cifradas antes de enviarse al destino externo y transporte cifrado. Material de recuperación separado del servidor; restauración aislada comprobada. Acuerdo de tratamiento y condiciones de Hetzner aplicables al servicio, sujetos a la comprobación documental de la cuenta."
+      },
+      {
+        "service": "Envío de correo transaccional",
+        "name": "Plus Five Five, Inc. (Resend)",
+        "data": "Dirección de destino y contenido de los correos que envía el servicio, incluidos enlaces de verificación/recuperación, códigos de seguridad y avisos de soporte. No se envía la cartera completa por este canal.",
+        "references": [
+          {
+            "label": "Acuerdo de tratamiento de Resend",
+            "href": "https://resend.com/legal/dpa"
+          }
+        ],
+        "location": "Estados Unidos (tratamiento principal según su DPA)",
+        "safeguards": "Cláusulas contractuales tipo incorporadas al DPA de Resend; revisar la cuenta y sus subencargados antes de publicar"
+      },
+      {
+        "service": "Web pública y lista de espera, DNS y antispam del formulario",
+        "name": "Cloudflare, Inc. (Pages, D1, Turnstile y DNS)",
+        "data": "Datos técnicos de navegación y antispam; email, nombre y rango de inmuebles facilitados en la lista de espera, con evidencia de consentimiento. D1 no contiene la base de datos de las carteras ni los contratos.",
+        "references": [
+          {
+            "label": "Acuerdo de tratamiento de Cloudflare",
+            "href": "https://www.cloudflare.com/cloudflare-customer-dpa/"
+          }
+        ],
+        "location": "Infraestructura internacional; no se acredita residencia exclusivamente europea. D1 almacena solo la lista de espera, no la cartera ni sus documentos.",
+        "safeguards": "DPA de Cloudflare y cláusulas contractuales tipo para transferencias restringidas. Revisar las condiciones de la cuenta y los subencargados. Email Routing ya no se utiliza para recibir el correo de soporte."
+      },
+      {
+        "service": "Buzón receptor de soporte",
+        "name": "OVH HISPANO S.L. (OVHcloud Zimbra Starter)",
+        "data": "Remitente, destinatario, asunto, contenido y adjuntos de las consultas que se envían al buzón y sus respuestas. Evita enviar contraseñas, contratos completos o datos de terceros innecesarios.",
+        "references": [
+          {
+            "label": "Condiciones de correo y tratamiento de OVHcloud",
+            "href": "https://www.ovhcloud.com/es-es/terms-and-conditions/contracts/"
+          }
+        ],
+        "location": "Almacenamiento del buzón en Francia según la información pública de Zimbra. No se afirma que todos los accesos de soporte o subencargados se limiten a Francia.",
+        "safeguards": "Buzón contratado y recepción/respuesta confirmadas. El titular identifica OVH HISPANO S.L. en su factura y ha aportado el acuerdo de tratamiento de OVHcloud de 17/10/2025. Debe conservarse la evidencia de incorporación al pedido y las condiciones y subencargados aplicables. El cambio de proveedor no demuestra por sí solo cumplimiento ni aplica automáticamente la política de conservación."
+      },
+      {
+        "service": "Mensajes históricos del buzón anterior, si aún se conservan",
+        "name": "Google (Gmail gratuito; sin recepción nueva de soporte)",
+        "data": "Únicamente consultas y adjuntos del buzón anterior que aún deban conservarse. Este servicio ya no recibe las consultas nuevas de soporte.",
+        "references": [
+          {
+            "label": "Política de privacidad de Google",
+            "href": "https://policies.google.com/privacy?hl=es"
+          }
+        ],
+        "location": "Servicio internacional; no se ha acreditado una región contractual europea para este buzón.",
+        "safeguards": "La recepción nueva se ha trasladado a OVHcloud. Pueden quedar mensajes, adjuntos o copias anteriores en Gmail: revisar su necesidad, restringir su acceso y suprimir lo que no deba conservarse. No se atribuye a Gmail gratuito el acuerdo empresarial de Google Workspace ni se da por borrado su historial."
+      },
+      {
+        "service": "Asistente de IA (OpenAI), solo cuando esté habilitado y lo actives",
+        "name": "OpenAI (API; entidad contractual de la cuenta pendiente de confirmar)",
+        "data": "Solo si se habilita y activas el chat: mensajes y contexto autorizado necesario para responder, incluidos los datos que tú escribas. El chat no envía archivos originales para análisis documental; Document AI real permanece deshabilitada.",
+        "references": [
+          {
+            "label": "Tratamiento y conservación de la API de OpenAI",
+            "href": "https://developers.openai.com/api/docs/guides/your-data"
+          }
+        ],
+        "location": "Servicio internacional; no se ha acreditado residencia europea para el proyecto. Puede haber tratamiento fuera del Espacio Económico Europeo.",
+        "safeguards": "Verificar y conservar el acuerdo de tratamiento de la cuenta y sus garantías de transferencia antes de abrir la IA. store=false no equivale a retención cero; desactivar la cesión voluntaria para entrenamiento. Document AI real sigue deshabilitada."
+      }
+    ]
+  },
+  "pages": [
+    {
+      "name": "legal",
+      "path": "/legal",
+      "title": "Aviso legal",
+      "label": "Aviso legal",
+      "summary": "Quién presta el servicio y cómo contactar con Alquivo.",
+      "sections": [
+        {
+          "id": "titular",
+          "title": "1. Titular del servicio",
+          "identity": true,
+          "paragraphs": [
+            "Alquivo es el nombre comercial de este servicio de gestión inmobiliaria. Su titular y prestador es la persona o entidad identificada a continuación. Estos datos también identifican al responsable del tratamiento de los datos de cuenta y contacto."
+          ]
+        },
+        {
+          "id": "objeto",
+          "title": "2. Finalidad del sitio",
+          "paragraphs": [
+            "El sitio presenta Alquivo y permite acceder a su aplicación, consultar sus condiciones y solicitar soporte. El servicio ayuda a organizar inmuebles, alquileres, ingresos, gastos y documentos. La información de las guías es general y no constituye asesoramiento jurídico, fiscal ni financiero adaptado a una situación personal."
+          ],
+          "links": [
+            {
+              "to": "/terms",
+              "label": "Consultar las condiciones de uso de la beta"
+            }
+          ]
+        },
+        {
+          "id": "propiedad",
+          "title": "3. Contenidos y propiedad intelectual",
+          "paragraphs": [
+            "El software, la identidad visual y los contenidos propios del sitio están protegidos por los derechos que correspondan a su titular. Los componentes y materiales de terceros conservan sus respectivas licencias. Puedes consultar y guardar estos textos para tu uso personal; no se concede por ello una licencia para explotar comercialmente el software o la marca.",
+            "Los datos y documentos que aportes no pasan a ser propiedad de Alquivo. Se utilizan para prestar el servicio conforme a las condiciones y, cuando corresponda, al acuerdo de encargo. La participación opcional en la mejora del asistente tiene una finalidad y un permiso separados, descritos en privacidad."
+          ]
+        },
+        {
+          "id": "contacto",
+          "title": "4. Contacto y comunicaciones",
+          "paragraphs": [
+            "Puedes escribir a soporte@alquivo.com. Puedes comunicar errores, incidencias o contenido que consideres ilícito indicando la información necesaria para localizarlo, sin enviar datos personales innecesarios. Los enlaces a páginas externas se ofrecen como referencia; cada tercero gestiona su propio sitio."
+          ],
+          "links": [
+            {
+              "to": "/privacy",
+              "label": "Política de privacidad"
+            },
+            {
+              "to": "/cookies",
+              "label": "Política de cookies"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "terms",
+      "path": "/terms",
+      "title": "Condiciones de uso",
+      "label": "Condiciones",
+      "summary": "Una beta gratuita, sin cargos automáticos, para organizar tu patrimonio y ayudarnos a mejorar Alquivo.",
+      "sections": [
+        {
+          "id": "servicio",
+          "title": "1. Servicio y aceptación",
+          "paragraphs": [
+            "Estas condiciones regulan el uso de Alquivo y se formalizan en castellano entre el titular identificado en el aviso legal y la persona que crea la cuenta. Para registrarte debes ser mayor de edad y tener capacidad para contratar; si actúas por otra persona o entidad, debes estar autorizado para representarla.",
+            "Antes de crear la cuenta puedes revisar y corregir los datos del formulario. Al marcar la casilla y completar el registro aceptas esta versión de las condiciones, incluido el acuerdo de encargo cuando resulte aplicable. Guardamos la fecha y versión aceptadas. Puedes imprimir o guardar estos textos desde el navegador y solicitar una copia al soporte. La política de privacidad informa sobre el uso de tus datos; su lectura no equivale a consentir publicidad ni funciones opcionales."
+          ],
+          "links": [
+            {
+              "to": "/legal",
+              "label": "Aviso legal e identificación del titular"
+            },
+            {
+              "to": "/data-processing",
+              "label": "Acuerdo de encargo y proveedores"
+            },
+            {
+              "to": "/privacy",
+              "label": "Política de privacidad"
+            }
+          ]
+        },
+        {
+          "id": "beta",
+          "title": "2. Qué incluye la beta gratuita",
+          "paragraphs": [
+            "Durante la beta, la cuenta permite gestionar hasta 50 inmuebles y utilizar hasta 5 GB de almacenamiento para documentos y fotos. Incluye las funciones habilitadas para el público en la aplicación; las funciones todavía en revisión no están incluidas. Las funciones de IA, cuando estén disponibles, tienen límites de uso específicos que se muestran antes de activarlas o utilizarlas. Que una función se anuncie como próxima no significa que esté incluida o disponible.",
+            "La beta no exige tarjeta ni genera cuotas. No se transforma automáticamente en una suscripción de pago. Si al terminar ofrecemos otros planes, conocerás su precio, duración y condiciones y solo se contratarán mediante una aceptación expresa por tu parte. Una futura oferta de fundador será opcional.",
+            "La beta sirve para validar un producto que aún evoluciona: puede haber errores, interrupciones o ajustes. Esta circunstancia no elimina nuestras obligaciones de protección de datos ni los derechos que te reconozca la ley. No existe una garantía de atención inmediata o disponibilidad ininterrumpida."
+          ]
+        },
+        {
+          "id": "cuenta",
+          "title": "3. Tu cuenta y un uso adecuado",
+          "paragraphs": [
+            "Facilita datos de cuenta correctos, protege tus credenciales y mantén accesible tu correo. El doble factor refuerza la seguridad; recordar un dispositivo evita ese segundo paso durante un máximo de 90 días, pero no sustituye la contraseña. Utilízalo solo en dispositivos de confianza. Comunica cuanto antes cualquier acceso que no reconozcas.",
+            "Debes tener una base legítima para incorporar los datos de inquilinos y otras personas e informarles cuando corresponda. No necesitas basarlo todo en su consentimiento: la base depende de la relación y de la finalidad del tratamiento. Introduce solo la información necesaria y evita datos especialmente sensibles que no sean precisos para la gestión del alquiler."
+          ],
+          "items": [
+            "No utilices cuentas ajenas, eludas límites ni intentes acceder a carteras o archivos de otras personas.",
+            "No subas malware, contenido ilícito ni materiales que vulneren derechos de terceros.",
+            "No compartas la cuenta para ofrecer acceso a terceros sin autorización ni uses la aplicación para enviar comunicaciones no solicitadas."
+          ]
+        },
+        {
+          "id": "datos",
+          "title": "4. Tus documentos y resultados",
+          "paragraphs": [
+            "Conservas los derechos sobre tus documentos y contenidos. Nos autorizas únicamente a alojarlos y procesarlos en lo necesario para prestarte el servicio, atender tus instrucciones y proteger su funcionamiento. No se ceden para su venta ni para publicidad.",
+            "Los saldos, rentabilidades y resúmenes dependen de la información introducida. Comprueba los resultados antes de tomar decisiones o cumplir obligaciones fiscales o contractuales. Conserva los originales que debas custodiar legalmente. El servicio no sustituye al registro, a una gestoría ni a un asesor profesional."
+          ]
+        },
+        {
+          "id": "ia",
+          "title": "5. Funciones de inteligencia artificial",
+          "paragraphs": [
+            "Si una función de IA está habilitada para tu cuenta, su uso requiere revisar su aviso específico y activarla. El asistente puede equivocarse o no disponer de información suficiente. Sus respuestas no constituyen asesoramiento profesional ni decisiones automatizadas sobre inquilinos.",
+            "Cuando el asistente prepare una operación, revísala antes de confirmarla. La activación del chat no autoriza por sí sola el envío de documentos a un proveedor de IA. Una función de análisis documental real requerirá un aviso y una activación independientes. Puedes dejar de usar el asistente sin perder el acceso a la gestión ordinaria."
+          ],
+          "links": [
+            {
+              "to": "/privacy#ia",
+              "label": "Qué datos utiliza el asistente"
+            }
+          ]
+        },
+        {
+          "id": "soporte",
+          "title": "6. Soporte y comunicaciones del servicio",
+          "paragraphs": [
+            "Puedes abrir varios tickets y continuar cada conversación dentro de la aplicación. También puedes contactar por correo. Puedes escribir a soporte@alquivo.com. El soporte no es un servicio de emergencias. Para resolver una consulta comparte solo lo necesario y oculta los datos de terceros en las capturas.",
+            "Podemos enviarte comunicaciones necesarias sobre seguridad, acceso, soporte y cambios relevantes del servicio. Crear una cuenta no te suscribe a campañas de publicidad."
+          ]
+        },
+        {
+          "id": "baja",
+          "title": "7. Baja, suspensión y fin de la beta",
+          "paragraphs": [
+            "Puedes dejar de utilizar el servicio y eliminar tu cuenta desde Configuración. Antes de eliminarla, descarga tus documentos y las exportaciones disponibles de inmuebles, contratos y movimientos. Si necesitas otros datos, solicítalos al soporte antes de borrar la cuenta. El borrado de la cuenta también elimina su cartera y sus tickets del sistema activo; los archivos pendientes de borrado se reintentan. La eliminación no puede deshacerse desde la aplicación.",
+            "Podremos limitar o suspender el acceso ante usos ilícitos, intentos de acceso ajeno, riesgos de seguridad o incumplimientos graves. La medida será proporcional y, cuando sea posible sin agravar el riesgo ni incumplir la ley, explicaremos el motivo y cómo solicitar su revisión. No emplearemos la suspensión para forzarte a contratar un plan de pago.",
+            "Si decidimos finalizar la beta o reducir de forma sustancial sus prestaciones, avisaremos con al menos 30 días naturales para que puedas decidir y descargar tus datos, salvo que una obligación legal o una urgencia de seguridad exija actuar antes. No borraremos deliberadamente una cartera por el mero anuncio de un plan futuro."
+          ]
+        },
+        {
+          "id": "responsabilidad",
+          "title": "8. Responsabilidad y derechos",
+          "paragraphs": [
+            "Cada parte responde conforme a la legislación aplicable. El carácter gratuito o experimental del servicio no excluye la responsabilidad que legalmente corresponda a Alquivo, ni limita los derechos irrenunciables de los consumidores. Ninguna cláusula excluye la responsabilidad por dolo ni impone una renuncia general a reclamar.",
+            "Los cambios relevantes se comunicarán con antelación razonable. Cuando una modificación exija una nueva aceptación o consentimiento, se solicitará expresamente; el silencio no sirve para contratar un plan de pago."
+          ]
+        },
+        {
+          "id": "reclamaciones",
+          "title": "9. Legislación y reclamaciones",
+          "paragraphs": [
+            "Puedes escribir a soporte@alquivo.com. Intentaremos resolver cualquier reclamación identificando el problema y la cuenta afectada. Se aplica la legislación española, sin perjuicio de la protección obligatoria que corresponda a una persona consumidora por su residencia. Los tribunales competentes serán los determinados por la ley; no se impone un fuero que prive al consumidor de sus derechos."
+          ]
+        }
+      ]
+    },
+    {
+      "name": "privacy",
+      "path": "/privacy",
+      "title": "Política de privacidad",
+      "label": "Privacidad",
+      "summary": "Qué datos utilizamos, para qué los necesitamos y cómo ejercer tus derechos.",
+      "sections": [
+        {
+          "id": "responsable",
+          "title": "1. Quién trata tus datos",
+          "identity": true,
+          "paragraphs": [
+            "El titular de Alquivo actúa como responsable de los datos necesarios para gestionar las cuentas, la relación con los usuarios, el soporte y la seguridad del servicio. Sus datos de contacto figuran a continuación.",
+            "Cuando un propietario incorpora datos de inquilinos, avalistas, proveedores u otras personas y decide para qué los utiliza, Alquivo los trata por su cuenta para prestar el servicio. Cuando esa relación esté sujeta al RGPD, se regula mediante el acuerdo de encargo. Si eres inquilino y tu propietario usa Alquivo, dirígete a él para conocer su información de privacidad; también puedes escribirnos para trasladarle una solicitud relacionada con sus datos, sin revelar información de otra cuenta."
+          ],
+          "links": [
+            {
+              "to": "/data-processing",
+              "label": "Acuerdo de encargo y proveedores"
+            }
+          ]
+        },
+        {
+          "id": "finalidades",
+          "title": "2. Datos, finalidades y bases jurídicas",
+          "table": {
+            "headings": [
+              "Uso",
+              "Datos necesarios",
+              "Base jurídica"
+            ],
+            "rows": [
+              [
+                "Crear y mantener tu cuenta",
+                "Nombre, correo, contraseña protegida, preferencias, fecha y versión de condiciones aceptadas.",
+                "Ejecución del contrato (art. 6.1.b RGPD)."
+              ],
+              [
+                "Gestionar tu cartera",
+                "Inmuebles, contratos, contactos, importes, fechas, incidencias, fotografías y documentos que aportes.",
+                "Prestación del servicio; respecto a datos de terceros, instrucciones del propietario según el acuerdo de encargo."
+              ],
+              [
+                "Atender consultas y tickets",
+                "Nombre, correo cuando lo facilites, asunto, mensajes, adjuntos y estado de la conversación.",
+                "Contrato o medidas precontractuales cuando correspondan; interés legítimo en atender y gestionar las demás consultas."
+              ],
+              [
+                "Proteger cuentas y prevenir abuso",
+                "Datos de sesión, verificaciones, dispositivos de confianza, eventos de acceso y datos técnicos de conexión.",
+                "Interés legítimo en proteger el servicio y a sus usuarios (art. 6.1.f RGPD)."
+              ],
+              [
+                "Cumplir obligaciones y atender reclamaciones",
+                "La información estrictamente necesaria para cada obligación o reclamación, incluida la evidencia mínima de aceptación y retirada de permisos.",
+                "Obligación legal (art. 6.1.c RGPD) e interés legítimo en la defensa de derechos."
+              ]
+            ]
+          },
+          "paragraphs": [
+            "Los datos se obtienen de ti, de las operaciones que realizas en la aplicación y de la conexión necesaria para usarla. Los datos de terceros proceden del propietario que los incorpora. Los campos señalados como obligatorios son necesarios para completar el registro o atender la solicitud; no proporcionarlos puede impedir esa operación. El contenido adicional de documentos y mensajes lo decides tú.",
+            "La beta no solicita tarjetas ni cobra cuotas. No utilizamos tus contratos para publicidad, no vendemos datos personales y no se han integrado herramientas de seguimiento publicitario o analítica de terceros. Las métricas técnicas de funcionamiento no se utilizan para evaluar la solvencia de personas."
+          ]
+        },
+        {
+          "id": "soporte",
+          "title": "3. Conversaciones de soporte",
+          "paragraphs": [
+            "Los tickets permiten abrir varias consultas y seguir cada conversación. Pueden ver su contenido el titular de la conversación y el personal autorizado de soporte. El permiso de soporte no concede acceso a la cartera inmobiliaria del usuario. Este chat se atiende por personas y no utiliza IA.",
+            "Cuando hay correo operativo, las notificaciones al equipo indican que existe un ticket o una respuesta y cómo abrir la bandeja. No incluyen el texto ni los adjuntos del ticket. Si utilizas el formulario alternativo que envía un correo o escribes directamente al buzón, el proveedor de correo procesa el contenido que envías.",
+            "Sin iniciar sesión, el acceso a tus tickets depende de la sesión de ese navegador. Indicar una dirección de correo no acredita su titularidad ni permite recuperar el historial en otro dispositivo. Si la sesión caduca, puedes perder el acceso aunque el ticket siga conservado. Las consultas abiertas desde tu cuenta quedan vinculadas a ella."
+          ]
+        },
+        {
+          "id": "ia",
+          "title": "4. Asistente de IA opcional",
+          "paragraphs": [
+            "El asistente solo se utiliza cuando la función está habilitada y aceptas su aviso específico. La activación es voluntaria y puedes revocarla. Para los datos personales que aportas en tu propio nombre, esa elección se basa en tu consentimiento; para los datos de otras personas, el envío es una instrucción del propietario y requiere que este disponga de su propia base jurídica. Tu aceptación no sustituye los derechos de los inquilinos.",
+            "Cuando utilizas el chat, OpenAI recibe tu pregunta, el historial reciente y los datos seleccionados que necesita para responder. Pueden incluir nombres de contactos y su relación con contratos, nombres de inmuebles, títulos de incidencias, importes y fechas. Las herramientas del chat no recuperan DNI, correos, teléfonos ya guardados, notas anteriores, direcciones completas ni el contenido de los documentos. Si escribes esos datos en un mensaje, o los incluyes en nombres o títulos, también pueden llegar al proveedor; evita hacerlo si no es necesario.",
+            "Las propuestas de gastos, cobros o cambios de datos requieren tu confirmación antes de guardarse como operaciones reales. Borrar el chat no borra las operaciones que ya hayas confirmado. El servicio no adopta decisiones exclusivamente automatizadas con efectos jurídicos o similares sobre ti o tus inquilinos.",
+            "En el mismo chat puede conservarse durante 30 minutos una referencia al inmueble recién consultado, limitada a esa conversación y cuenta, sin memorizar sus saldos como datos actuales. Las consultas vuelven a verificar los datos. Las propuestas de altas de inmuebles, contactos y contratos en borrador siguen en revisión administrativa; no activan alquileres ni emiten mensualidades. Las direcciones y datos de contacto nuevos que escribas en el chat también llegan al proveedor; puedes utilizar los formularios manuales para no enviarlos a la IA.",
+            "El historial y los borradores del asistente se eliminan a los 30 días mediante la tarea de limpieza; también puedes borrarlos o desactivar la función. Las métricas de uso, coste y trazabilidad sin el texto de la conversación se conservan durante 12 meses completos más el mes en curso.",
+            "La aplicación usa la API de OpenAI y solicita no almacenar las respuestas con store=false. Esa opción no elimina los registros de prevención de abusos: OpenAI indica una conservación habitual de hasta 30 días, con posibles excepciones legales o de seguridad. Los datos de la API no se utilizan para entrenar modelos por defecto; las opciones de compartir datos de la cuenta deben mantenerse desactivadas. No se promete retención cero ni residencia exclusivamente europea. Antes de abrir la función pública deben verificarse el contrato, las opciones de la cuenta y las garantías que figuran en la relación de proveedores.",
+            "La importación documental disponible para pruebas administrativas utiliza una simulación local que no envía archivos a OpenAI. Tiene un aviso separado y almacena sus borradores y fragmentos cifrados hasta 30 días o hasta revocar ese permiso. Los originales y las operaciones confirmadas siguen en sus módulos. Antes de habilitar análisis documental real se informará del proveedor y de los datos enviados y se solicitará una activación independiente; el permiso del chat no lo cubre."
+          ],
+          "links": [
+            {
+              "to": "/data-processing#proveedores",
+              "label": "Proveedores y transferencias de datos"
+            }
+          ],
+          "externalLinks": [
+            {
+              "href": "https://developers.openai.com/api/docs/guides/your-data",
+              "label": "Controles de datos de la API de OpenAI"
+            }
+          ]
+        },
+        {
+          "id": "mejora-ia",
+          "title": "4 bis. Compartir conversaciones para mejorar Alquivo AI",
+          "paragraphs": [
+            "Esta opción solo está disponible cuando aparece su control de activación en Privacidad del asistente. Si no aparece, la función no está habilitada para tu cuenta. La existencia de este apartado no activa la captura ni autoriza revisar conversaciones sin tu elección expresa.",
+            "Puedes autorizar por separado y de forma opcional la revisión de tus nuevas conversaciones para detectar y corregir errores del asistente. El titular de Alquivo es responsable de esta finalidad de mejora. La elección se basa en tu consentimiento, no viene marcada y no es necesaria para utilizar el asistente. No se recuperan conversaciones anteriores a la autorización ni se interpreta la activación del chat como permiso para esta finalidad.",
+            "Si participas, se registran cifrados los mensajes nuevos y su contexto reciente autorizado, las respuestas, las herramientas y los datos consultados necesarios para investigar, junto con errores, modelo, versiones y tiempos. Se limita el tamaño del registro y no se recuperan documentos originales, credenciales del sistema ni razonamientos internos del modelo. Si escribes datos personales o secretos en el chat, pueden quedar incluidos: evita hacerlo. Puede haber registros parciales. No se realizan consultas adicionales al proveedor de IA para crear estos registros.",
+            "Únicamente las personas con autorización específica, correo verificado y doble factor pueden revisar estos registros. Se auditan sus accesos y las preparaciones de exportación. El permiso de soporte ordinario no concede acceso. No se envían automáticamente por correo ni a otros servicios de IA, no se publican y no activan el uso de tus datos para entrenar modelos de OpenAI.",
+            "Los registros caducan como máximo a los 30 días y nunca amplían la conservación de los mensajes que contienen. Puedes retirar el permiso desde Privacidad en el asistente: se eliminan los registros de mejora y cesa la captura, pero puedes seguir usando el chat. También se eliminan los registros afectados al borrar la conversación, desactivar el asistente o eliminar la cuenta. El borrado y restauración de las copias de seguridad sigue las reglas de conservación publicadas. Se conserva por separado la evidencia mínima de aceptación y retirada para acreditar el tratamiento.",
+            "Para conservar casos de prueba se deben sustituir los datos reales por ejemplos ficticios. Las herramientas de depuración de exportaciones son una ayuda y exigen revisión humana: no garantizan anonimato ni autorizan compartir registros identificables con ChatGPT, Codex u otros terceros. La participación del propietario no constituye consentimiento de los inquilinos ni amplía las finalidades legítimas de tratamiento de sus datos; evita incorporar información de terceros innecesaria o sensible. Si aparece, debe excluirse de los ejemplos de mejora y atenderse cualquier solicitud de derechos."
+          ],
+          "links": [
+            {
+              "to": "/legal",
+              "label": "Aviso legal e identificación del titular"
+            },
+            {
+              "to": "/data-processing",
+              "label": "Acuerdo de encargo y proveedores"
+            }
+          ]
+        },
+        {
+          "id": "conservacion",
+          "title": "5. Cuánto tiempo conservamos los datos",
+          "table": {
+            "headings": [
+              "Información",
+              "Conservación"
+            ],
+            "rows": [
+              [
+                "Cuenta, cartera y documentos",
+                "Mientras uses el servicio; puedes solicitar o ejecutar la eliminación. El borrado de archivos pendiente se reintenta hasta completarlo."
+              ],
+              [
+                "Tickets de soporte",
+                "180 días desde el último mensaje o cambio de estado. Los vinculados a una cuenta también se eliminan al borrar esa cuenta."
+              ],
+              [
+                "Conversaciones y borradores de IA",
+                "30 días, o antes si los eliminas o revocas la función conforme a su aviso. Las operaciones confirmadas permanecen en la cartera."
+              ],
+              [
+                "Métricas de uso y coste de IA",
+                "12 meses completos más el mes en curso, sin el contenido de los mensajes."
+              ],
+              [
+                "Registros opcionales de mejora de IA",
+                "Hasta 30 días, sin ampliar la caducidad de los mensajes incluidos; antes al retirar el permiso, borrar la conversación o eliminar la cuenta. Comentarios de revisión con la misma caducidad."
+              ],
+              [
+                "Evidencia de aceptación de condiciones y permisos de IA",
+                "Correo de la cuenta cifrado, ámbito, versión, aceptación o retirada y fecha. Mientras la aceptación esté vigente y hasta 1.095 días desde su sustitución, retirada o eliminación de la cuenta. No incluye conversaciones ni documentos y solo se utiliza con acceso restringido para acreditar el tratamiento y atender responsabilidades."
+              ],
+              [
+                "Registro de auditoría de seguridad de la aplicación",
+                "30 días. Incluye identificador de usuario y una huella de la conexión, sin contraseñas ni documentos."
+              ],
+              [
+                "Dispositivos de confianza",
+                "El reconocimiento dura como máximo 90 días. El registro técnico se elimina al revocarlo, sustituirlo por otros dispositivos según el límite de la cuenta o eliminar la cuenta."
+              ],
+              [
+                "Copias de seguridad",
+                "Copias externas diarias cifradas de la base de datos y los archivos, en Alemania, con una ventana de conservación de 30 días. Se conserva además la última copia válida si se interrumpe la generación de copias nuevas; esa excepción puede superar la ventana mientras se resuelve la incidencia. La eliminación en la aplicación no borra inmediatamente las copias: no se usan como archivo ordinario y, al restaurarlas, deben reaplicarse las bajas y caducidades. Se ha comprobado la restauración en un entorno aislado. Las copias técnicas del proveedor de alojamiento se rigen por las condiciones de ese servicio."
+              ],
+              [
+                "Mensajes del buzón y formularios enviados por correo",
+                "Política prevista: consultas hasta 12 meses después de su cierre, salvo información concreta que deba conservarse por obligación legal o reclamación, con acceso restringido. Pendiente de aplicar y verificar en OVHcloud, sus copias y los mensajes históricos que puedan seguir en Gmail; cambiar de buzón no acredita su borrado."
+              ],
+              [
+                "Registros del alojamiento y servicios técnicos",
+                "Los registros diarios de la aplicación tienen una rotación configurada de 14 días y los de auditoría de seguridad, de 30 días; la limpieza depende de las ejecuciones de rotación. Los registros operativos de los contenedores se limitan por tamaño, no por antigüedad: queda pendiente establecer y comprobar su plazo máximo. No deben incluir cuerpos de mensajes, documentos ni credenciales. Los registros propios de cada proveedor se rigen por sus condiciones, no por estos plazos."
+              ]
+            ]
+          },
+          "paragraphs": [
+            "Los plazos técnicos de limpieza pueden requerir la siguiente ejecución programada. La eliminación en el sistema activo no equivale al borrado instantáneo de todas las copias de seguridad: estas deben caducar según el plazo indicado y no se utilizan para fines ordinarios. Si se restaura una copia, deben reaplicarse las solicitudes de borrado.",
+            "Cuando una obligación legal o una reclamación justifique conservar datos concretos, se limitarán a lo necesario, con acceso restringido durante el plazo aplicable, y se eliminarán al finalizar. No se conservará por ese motivo toda una cartera de forma indefinida."
+          ]
+        },
+        {
+          "id": "destinatarios",
+          "title": "6. Quién puede acceder y dónde se tratan los datos",
+          "paragraphs": [
+            "Acceden las personas autorizadas que lo necesitan para su función y los proveedores contratados de alojamiento, almacenamiento, copias y correo. El proveedor de IA interviene únicamente en las funciones activadas que lo requieren. Podemos comunicar datos a autoridades cuando exista una obligación legal.",
+            "Los proveedores deben estar sujetos a acuerdos adecuados de protección de datos. Si hay acceso o tratamiento desde fuera del Espacio Económico Europeo, se indicarán el país y la garantía aplicable, como una decisión de adecuación vigente o cláusulas contractuales tipo acompañadas de las medidas necesarias. No debe entenderse que todos los datos permanecen en Europa por el mero hecho de utilizar un servidor europeo."
+          ],
+          "links": [
+            {
+              "to": "/data-processing#proveedores",
+              "label": "Consultar proveedores, ubicaciones y garantías"
+            }
+          ]
+        },
+        {
+          "id": "derechos",
+          "title": "7. Tus derechos y cómo ejercerlos",
+          "paragraphs": [
+            "Puedes escribir a soporte@alquivo.com. Puedes pedir acceso, rectificación, supresión, limitación, portabilidad cuando proceda u oponerte a tratamientos basados en interés legítimo. Si un uso depende de tu consentimiento, puedes retirarlo en cualquier momento sin afectar a la licitud de lo ya realizado. Indica qué derecho quieres ejercer y la cuenta o información afectada. No envíes un DNI por defecto: solo pediremos información adicional proporcionada si es necesaria para comprobar tu identidad.",
+            "Responderemos, con carácter general, en un mes desde la recepción. Si la complejidad o el número de solicitudes justifican una ampliación legal, te informaremos dentro de ese primer mes. Puedes reclamar ante la Agencia Española de Protección de Datos si consideras que tus derechos no han sido atendidos, y ante la autoridad que te corresponda según la normativa aplicable."
+          ],
+          "externalLinks": [
+            {
+              "href": "https://www.aepd.es/",
+              "label": "Agencia Española de Protección de Datos"
+            }
+          ]
+        },
+        {
+          "id": "seguridad",
+          "title": "8. Seguridad y actualizaciones",
+          "paragraphs": [
+            "La aplicación limita el acceso por cuenta y cartera y almacena los documentos de forma privada y cifrada. Las contraseñas se guardan mediante una función de hash. Ofrece doble factor y controles de acceso para las funciones de soporte. Estas medidas reducen riesgos, pero ningún sistema permite prometer seguridad absoluta.",
+            "La fecha de esta página identifica la versión de la información. Comunicaremos cambios relevantes y pediremos una nueva autorización si resulta necesaria para una función opcional. Puedes consultar por separado el uso de cookies y almacenamiento del navegador."
+          ],
+          "links": [
+            {
+              "to": "/cookies",
+              "label": "Política de cookies"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "cookies",
+      "path": "/cookies",
+      "title": "Política de cookies",
+      "label": "Cookies",
+      "summary": "Alquivo utiliza almacenamiento técnico para el acceso y la seguridad. No incorpora cookies de publicidad ni analítica de terceros.",
+      "sections": [
+        {
+          "id": "uso",
+          "title": "1. Qué son y para qué se utilizan",
+          "paragraphs": [
+            "Las cookies son pequeños valores que el navegador guarda y envía al sitio. El almacenamiento local permite guardar información en ese navegador sin enviarla automáticamente en cada solicitud. Alquivo utiliza estas tecnologías para mantener la sesión solicitada, proteger formularios, recordar dispositivos cuando lo pides y mostrar información de tu cuenta."
+          ]
+        },
+        {
+          "id": "inventario",
+          "title": "2. Inventario de almacenamiento propio",
+          "table": {
+            "headings": [
+              "Nombre y tipo",
+              "Finalidad",
+              "Duración"
+            ],
+            "rows": [
+              [
+                "alquivo-session (cookie de sesión)",
+                "Mantener el acceso y vincular los tickets de visitantes a su sesión. El nombre puede variar según el despliegue.",
+                "Configuración de referencia: 120 minutos de inactividad; la actividad renueva la sesión."
+              ],
+              [
+                "XSRF-TOKEN (cookie técnica)",
+                "Proteger las peticiones frente a solicitudes fraudulentas.",
+                "Vinculada a la duración de la sesión, con renovación durante el uso."
+              ],
+              [
+                "alquivo_trusted_device (cookie opcional de seguridad)",
+                "Reconocer este dispositivo cuando marcas «recordar este dispositivo» al superar el doble factor.",
+                "Máximo de 90 días desde su emisión; no se renueva por el mero hecho de iniciar sesión."
+              ],
+              [
+                "alquivo_user y alquivo_portfolio (almacenamiento local)",
+                "Mostrar datos básicos de la cuenta y cartera. No sustituyen las cookies de autenticación ni dan acceso por sí solos.",
+                "Hasta cerrar sesión, limpiar los datos del sitio o sustituirlos por una actualización. El navegador también puede eliminarlos."
+              ],
+              [
+                "alquivo:locale (almacenamiento local)",
+                "Recordar el idioma seleccionado cuando esa opción esté disponible.",
+                "Hasta cambiar la preferencia o borrar los datos del sitio."
+              ],
+              [
+                "alquivo:email-reminder:v1:<cuenta> (almacenamiento local)",
+                "Recordar que has ocultado el aviso de verificación de correo. No verifica la cuenta ni modifica tus permisos.",
+                "Hasta borrar los datos del sitio. Puede quedar conservado tras cerrar sesión."
+              ]
+            ]
+          },
+          "paragraphs": [
+            "Algunas instalaciones antiguas pueden conservar claves de visualización ig_user e ig_portfolio, que se sustituyen por las actuales o se eliminan al cerrar sesión. No son identificadores publicitarios."
+          ]
+        },
+        {
+          "id": "consentimiento",
+          "title": "3. Elección y consentimiento",
+          "paragraphs": [
+            "Las tecnologías estrictamente necesarias para el servicio que solicitas están exceptuadas del consentimiento de cookies. Por eso no mostramos un botón general para aceptar publicidad que no existe. Recordar un dispositivo es una opción que activas tú y puedes revocar desde la configuración de seguridad.",
+            "Si incorporamos analítica o publicidad que requiera consentimiento, informaremos de sus proveedores, finalidades y duración y ofreceremos una elección real antes de activarlas. Rechazarlas no impedirá utilizar las funciones que no las necesiten."
+          ]
+        },
+        {
+          "id": "control",
+          "title": "4. Cómo eliminarlas",
+          "paragraphs": [
+            "Puedes borrar o bloquear las cookies y los datos del sitio desde la configuración de privacidad de tu navegador. Cerrar sesión elimina la caché local de la cuenta, pero no equivale por sí solo a revocar todos los dispositivos de confianza. Utiliza también las opciones de seguridad si quieres que vuelva a solicitarse el doble factor.",
+            "Bloquear el almacenamiento necesario puede impedir iniciar sesión o continuar un ticket como visitante. Si compartes ordenador, cierra sesión y evita recordar el dispositivo. Para consultas sobre privacidad, contacta con el titular indicado en el aviso legal."
+          ],
+          "links": [
+            {
+              "to": "/legal",
+              "label": "Aviso legal e identificación del titular"
+            },
+            {
+              "to": "/privacy",
+              "label": "Política de privacidad"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "data-processing",
+      "path": "/data-processing",
+      "title": "Acuerdo de encargo de tratamiento",
+      "label": "Tratamiento de datos",
+      "summary": "Cómo trata Alquivo los datos de tus inquilinos y otras personas cuando utilizas la aplicación como responsable del tratamiento.",
+      "sections": [
+        {
+          "id": "partes",
+          "title": "1. Partes y alcance",
+          "paragraphs": [
+            "Este acuerdo forma parte de las condiciones aceptadas al registrar la cuenta y se aplica cuando el usuario trata datos personales como responsable sujeto al RGPD. El responsable es el usuario o la entidad a la que representa. El encargado es el titular de Alquivo identificado en el aviso legal. No regula los tratamientos propios de cuenta, seguridad y relación comercial de Alquivo, que se describen en su política de privacidad.",
+            "El objeto es prestar el servicio de gestión inmobiliaria siguiendo las instrucciones del responsable. Dura mientras se preste el servicio y hasta la devolución o supresión de los datos. En caso de conflicto sobre el tratamiento por cuenta del usuario, prevalece este acuerdo sobre otras condiciones del servicio."
+          ],
+          "links": [
+            {
+              "to": "/legal",
+              "label": "Aviso legal e identificación del titular"
+            },
+            {
+              "to": "/privacy",
+              "label": "Política de privacidad"
+            }
+          ]
+        },
+        {
+          "id": "operaciones",
+          "title": "2. Operaciones, datos y personas afectadas",
+          "paragraphs": [
+            "El servicio permite recoger, organizar, almacenar, consultar, actualizar, relacionar, exportar y suprimir datos y documentos. Trata datos identificativos y de contacto, relaciones contractuales, inmuebles, importes, fechas, pagos, incidencias y el contenido de los archivos que el responsable aporte. Las personas afectadas pueden ser propietarios, inquilinos, avalistas, representantes, proveedores y contactos relacionados con la gestión.",
+            "No está diseñado para tratar categorías especiales de datos, antecedentes penales ni realizar evaluaciones automatizadas de solvencia. El responsable debe minimizar el contenido de los documentos y consultar previamente cualquier necesidad de tratamiento que exceda este alcance."
+          ]
+        },
+        {
+          "id": "instrucciones",
+          "title": "3. Instrucciones y deberes del responsable",
+          "paragraphs": [
+            "Las operaciones que el usuario realiza en la aplicación, este acuerdo y las solicitudes verificadas al soporte constituyen instrucciones documentadas. El responsable determina las finalidades y su base jurídica, informa a los interesados y garantiza que las instrucciones son lícitas. La activación de una función opcional no constituye el consentimiento de las personas cuyos datos haya incorporado.",
+            "Alquivo tratará los datos únicamente conforme a esas instrucciones, también respecto a transferencias internacionales, salvo obligación legal aplicable. En ese supuesto informará al responsable antes de tratar los datos, salvo prohibición legal. Si considera que una instrucción infringe la normativa, lo comunicará y podrá suspender esa operación hasta aclararla."
+          ]
+        },
+        {
+          "id": "confidencialidad",
+          "title": "4. Confidencialidad y seguridad",
+          "paragraphs": [
+            "Alquivo limitará el acceso a las personas que lo necesiten para prestar el servicio y estén sujetas a compromisos de confidencialidad u obligaciones equivalentes. Esta obligación continuará al terminar la relación.",
+            "Se aplicarán medidas técnicas y organizativas proporcionadas al riesgo: aislamiento de carteras y autorización de accesos, archivos privados cifrados, protección de credenciales, comunicaciones cifradas en el servicio público, gestión de permisos de soporte y administración, registro de eventos de seguridad, actualización de componentes y procedimientos de recuperación y borrado. Las copias y su restauración deben mantenerse de acuerdo con las condiciones operativas publicadas. El detalle técnico necesario podrá facilitarse de forma reservada, sin divulgar claves ni información que comprometa a otros usuarios."
+          ]
+        },
+        {
+          "id": "proveedores",
+          "title": "5. Subencargados y ubicación del tratamiento",
+          "providers": true,
+          "paragraphs": [
+            "La relación siguiente identifica el servicio, la entidad conocida, los datos tratados, la ubicación y las garantías de cada proveedor. Distingue los servicios operativos, las funciones opcionales todavía deshabilitadas y los mensajes históricos del buzón anterior. Los enlaces permiten consultar sus documentos públicos; no acreditan por sí solos la incorporación de todos los acuerdos u opciones a una cuenta concreta. La autorización del responsable se limita a los proveedores efectivamente contratados e identificados para las funciones que utilice.",
+            "Alquivo impondrá a sus subencargados obligaciones de protección de datos equivalentes a las que correspondan en este acuerdo y seguirá respondiendo ante el responsable por el cumplimiento de sus obligaciones. Informará de las incorporaciones o sustituciones previstas con al menos 15 días de antelación, para que el responsable pueda objetar por razones de protección de datos. Si no se alcanza una solución, podrá dejar de utilizar la función afectada o finalizar el servicio con devolución o supresión de sus datos. No se someterán sus datos al proveedor objetado mientras se resuelve la objeción.",
+            "La IA solo interviene cuando la función esté habilitada y el responsable la active tras consultar su aviso. Activar el chat no autoriza enviar archivos originales para análisis documental. No se atribuye al consentimiento del usuario la función de sustituir las garantías legales de una transferencia internacional."
+          ]
+        },
+        {
+          "id": "derechos",
+          "title": "6. Ayuda para atender derechos",
+          "paragraphs": [
+            "Alquivo ayudará al responsable, teniendo en cuenta la naturaleza del tratamiento, a responder a solicitudes de acceso, rectificación, supresión, oposición, limitación y portabilidad. Si recibe directamente una solicitud sobre datos tratados por cuenta del usuario, se la trasladará sin dilación indebida y no resolverá por su cuenta salvo autorización u obligación legal.",
+            "El responsable puede pedir esa asistencia a través del soporte. Puedes escribir a soporte@alquivo.com. Se utilizará la información mínima necesaria para identificar la solicitud y comprobar la legitimidad de quien la formula."
+          ]
+        },
+        {
+          "id": "incidentes",
+          "title": "7. Incidentes y evaluación de riesgos",
+          "paragraphs": [
+            "Si Alquivo conoce una violación de seguridad de los datos tratados por cuenta del responsable, se lo comunicará sin dilación indebida. Facilitará, según esté disponible, la naturaleza del incidente, las categorías de datos y personas afectadas, sus posibles consecuencias, las medidas adoptadas y un contacto para seguimiento. Podrá completar la información de forma progresiva.",
+            "Alquivo colaborará con el responsable en la valoración de riesgos, las comunicaciones a autoridades o interesados, las evaluaciones de impacto y las consultas previas que procedan, teniendo en cuenta la información disponible y el alcance del servicio. El responsable conserva las decisiones y obligaciones que le correspondan; Alquivo mantiene las propias."
+          ]
+        },
+        {
+          "id": "devolucion",
+          "title": "8. Devolución y supresión",
+          "paragraphs": [
+            "Al finalizar el servicio, el responsable podrá obtener sus datos mediante las descargas y exportaciones disponibles o solicitar al soporte la devolución del resto en un formato de uso común. Debe hacerlo antes de ordenar un borrado irreversible. Alquivo suprimirá los datos por instrucción del responsable y al concluir su tratamiento, salvo conservación exigida por la ley.",
+            "Los fallos de borrado de archivos se reintentan. Las copias de seguridad se eliminan conforme al plazo publicado, permanecen aisladas del uso ordinario y, si se restauran, deben reaplicarse las instrucciones de supresión. La finalización no autoriza reutilizar los datos para otros fines."
+          ],
+          "links": [
+            {
+              "to": "/privacy#conservacion",
+              "label": "Plazos de conservación"
+            }
+          ]
+        },
+        {
+          "id": "evidencias",
+          "title": "9. Información y comprobaciones",
+          "paragraphs": [
+            "Alquivo pondrá a disposición del responsable la información necesaria para acreditar las obligaciones de este acuerdo y permitirá y contribuirá a comprobaciones razonables, incluidas auditorías por el responsable o un auditor autorizado. Se coordinarán su alcance y forma para proteger la seguridad, la continuidad del servicio y los datos de otras personas, sin impedir el ejercicio efectivo de este derecho ni las facultades de la autoridad de control."
+          ]
+        }
+      ]
+    }
+  ],
+  "sources": {
+    "frontend/src/content/legal.js": "import { legalOperator } from \"./legalOperator.js\";\n\n// Keep in sync with backend/config/legal.php. Archive each published revision.\nexport const legalVersion = \"2026-10-23-r2\";\nexport const legalUpdatedAt = \"2026-10-23\";\nexport const operator = legalOperator;\nexport const pendingValue = \"Pendiente de completar antes de publicar la beta\";\nexport const legalDraft =\n  !operator.reviewedForPublication ||\n  [\n    operator.name,\n    operator.legalForm,\n    operator.taxId,\n    operator.address,\n    operator.backupRetention,\n    operator.mailboxRetention,\n    operator.infrastructureLogRetention,\n  ].some((value) => !value.trim()) ||\n  operator.providers.some((provider) =>\n    [provider.name, provider.location, provider.safeguards].some(\n      (value) => !value.trim(),\n    ),\n  );\n\nconst contact = `Puedes escribir a ${operator.email}.`;\nconst links = {\n  privacy: { to: \"/privacy\", label: \"Política de privacidad\" },\n  processing: {\n    to: \"/data-processing\",\n    label: \"Acuerdo de encargo y proveedores\",\n  },\n  cookies: { to: \"/cookies\", label: \"Política de cookies\" },\n  notice: { to: \"/legal\", label: \"Aviso legal e identificación del titular\" },\n};\n\nexport const legalPages = [\n  {\n    name: \"legal\",\n    path: \"/legal\",\n    title: \"Aviso legal\",\n    label: \"Aviso legal\",\n    summary: \"Quién presta el servicio y cómo contactar con Alquivo.\",\n    sections: [\n      {\n        id: \"titular\",\n        title: \"1. Titular del servicio\",\n        identity: true,\n        paragraphs: [\n          \"Alquivo es el nombre comercial de este servicio de gestión inmobiliaria. Su titular y prestador es la persona o entidad identificada a continuación. Estos datos también identifican al responsable del tratamiento de los datos de cuenta y contacto.\",\n        ],\n      },\n      {\n        id: \"objeto\",\n        title: \"2. Finalidad del sitio\",\n        paragraphs: [\n          \"El sitio presenta Alquivo y permite acceder a su aplicación, consultar sus condiciones y solicitar soporte. El servicio ayuda a organizar inmuebles, alquileres, ingresos, gastos y documentos. La información de las guías es general y no constituye asesoramiento jurídico, fiscal ni financiero adaptado a una situación personal.\",\n        ],\n        links: [\n          {\n            to: \"/terms\",\n            label: \"Consultar las condiciones de uso de la beta\",\n          },\n        ],\n      },\n      {\n        id: \"propiedad\",\n        title: \"3. Contenidos y propiedad intelectual\",\n        paragraphs: [\n          \"El software, la identidad visual y los contenidos propios del sitio están protegidos por los derechos que correspondan a su titular. Los componentes y materiales de terceros conservan sus respectivas licencias. Puedes consultar y guardar estos textos para tu uso personal; no se concede por ello una licencia para explotar comercialmente el software o la marca.\",\n          \"Los datos y documentos que aportes no pasan a ser propiedad de Alquivo. Se utilizan para prestar el servicio conforme a las condiciones y, cuando corresponda, al acuerdo de encargo. La participación opcional en la mejora del asistente tiene una finalidad y un permiso separados, descritos en privacidad.\",\n        ],\n      },\n      {\n        id: \"contacto\",\n        title: \"4. Contacto y comunicaciones\",\n        paragraphs: [\n          `${contact} Puedes comunicar errores, incidencias o contenido que consideres ilícito indicando la información necesaria para localizarlo, sin enviar datos personales innecesarios. Los enlaces a páginas externas se ofrecen como referencia; cada tercero gestiona su propio sitio.`,\n        ],\n        links: [links.privacy, links.cookies],\n      },\n    ],\n  },\n  {\n    name: \"terms\",\n    path: \"/terms\",\n    title: \"Condiciones de uso\",\n    label: \"Condiciones\",\n    summary:\n      \"Una beta gratuita, sin cargos automáticos, para organizar tu patrimonio y ayudarnos a mejorar Alquivo.\",\n    sections: [\n      {\n        id: \"servicio\",\n        title: \"1. Servicio y aceptación\",\n        paragraphs: [\n          \"Estas condiciones regulan el uso de Alquivo y se formalizan en castellano entre el titular identificado en el aviso legal y la persona que crea la cuenta. Para registrarte debes ser mayor de edad y tener capacidad para contratar; si actúas por otra persona o entidad, debes estar autorizado para representarla.\",\n          \"Antes de crear la cuenta puedes revisar y corregir los datos del formulario. Al marcar la casilla y completar el registro aceptas esta versión de las condiciones, incluido el acuerdo de encargo cuando resulte aplicable. Guardamos la fecha y versión aceptadas. Puedes imprimir o guardar estos textos desde el navegador y solicitar una copia al soporte. La política de privacidad informa sobre el uso de tus datos; su lectura no equivale a consentir publicidad ni funciones opcionales.\",\n        ],\n        links: [links.notice, links.processing, links.privacy],\n      },\n      {\n        id: \"beta\",\n        title: \"2. Qué incluye la beta gratuita\",\n        paragraphs: [\n          \"Durante la beta, la cuenta permite gestionar hasta 50 inmuebles y utilizar hasta 5 GB de almacenamiento para documentos y fotos. Incluye las funciones habilitadas para el público en la aplicación; las funciones todavía en revisión no están incluidas. Las funciones de IA, cuando estén disponibles, tienen límites de uso específicos que se muestran antes de activarlas o utilizarlas. Que una función se anuncie como próxima no significa que esté incluida o disponible.\",\n          \"La beta no exige tarjeta ni genera cuotas. No se transforma automáticamente en una suscripción de pago. Si al terminar ofrecemos otros planes, conocerás su precio, duración y condiciones y solo se contratarán mediante una aceptación expresa por tu parte. Una futura oferta de fundador será opcional.\",\n          \"La beta sirve para validar un producto que aún evoluciona: puede haber errores, interrupciones o ajustes. Esta circunstancia no elimina nuestras obligaciones de protección de datos ni los derechos que te reconozca la ley. No existe una garantía de atención inmediata o disponibilidad ininterrumpida.\",\n        ],\n      },\n      {\n        id: \"cuenta\",\n        title: \"3. Tu cuenta y un uso adecuado\",\n        paragraphs: [\n          \"Facilita datos de cuenta correctos, protege tus credenciales y mantén accesible tu correo. El doble factor refuerza la seguridad; recordar un dispositivo evita ese segundo paso durante un máximo de 90 días, pero no sustituye la contraseña. Utilízalo solo en dispositivos de confianza. Comunica cuanto antes cualquier acceso que no reconozcas.\",\n          \"Debes tener una base legítima para incorporar los datos de inquilinos y otras personas e informarles cuando corresponda. No necesitas basarlo todo en su consentimiento: la base depende de la relación y de la finalidad del tratamiento. Introduce solo la información necesaria y evita datos especialmente sensibles que no sean precisos para la gestión del alquiler.\",\n        ],\n        items: [\n          \"No utilices cuentas ajenas, eludas límites ni intentes acceder a carteras o archivos de otras personas.\",\n          \"No subas malware, contenido ilícito ni materiales que vulneren derechos de terceros.\",\n          \"No compartas la cuenta para ofrecer acceso a terceros sin autorización ni uses la aplicación para enviar comunicaciones no solicitadas.\",\n        ],\n      },\n      {\n        id: \"datos\",\n        title: \"4. Tus documentos y resultados\",\n        paragraphs: [\n          \"Conservas los derechos sobre tus documentos y contenidos. Nos autorizas únicamente a alojarlos y procesarlos en lo necesario para prestarte el servicio, atender tus instrucciones y proteger su funcionamiento. No se ceden para su venta ni para publicidad.\",\n          \"Los saldos, rentabilidades y resúmenes dependen de la información introducida. Comprueba los resultados antes de tomar decisiones o cumplir obligaciones fiscales o contractuales. Conserva los originales que debas custodiar legalmente. El servicio no sustituye al registro, a una gestoría ni a un asesor profesional.\",\n        ],\n      },\n      {\n        id: \"ia\",\n        title: \"5. Funciones de inteligencia artificial\",\n        paragraphs: [\n          \"Si una función de IA está habilitada para tu cuenta, su uso requiere revisar su aviso específico y activarla. El asistente puede equivocarse o no disponer de información suficiente. Sus respuestas no constituyen asesoramiento profesional ni decisiones automatizadas sobre inquilinos.\",\n          \"Cuando el asistente prepare una operación, revísala antes de confirmarla. La activación del chat no autoriza por sí sola el envío de documentos a un proveedor de IA. Una función de análisis documental real requerirá un aviso y una activación independientes. Puedes dejar de usar el asistente sin perder el acceso a la gestión ordinaria.\",\n        ],\n        links: [{ to: \"/privacy#ia\", label: \"Qué datos utiliza el asistente\" }],\n      },\n      {\n        id: \"soporte\",\n        title: \"6. Soporte y comunicaciones del servicio\",\n        paragraphs: [\n          `Puedes abrir varios tickets y continuar cada conversación dentro de la aplicación. También puedes contactar por correo. ${contact} El soporte no es un servicio de emergencias. Para resolver una consulta comparte solo lo necesario y oculta los datos de terceros en las capturas.`,\n          \"Podemos enviarte comunicaciones necesarias sobre seguridad, acceso, soporte y cambios relevantes del servicio. Crear una cuenta no te suscribe a campañas de publicidad.\",\n        ],\n      },\n      {\n        id: \"baja\",\n        title: \"7. Baja, suspensión y fin de la beta\",\n        paragraphs: [\n          \"Puedes dejar de utilizar el servicio y eliminar tu cuenta desde Configuración. Antes de eliminarla, descarga tus documentos y las exportaciones disponibles de inmuebles, contratos y movimientos. Si necesitas otros datos, solicítalos al soporte antes de borrar la cuenta. El borrado de la cuenta también elimina su cartera y sus tickets del sistema activo; los archivos pendientes de borrado se reintentan. La eliminación no puede deshacerse desde la aplicación.\",\n          \"Podremos limitar o suspender el acceso ante usos ilícitos, intentos de acceso ajeno, riesgos de seguridad o incumplimientos graves. La medida será proporcional y, cuando sea posible sin agravar el riesgo ni incumplir la ley, explicaremos el motivo y cómo solicitar su revisión. No emplearemos la suspensión para forzarte a contratar un plan de pago.\",\n          \"Si decidimos finalizar la beta o reducir de forma sustancial sus prestaciones, avisaremos con al menos 30 días naturales para que puedas decidir y descargar tus datos, salvo que una obligación legal o una urgencia de seguridad exija actuar antes. No borraremos deliberadamente una cartera por el mero anuncio de un plan futuro.\",\n        ],\n      },\n      {\n        id: \"responsabilidad\",\n        title: \"8. Responsabilidad y derechos\",\n        paragraphs: [\n          \"Cada parte responde conforme a la legislación aplicable. El carácter gratuito o experimental del servicio no excluye la responsabilidad que legalmente corresponda a Alquivo, ni limita los derechos irrenunciables de los consumidores. Ninguna cláusula excluye la responsabilidad por dolo ni impone una renuncia general a reclamar.\",\n          \"Los cambios relevantes se comunicarán con antelación razonable. Cuando una modificación exija una nueva aceptación o consentimiento, se solicitará expresamente; el silencio no sirve para contratar un plan de pago.\",\n        ],\n      },\n      {\n        id: \"reclamaciones\",\n        title: \"9. Legislación y reclamaciones\",\n        paragraphs: [\n          `${contact} Intentaremos resolver cualquier reclamación identificando el problema y la cuenta afectada. Se aplica la legislación española, sin perjuicio de la protección obligatoria que corresponda a una persona consumidora por su residencia. Los tribunales competentes serán los determinados por la ley; no se impone un fuero que prive al consumidor de sus derechos.`,\n        ],\n      },\n    ],\n  },\n  {\n    name: \"privacy\",\n    path: \"/privacy\",\n    title: \"Política de privacidad\",\n    label: \"Privacidad\",\n    summary:\n      \"Qué datos utilizamos, para qué los necesitamos y cómo ejercer tus derechos.\",\n    sections: [\n      {\n        id: \"responsable\",\n        title: \"1. Quién trata tus datos\",\n        identity: true,\n        paragraphs: [\n          \"El titular de Alquivo actúa como responsable de los datos necesarios para gestionar las cuentas, la relación con los usuarios, el soporte y la seguridad del servicio. Sus datos de contacto figuran a continuación.\",\n          \"Cuando un propietario incorpora datos de inquilinos, avalistas, proveedores u otras personas y decide para qué los utiliza, Alquivo los trata por su cuenta para prestar el servicio. Cuando esa relación esté sujeta al RGPD, se regula mediante el acuerdo de encargo. Si eres inquilino y tu propietario usa Alquivo, dirígete a él para conocer su información de privacidad; también puedes escribirnos para trasladarle una solicitud relacionada con sus datos, sin revelar información de otra cuenta.\",\n        ],\n        links: [links.processing],\n      },\n      {\n        id: \"finalidades\",\n        title: \"2. Datos, finalidades y bases jurídicas\",\n        table: {\n          headings: [\"Uso\", \"Datos necesarios\", \"Base jurídica\"],\n          rows: [\n            [\n              \"Crear y mantener tu cuenta\",\n              \"Nombre, correo, contraseña protegida, preferencias, fecha y versión de condiciones aceptadas.\",\n              \"Ejecución del contrato (art. 6.1.b RGPD).\",\n            ],\n            [\n              \"Gestionar tu cartera\",\n              \"Inmuebles, contratos, contactos, importes, fechas, incidencias, fotografías y documentos que aportes.\",\n              \"Prestación del servicio; respecto a datos de terceros, instrucciones del propietario según el acuerdo de encargo.\",\n            ],\n            [\n              \"Atender consultas y tickets\",\n              \"Nombre, correo cuando lo facilites, asunto, mensajes, adjuntos y estado de la conversación.\",\n              \"Contrato o medidas precontractuales cuando correspondan; interés legítimo en atender y gestionar las demás consultas.\",\n            ],\n            [\n              \"Proteger cuentas y prevenir abuso\",\n              \"Datos de sesión, verificaciones, dispositivos de confianza, eventos de acceso y datos técnicos de conexión.\",\n              \"Interés legítimo en proteger el servicio y a sus usuarios (art. 6.1.f RGPD).\",\n            ],\n            [\n              \"Cumplir obligaciones y atender reclamaciones\",\n              \"La información estrictamente necesaria para cada obligación o reclamación, incluida la evidencia mínima de aceptación y retirada de permisos.\",\n              \"Obligación legal (art. 6.1.c RGPD) e interés legítimo en la defensa de derechos.\",\n            ],\n          ],\n        },\n        paragraphs: [\n          \"Los datos se obtienen de ti, de las operaciones que realizas en la aplicación y de la conexión necesaria para usarla. Los datos de terceros proceden del propietario que los incorpora. Los campos señalados como obligatorios son necesarios para completar el registro o atender la solicitud; no proporcionarlos puede impedir esa operación. El contenido adicional de documentos y mensajes lo decides tú.\",\n          \"La beta no solicita tarjetas ni cobra cuotas. No utilizamos tus contratos para publicidad, no vendemos datos personales y no se han integrado herramientas de seguimiento publicitario o analítica de terceros. Las métricas técnicas de funcionamiento no se utilizan para evaluar la solvencia de personas.\",\n        ],\n      },\n      {\n        id: \"soporte\",\n        title: \"3. Conversaciones de soporte\",\n        paragraphs: [\n          \"Los tickets permiten abrir varias consultas y seguir cada conversación. Pueden ver su contenido el titular de la conversación y el personal autorizado de soporte. El permiso de soporte no concede acceso a la cartera inmobiliaria del usuario. Este chat se atiende por personas y no utiliza IA.\",\n          \"Cuando hay correo operativo, las notificaciones al equipo indican que existe un ticket o una respuesta y cómo abrir la bandeja. No incluyen el texto ni los adjuntos del ticket. Si utilizas el formulario alternativo que envía un correo o escribes directamente al buzón, el proveedor de correo procesa el contenido que envías.\",\n          \"Sin iniciar sesión, el acceso a tus tickets depende de la sesión de ese navegador. Indicar una dirección de correo no acredita su titularidad ni permite recuperar el historial en otro dispositivo. Si la sesión caduca, puedes perder el acceso aunque el ticket siga conservado. Las consultas abiertas desde tu cuenta quedan vinculadas a ella.\",\n        ],\n      },\n      {\n        id: \"ia\",\n        title: \"4. Asistente de IA opcional\",\n        paragraphs: [\n          \"El asistente solo se utiliza cuando la función está habilitada y aceptas su aviso específico. La activación es voluntaria y puedes revocarla. Para los datos personales que aportas en tu propio nombre, esa elección se basa en tu consentimiento; para los datos de otras personas, el envío es una instrucción del propietario y requiere que este disponga de su propia base jurídica. Tu aceptación no sustituye los derechos de los inquilinos.\",\n          \"Cuando utilizas el chat, OpenAI recibe tu pregunta, el historial reciente y los datos seleccionados que necesita para responder. Pueden incluir nombres de contactos y su relación con contratos, nombres de inmuebles, títulos de incidencias, importes y fechas. Las herramientas del chat no recuperan DNI, correos, teléfonos ya guardados, notas anteriores, direcciones completas ni el contenido de los documentos. Si escribes esos datos en un mensaje, o los incluyes en nombres o títulos, también pueden llegar al proveedor; evita hacerlo si no es necesario.\",\n          \"Las propuestas de gastos, cobros o cambios de datos requieren tu confirmación antes de guardarse como operaciones reales. Borrar el chat no borra las operaciones que ya hayas confirmado. El servicio no adopta decisiones exclusivamente automatizadas con efectos jurídicos o similares sobre ti o tus inquilinos.\",\n          \"En el mismo chat puede conservarse durante 30 minutos una referencia al inmueble recién consultado, limitada a esa conversación y cuenta, sin memorizar sus saldos como datos actuales. Las consultas vuelven a verificar los datos. Las propuestas de altas de inmuebles, contactos y contratos en borrador siguen en revisión administrativa; no activan alquileres ni emiten mensualidades. Las direcciones y datos de contacto nuevos que escribas en el chat también llegan al proveedor; puedes utilizar los formularios manuales para no enviarlos a la IA.\",\n          \"El historial y los borradores del asistente se eliminan a los 30 días mediante la tarea de limpieza; también puedes borrarlos o desactivar la función. Las métricas de uso, coste y trazabilidad sin el texto de la conversación se conservan durante 12 meses completos más el mes en curso.\",\n          \"La aplicación usa la API de OpenAI y solicita no almacenar las respuestas con store=false. Esa opción no elimina los registros de prevención de abusos: OpenAI indica una conservación habitual de hasta 30 días, con posibles excepciones legales o de seguridad. Los datos de la API no se utilizan para entrenar modelos por defecto; las opciones de compartir datos de la cuenta deben mantenerse desactivadas. No se promete retención cero ni residencia exclusivamente europea. Antes de abrir la función pública deben verificarse el contrato, las opciones de la cuenta y las garantías que figuran en la relación de proveedores.\",\n          \"La importación documental disponible para pruebas administrativas utiliza una simulación local que no envía archivos a OpenAI. Tiene un aviso separado y almacena sus borradores y fragmentos cifrados hasta 30 días o hasta revocar ese permiso. Los originales y las operaciones confirmadas siguen en sus módulos. Antes de habilitar análisis documental real se informará del proveedor y de los datos enviados y se solicitará una activación independiente; el permiso del chat no lo cubre.\",\n        ],\n        links: [\n          {\n            to: \"/data-processing#proveedores\",\n            label: \"Proveedores y transferencias de datos\",\n          },\n        ],\n        externalLinks: [\n          {\n            href: \"https://developers.openai.com/api/docs/guides/your-data\",\n            label: \"Controles de datos de la API de OpenAI\",\n          },\n        ],\n      },\n      {\n        id: \"mejora-ia\",\n        title: \"4 bis. Compartir conversaciones para mejorar Alquivo AI\",\n        paragraphs: [\n          \"Esta opción solo está disponible cuando aparece su control de activación en Privacidad del asistente. Si no aparece, la función no está habilitada para tu cuenta. La existencia de este apartado no activa la captura ni autoriza revisar conversaciones sin tu elección expresa.\",\n          \"Puedes autorizar por separado y de forma opcional la revisión de tus nuevas conversaciones para detectar y corregir errores del asistente. El titular de Alquivo es responsable de esta finalidad de mejora. La elección se basa en tu consentimiento, no viene marcada y no es necesaria para utilizar el asistente. No se recuperan conversaciones anteriores a la autorización ni se interpreta la activación del chat como permiso para esta finalidad.\",\n          \"Si participas, se registran cifrados los mensajes nuevos y su contexto reciente autorizado, las respuestas, las herramientas y los datos consultados necesarios para investigar, junto con errores, modelo, versiones y tiempos. Se limita el tamaño del registro y no se recuperan documentos originales, credenciales del sistema ni razonamientos internos del modelo. Si escribes datos personales o secretos en el chat, pueden quedar incluidos: evita hacerlo. Puede haber registros parciales. No se realizan consultas adicionales al proveedor de IA para crear estos registros.\",\n          \"Únicamente las personas con autorización específica, correo verificado y doble factor pueden revisar estos registros. Se auditan sus accesos y las preparaciones de exportación. El permiso de soporte ordinario no concede acceso. No se envían automáticamente por correo ni a otros servicios de IA, no se publican y no activan el uso de tus datos para entrenar modelos de OpenAI.\",\n          \"Los registros caducan como máximo a los 30 días y nunca amplían la conservación de los mensajes que contienen. Puedes retirar el permiso desde Privacidad en el asistente: se eliminan los registros de mejora y cesa la captura, pero puedes seguir usando el chat. También se eliminan los registros afectados al borrar la conversación, desactivar el asistente o eliminar la cuenta. El borrado y restauración de las copias de seguridad sigue las reglas de conservación publicadas. Se conserva por separado la evidencia mínima de aceptación y retirada para acreditar el tratamiento.\",\n          \"Para conservar casos de prueba se deben sustituir los datos reales por ejemplos ficticios. Las herramientas de depuración de exportaciones son una ayuda y exigen revisión humana: no garantizan anonimato ni autorizan compartir registros identificables con ChatGPT, Codex u otros terceros. La participación del propietario no constituye consentimiento de los inquilinos ni amplía las finalidades legítimas de tratamiento de sus datos; evita incorporar información de terceros innecesaria o sensible. Si aparece, debe excluirse de los ejemplos de mejora y atenderse cualquier solicitud de derechos.\",\n        ],\n        links: [links.notice, links.processing],\n      },\n      {\n        id: \"conservacion\",\n        title: \"5. Cuánto tiempo conservamos los datos\",\n        table: {\n          headings: [\"Información\", \"Conservación\"],\n          rows: [\n            [\n              \"Cuenta, cartera y documentos\",\n              \"Mientras uses el servicio; puedes solicitar o ejecutar la eliminación. El borrado de archivos pendiente se reintenta hasta completarlo.\",\n            ],\n            [\n              \"Tickets de soporte\",\n              \"180 días desde el último mensaje o cambio de estado. Los vinculados a una cuenta también se eliminan al borrar esa cuenta.\",\n            ],\n            [\n              \"Conversaciones y borradores de IA\",\n              \"30 días, o antes si los eliminas o revocas la función conforme a su aviso. Las operaciones confirmadas permanecen en la cartera.\",\n            ],\n            [\n              \"Métricas de uso y coste de IA\",\n              \"12 meses completos más el mes en curso, sin el contenido de los mensajes.\",\n            ],\n            [\n              \"Registros opcionales de mejora de IA\",\n              \"Hasta 30 días, sin ampliar la caducidad de los mensajes incluidos; antes al retirar el permiso, borrar la conversación o eliminar la cuenta. Comentarios de revisión con la misma caducidad.\",\n            ],\n            [\n              \"Evidencia de aceptación de condiciones y permisos de IA\",\n              \"Correo de la cuenta cifrado, ámbito, versión, aceptación o retirada y fecha. Mientras la aceptación esté vigente y hasta 1.095 días desde su sustitución, retirada o eliminación de la cuenta. No incluye conversaciones ni documentos y solo se utiliza con acceso restringido para acreditar el tratamiento y atender responsabilidades.\",\n            ],\n            [\n              \"Registro de auditoría de seguridad de la aplicación\",\n              \"30 días. Incluye identificador de usuario y una huella de la conexión, sin contraseñas ni documentos.\",\n            ],\n            [\n              \"Dispositivos de confianza\",\n              \"El reconocimiento dura como máximo 90 días. El registro técnico se elimina al revocarlo, sustituirlo por otros dispositivos según el límite de la cuenta o eliminar la cuenta.\",\n            ],\n            [\"Copias de seguridad\", operator.backupRetention || pendingValue],\n            [\n              \"Mensajes del buzón y formularios enviados por correo\",\n              operator.mailboxRetention || pendingValue,\n            ],\n            [\n              \"Registros del alojamiento y servicios técnicos\",\n              operator.infrastructureLogRetention || pendingValue,\n            ],\n          ],\n        },\n        paragraphs: [\n          \"Los plazos técnicos de limpieza pueden requerir la siguiente ejecución programada. La eliminación en el sistema activo no equivale al borrado instantáneo de todas las copias de seguridad: estas deben caducar según el plazo indicado y no se utilizan para fines ordinarios. Si se restaura una copia, deben reaplicarse las solicitudes de borrado.\",\n          \"Cuando una obligación legal o una reclamación justifique conservar datos concretos, se limitarán a lo necesario, con acceso restringido durante el plazo aplicable, y se eliminarán al finalizar. No se conservará por ese motivo toda una cartera de forma indefinida.\",\n        ],\n      },\n      {\n        id: \"destinatarios\",\n        title: \"6. Quién puede acceder y dónde se tratan los datos\",\n        paragraphs: [\n          \"Acceden las personas autorizadas que lo necesitan para su función y los proveedores contratados de alojamiento, almacenamiento, copias y correo. El proveedor de IA interviene únicamente en las funciones activadas que lo requieren. Podemos comunicar datos a autoridades cuando exista una obligación legal.\",\n          \"Los proveedores deben estar sujetos a acuerdos adecuados de protección de datos. Si hay acceso o tratamiento desde fuera del Espacio Económico Europeo, se indicarán el país y la garantía aplicable, como una decisión de adecuación vigente o cláusulas contractuales tipo acompañadas de las medidas necesarias. No debe entenderse que todos los datos permanecen en Europa por el mero hecho de utilizar un servidor europeo.\",\n        ],\n        links: [\n          {\n            to: \"/data-processing#proveedores\",\n            label: \"Consultar proveedores, ubicaciones y garantías\",\n          },\n        ],\n      },\n      {\n        id: \"derechos\",\n        title: \"7. Tus derechos y cómo ejercerlos\",\n        paragraphs: [\n          `${contact} Puedes pedir acceso, rectificación, supresión, limitación, portabilidad cuando proceda u oponerte a tratamientos basados en interés legítimo. Si un uso depende de tu consentimiento, puedes retirarlo en cualquier momento sin afectar a la licitud de lo ya realizado. Indica qué derecho quieres ejercer y la cuenta o información afectada. No envíes un DNI por defecto: solo pediremos información adicional proporcionada si es necesaria para comprobar tu identidad.`,\n          \"Responderemos, con carácter general, en un mes desde la recepción. Si la complejidad o el número de solicitudes justifican una ampliación legal, te informaremos dentro de ese primer mes. Puedes reclamar ante la Agencia Española de Protección de Datos si consideras que tus derechos no han sido atendidos, y ante la autoridad que te corresponda según la normativa aplicable.\",\n        ],\n        externalLinks: [\n          {\n            href: \"https://www.aepd.es/\",\n            label: \"Agencia Española de Protección de Datos\",\n          },\n        ],\n      },\n      {\n        id: \"seguridad\",\n        title: \"8. Seguridad y actualizaciones\",\n        paragraphs: [\n          \"La aplicación limita el acceso por cuenta y cartera y almacena los documentos de forma privada y cifrada. Las contraseñas se guardan mediante una función de hash. Ofrece doble factor y controles de acceso para las funciones de soporte. Estas medidas reducen riesgos, pero ningún sistema permite prometer seguridad absoluta.\",\n          \"La fecha de esta página identifica la versión de la información. Comunicaremos cambios relevantes y pediremos una nueva autorización si resulta necesaria para una función opcional. Puedes consultar por separado el uso de cookies y almacenamiento del navegador.\",\n        ],\n        links: [links.cookies],\n      },\n    ],\n  },\n  {\n    name: \"cookies\",\n    path: \"/cookies\",\n    title: \"Política de cookies\",\n    label: \"Cookies\",\n    summary:\n      \"Alquivo utiliza almacenamiento técnico para el acceso y la seguridad. No incorpora cookies de publicidad ni analítica de terceros.\",\n    sections: [\n      {\n        id: \"uso\",\n        title: \"1. Qué son y para qué se utilizan\",\n        paragraphs: [\n          \"Las cookies son pequeños valores que el navegador guarda y envía al sitio. El almacenamiento local permite guardar información en ese navegador sin enviarla automáticamente en cada solicitud. Alquivo utiliza estas tecnologías para mantener la sesión solicitada, proteger formularios, recordar dispositivos cuando lo pides y mostrar información de tu cuenta.\",\n        ],\n      },\n      {\n        id: \"inventario\",\n        title: \"2. Inventario de almacenamiento propio\",\n        table: {\n          headings: [\"Nombre y tipo\", \"Finalidad\", \"Duración\"],\n          rows: [\n            [\n              \"alquivo-session (cookie de sesión)\",\n              \"Mantener el acceso y vincular los tickets de visitantes a su sesión. El nombre puede variar según el despliegue.\",\n              \"Configuración de referencia: 120 minutos de inactividad; la actividad renueva la sesión.\",\n            ],\n            [\n              \"XSRF-TOKEN (cookie técnica)\",\n              \"Proteger las peticiones frente a solicitudes fraudulentas.\",\n              \"Vinculada a la duración de la sesión, con renovación durante el uso.\",\n            ],\n            [\n              \"alquivo_trusted_device (cookie opcional de seguridad)\",\n              \"Reconocer este dispositivo cuando marcas «recordar este dispositivo» al superar el doble factor.\",\n              \"Máximo de 90 días desde su emisión; no se renueva por el mero hecho de iniciar sesión.\",\n            ],\n            [\n              \"alquivo_user y alquivo_portfolio (almacenamiento local)\",\n              \"Mostrar datos básicos de la cuenta y cartera. No sustituyen las cookies de autenticación ni dan acceso por sí solos.\",\n              \"Hasta cerrar sesión, limpiar los datos del sitio o sustituirlos por una actualización. El navegador también puede eliminarlos.\",\n            ],\n            [\n              \"alquivo:locale (almacenamiento local)\",\n              \"Recordar el idioma seleccionado cuando esa opción esté disponible.\",\n              \"Hasta cambiar la preferencia o borrar los datos del sitio.\",\n            ],\n            [\n              \"alquivo:email-reminder:v1:<cuenta> (almacenamiento local)\",\n              \"Recordar que has ocultado el aviso de verificación de correo. No verifica la cuenta ni modifica tus permisos.\",\n              \"Hasta borrar los datos del sitio. Puede quedar conservado tras cerrar sesión.\",\n            ],\n          ],\n        },\n        paragraphs: [\n          \"Algunas instalaciones antiguas pueden conservar claves de visualización ig_user e ig_portfolio, que se sustituyen por las actuales o se eliminan al cerrar sesión. No son identificadores publicitarios.\",\n        ],\n      },\n      {\n        id: \"consentimiento\",\n        title: \"3. Elección y consentimiento\",\n        paragraphs: [\n          \"Las tecnologías estrictamente necesarias para el servicio que solicitas están exceptuadas del consentimiento de cookies. Por eso no mostramos un botón general para aceptar publicidad que no existe. Recordar un dispositivo es una opción que activas tú y puedes revocar desde la configuración de seguridad.\",\n          \"Si incorporamos analítica o publicidad que requiera consentimiento, informaremos de sus proveedores, finalidades y duración y ofreceremos una elección real antes de activarlas. Rechazarlas no impedirá utilizar las funciones que no las necesiten.\",\n        ],\n      },\n      {\n        id: \"control\",\n        title: \"4. Cómo eliminarlas\",\n        paragraphs: [\n          \"Puedes borrar o bloquear las cookies y los datos del sitio desde la configuración de privacidad de tu navegador. Cerrar sesión elimina la caché local de la cuenta, pero no equivale por sí solo a revocar todos los dispositivos de confianza. Utiliza también las opciones de seguridad si quieres que vuelva a solicitarse el doble factor.\",\n          \"Bloquear el almacenamiento necesario puede impedir iniciar sesión o continuar un ticket como visitante. Si compartes ordenador, cierra sesión y evita recordar el dispositivo. Para consultas sobre privacidad, contacta con el titular indicado en el aviso legal.\",\n        ],\n        links: [links.notice, links.privacy],\n      },\n    ],\n  },\n  {\n    name: \"data-processing\",\n    path: \"/data-processing\",\n    title: \"Acuerdo de encargo de tratamiento\",\n    label: \"Tratamiento de datos\",\n    summary:\n      \"Cómo trata Alquivo los datos de tus inquilinos y otras personas cuando utilizas la aplicación como responsable del tratamiento.\",\n    sections: [\n      {\n        id: \"partes\",\n        title: \"1. Partes y alcance\",\n        paragraphs: [\n          \"Este acuerdo forma parte de las condiciones aceptadas al registrar la cuenta y se aplica cuando el usuario trata datos personales como responsable sujeto al RGPD. El responsable es el usuario o la entidad a la que representa. El encargado es el titular de Alquivo identificado en el aviso legal. No regula los tratamientos propios de cuenta, seguridad y relación comercial de Alquivo, que se describen en su política de privacidad.\",\n          \"El objeto es prestar el servicio de gestión inmobiliaria siguiendo las instrucciones del responsable. Dura mientras se preste el servicio y hasta la devolución o supresión de los datos. En caso de conflicto sobre el tratamiento por cuenta del usuario, prevalece este acuerdo sobre otras condiciones del servicio.\",\n        ],\n        links: [links.notice, links.privacy],\n      },\n      {\n        id: \"operaciones\",\n        title: \"2. Operaciones, datos y personas afectadas\",\n        paragraphs: [\n          \"El servicio permite recoger, organizar, almacenar, consultar, actualizar, relacionar, exportar y suprimir datos y documentos. Trata datos identificativos y de contacto, relaciones contractuales, inmuebles, importes, fechas, pagos, incidencias y el contenido de los archivos que el responsable aporte. Las personas afectadas pueden ser propietarios, inquilinos, avalistas, representantes, proveedores y contactos relacionados con la gestión.\",\n          \"No está diseñado para tratar categorías especiales de datos, antecedentes penales ni realizar evaluaciones automatizadas de solvencia. El responsable debe minimizar el contenido de los documentos y consultar previamente cualquier necesidad de tratamiento que exceda este alcance.\",\n        ],\n      },\n      {\n        id: \"instrucciones\",\n        title: \"3. Instrucciones y deberes del responsable\",\n        paragraphs: [\n          \"Las operaciones que el usuario realiza en la aplicación, este acuerdo y las solicitudes verificadas al soporte constituyen instrucciones documentadas. El responsable determina las finalidades y su base jurídica, informa a los interesados y garantiza que las instrucciones son lícitas. La activación de una función opcional no constituye el consentimiento de las personas cuyos datos haya incorporado.\",\n          \"Alquivo tratará los datos únicamente conforme a esas instrucciones, también respecto a transferencias internacionales, salvo obligación legal aplicable. En ese supuesto informará al responsable antes de tratar los datos, salvo prohibición legal. Si considera que una instrucción infringe la normativa, lo comunicará y podrá suspender esa operación hasta aclararla.\",\n        ],\n      },\n      {\n        id: \"confidencialidad\",\n        title: \"4. Confidencialidad y seguridad\",\n        paragraphs: [\n          \"Alquivo limitará el acceso a las personas que lo necesiten para prestar el servicio y estén sujetas a compromisos de confidencialidad u obligaciones equivalentes. Esta obligación continuará al terminar la relación.\",\n          \"Se aplicarán medidas técnicas y organizativas proporcionadas al riesgo: aislamiento de carteras y autorización de accesos, archivos privados cifrados, protección de credenciales, comunicaciones cifradas en el servicio público, gestión de permisos de soporte y administración, registro de eventos de seguridad, actualización de componentes y procedimientos de recuperación y borrado. Las copias y su restauración deben mantenerse de acuerdo con las condiciones operativas publicadas. El detalle técnico necesario podrá facilitarse de forma reservada, sin divulgar claves ni información que comprometa a otros usuarios.\",\n        ],\n      },\n      {\n        id: \"proveedores\",\n        title: \"5. Subencargados y ubicación del tratamiento\",\n        providers: true,\n        paragraphs: [\n          \"La relación siguiente identifica el servicio, la entidad conocida, los datos tratados, la ubicación y las garantías de cada proveedor. Distingue los servicios operativos, las funciones opcionales todavía deshabilitadas y los mensajes históricos del buzón anterior. Los enlaces permiten consultar sus documentos públicos; no acreditan por sí solos la incorporación de todos los acuerdos u opciones a una cuenta concreta. La autorización del responsable se limita a los proveedores efectivamente contratados e identificados para las funciones que utilice.\",\n          \"Alquivo impondrá a sus subencargados obligaciones de protección de datos equivalentes a las que correspondan en este acuerdo y seguirá respondiendo ante el responsable por el cumplimiento de sus obligaciones. Informará de las incorporaciones o sustituciones previstas con al menos 15 días de antelación, para que el responsable pueda objetar por razones de protección de datos. Si no se alcanza una solución, podrá dejar de utilizar la función afectada o finalizar el servicio con devolución o supresión de sus datos. No se someterán sus datos al proveedor objetado mientras se resuelve la objeción.\",\n          \"La IA solo interviene cuando la función esté habilitada y el responsable la active tras consultar su aviso. Activar el chat no autoriza enviar archivos originales para análisis documental. No se atribuye al consentimiento del usuario la función de sustituir las garantías legales de una transferencia internacional.\",\n        ],\n      },\n      {\n        id: \"derechos\",\n        title: \"6. Ayuda para atender derechos\",\n        paragraphs: [\n          \"Alquivo ayudará al responsable, teniendo en cuenta la naturaleza del tratamiento, a responder a solicitudes de acceso, rectificación, supresión, oposición, limitación y portabilidad. Si recibe directamente una solicitud sobre datos tratados por cuenta del usuario, se la trasladará sin dilación indebida y no resolverá por su cuenta salvo autorización u obligación legal.\",\n          `El responsable puede pedir esa asistencia a través del soporte. ${contact} Se utilizará la información mínima necesaria para identificar la solicitud y comprobar la legitimidad de quien la formula.`,\n        ],\n      },\n      {\n        id: \"incidentes\",\n        title: \"7. Incidentes y evaluación de riesgos\",\n        paragraphs: [\n          \"Si Alquivo conoce una violación de seguridad de los datos tratados por cuenta del responsable, se lo comunicará sin dilación indebida. Facilitará, según esté disponible, la naturaleza del incidente, las categorías de datos y personas afectadas, sus posibles consecuencias, las medidas adoptadas y un contacto para seguimiento. Podrá completar la información de forma progresiva.\",\n          \"Alquivo colaborará con el responsable en la valoración de riesgos, las comunicaciones a autoridades o interesados, las evaluaciones de impacto y las consultas previas que procedan, teniendo en cuenta la información disponible y el alcance del servicio. El responsable conserva las decisiones y obligaciones que le correspondan; Alquivo mantiene las propias.\",\n        ],\n      },\n      {\n        id: \"devolucion\",\n        title: \"8. Devolución y supresión\",\n        paragraphs: [\n          \"Al finalizar el servicio, el responsable podrá obtener sus datos mediante las descargas y exportaciones disponibles o solicitar al soporte la devolución del resto en un formato de uso común. Debe hacerlo antes de ordenar un borrado irreversible. Alquivo suprimirá los datos por instrucción del responsable y al concluir su tratamiento, salvo conservación exigida por la ley.\",\n          \"Los fallos de borrado de archivos se reintentan. Las copias de seguridad se eliminan conforme al plazo publicado, permanecen aisladas del uso ordinario y, si se restauran, deben reaplicarse las instrucciones de supresión. La finalización no autoriza reutilizar los datos para otros fines.\",\n        ],\n        links: [\n          { to: \"/privacy#conservacion\", label: \"Plazos de conservación\" },\n        ],\n      },\n      {\n        id: \"evidencias\",\n        title: \"9. Información y comprobaciones\",\n        paragraphs: [\n          \"Alquivo pondrá a disposición del responsable la información necesaria para acreditar las obligaciones de este acuerdo y permitirá y contribuirá a comprobaciones razonables, incluidas auditorías por el responsable o un auditor autorizado. Se coordinarán su alcance y forma para proteger la seguridad, la continuidad del servicio y los datos de otras personas, sin impedir el ejercicio efectivo de este derecho ni las facultades de la autoridad de control.\",\n        ],\n      },\n    ],\n  },\n];\n",
+    "frontend/src/content/legalOperator.js": "// Public information only: this file is included in the website and static HTML.\n// Complete it using the signed provider agreements before publishing the beta.\n// Never put credentials or private infrastructure details here.\nexport const legalOperator = {\n  name: \"Aleix Escañuela Fresneda\",\n  legalForm: \"Trabajador autónomo (persona física)\",\n  taxId: \"21807679E\",\n  address: \"C/ Vistabella, 8, 2.º B, 03802 Alcoy (Alicante), España\",\n  registry: \"\", // Only if registration details apply to the operator.\n  email: \"soporte@alquivo.com\",\n  reviewedForPublication: false,\n  // Confirmed infrastructure; private agreements/account settings still need owner review.\n  backupRetention:\n    \"Copias externas diarias cifradas de la base de datos y los archivos, en Alemania, con una ventana de conservación de 30 días. Se conserva además la última copia válida si se interrumpe la generación de copias nuevas; esa excepción puede superar la ventana mientras se resuelve la incidencia. La eliminación en la aplicación no borra inmediatamente las copias: no se usan como archivo ordinario y, al restaurarlas, deben reaplicarse las bajas y caducidades. Se ha comprobado la restauración en un entorno aislado. Las copias técnicas del proveedor de alojamiento se rigen por las condiciones de ese servicio.\",\n  mailboxRetention:\n    \"Política prevista: consultas hasta 12 meses después de su cierre, salvo información concreta que deba conservarse por obligación legal o reclamación, con acceso restringido. Pendiente de aplicar y verificar en OVHcloud, sus copias y los mensajes históricos que puedan seguir en Gmail; cambiar de buzón no acredita su borrado.\",\n  infrastructureLogRetention:\n    \"Los registros diarios de la aplicación tienen una rotación configurada de 14 días y los de auditoría de seguridad, de 30 días; la limpieza depende de las ejecuciones de rotación. Los registros operativos de los contenedores se limitan por tamaño, no por antigüedad: queda pendiente establecer y comprobar su plazo máximo. No deben incluir cuerpos de mensajes, documentos ni credenciales. Los registros propios de cada proveedor se rigen por sus condiciones, no por estos plazos.\",\n  providers: [\n    {\n      service: \"Alojamiento y almacenamiento de documentos\",\n      name: \"OVH HISPANO S.L. (OVHcloud VPS)\",\n      data: \"Datos de cuenta y cartera, contratos, contactos, movimientos, documentos y registros necesarios para prestar y proteger la aplicación.\",\n      references: [\n        {\n          label: \"Condiciones y acuerdo de tratamiento de OVHcloud\",\n          href: \"https://www.ovhcloud.com/es-es/terms-and-conditions/contracts/\",\n        },\n      ],\n      location:\n        \"Servidor y almacenamiento principal en Gravelines, Francia (Unión Europea). No se afirma que todos los accesos de soporte o subencargados del proveedor estén limitados a ese país.\",\n      safeguards:\n        \"Acuerdo de tratamiento de OVHcloud y condiciones del VPS, con obligaciones de confidencialidad, seguridad y asistencia. El servidor limita los accesos y los documentos de la aplicación se almacenan privados y cifrados. No se atribuye cifrado de extremo a extremo ni acceso exclusivo europeo al conjunto del servicio.\",\n    },\n    {\n      service: \"Copias de seguridad\",\n      name: \"Hetzner Online GmbH (Storage Box)\",\n      data: \"Copias cifradas de la base de datos y archivos privados. Las claves de recuperación se custodian separadas del destino de copias.\",\n      references: [\n        {\n          label: \"Protección de datos de Hetzner\",\n          href: \"https://www.hetzner.com/legal/privacy-policy/\",\n        },\n      ],\n      location:\n        \"Falkenstein, Alemania (Unión Europea), separado del servidor principal en Francia.\",\n      safeguards:\n        \"Copias cifradas antes de enviarse al destino externo y transporte cifrado. Material de recuperación separado del servidor; restauración aislada comprobada. Acuerdo de tratamiento y condiciones de Hetzner aplicables al servicio, sujetos a la comprobación documental de la cuenta.\",\n    },\n    {\n      service: \"Envío de correo transaccional\",\n      name: \"Plus Five Five, Inc. (Resend)\",\n      data: \"Dirección de destino y contenido de los correos que envía el servicio, incluidos enlaces de verificación/recuperación, códigos de seguridad y avisos de soporte. No se envía la cartera completa por este canal.\",\n      references: [\n        {\n          label: \"Acuerdo de tratamiento de Resend\",\n          href: \"https://resend.com/legal/dpa\",\n        },\n      ],\n      location: \"Estados Unidos (tratamiento principal según su DPA)\",\n      safeguards:\n        \"Cláusulas contractuales tipo incorporadas al DPA de Resend; revisar la cuenta y sus subencargados antes de publicar\",\n    },\n    {\n      service: \"Web pública y lista de espera, DNS y antispam del formulario\",\n      name: \"Cloudflare, Inc. (Pages, D1, Turnstile y DNS)\",\n      data: \"Datos técnicos de navegación y antispam; email, nombre y rango de inmuebles facilitados en la lista de espera, con evidencia de consentimiento. D1 no contiene la base de datos de las carteras ni los contratos.\",\n      references: [\n        {\n          label: \"Acuerdo de tratamiento de Cloudflare\",\n          href: \"https://www.cloudflare.com/cloudflare-customer-dpa/\",\n        },\n      ],\n      location:\n        \"Infraestructura internacional; no se acredita residencia exclusivamente europea. D1 almacena solo la lista de espera, no la cartera ni sus documentos.\",\n      safeguards:\n        \"DPA de Cloudflare y cláusulas contractuales tipo para transferencias restringidas. Revisar las condiciones de la cuenta y los subencargados. Email Routing ya no se utiliza para recibir el correo de soporte.\",\n    },\n    {\n      service: \"Buzón receptor de soporte\",\n      name: \"OVH HISPANO S.L. (OVHcloud Zimbra Starter)\",\n      data: \"Remitente, destinatario, asunto, contenido y adjuntos de las consultas que se envían al buzón y sus respuestas. Evita enviar contraseñas, contratos completos o datos de terceros innecesarios.\",\n      references: [\n        {\n          label: \"Condiciones de correo y tratamiento de OVHcloud\",\n          href: \"https://www.ovhcloud.com/es-es/terms-and-conditions/contracts/\",\n        },\n      ],\n      location:\n        \"Almacenamiento del buzón en Francia según la información pública de Zimbra. No se afirma que todos los accesos de soporte o subencargados se limiten a Francia.\",\n      safeguards:\n        \"Buzón contratado y recepción/respuesta confirmadas. El titular identifica OVH HISPANO S.L. en su factura y ha aportado el acuerdo de tratamiento de OVHcloud de 17/10/2025. Debe conservarse la evidencia de incorporación al pedido y las condiciones y subencargados aplicables. El cambio de proveedor no demuestra por sí solo cumplimiento ni aplica automáticamente la política de conservación.\",\n    },\n    {\n      service: \"Mensajes históricos del buzón anterior, si aún se conservan\",\n      name: \"Google (Gmail gratuito; sin recepción nueva de soporte)\",\n      data: \"Únicamente consultas y adjuntos del buzón anterior que aún deban conservarse. Este servicio ya no recibe las consultas nuevas de soporte.\",\n      references: [\n        {\n          label: \"Política de privacidad de Google\",\n          href: \"https://policies.google.com/privacy?hl=es\",\n        },\n      ],\n      location:\n        \"Servicio internacional; no se ha acreditado una región contractual europea para este buzón.\",\n      safeguards:\n        \"La recepción nueva se ha trasladado a OVHcloud. Pueden quedar mensajes, adjuntos o copias anteriores en Gmail: revisar su necesidad, restringir su acceso y suprimir lo que no deba conservarse. No se atribuye a Gmail gratuito el acuerdo empresarial de Google Workspace ni se da por borrado su historial.\",\n    },\n    {\n      service:\n        \"Asistente de IA (OpenAI), solo cuando esté habilitado y lo actives\",\n      name: \"OpenAI (API; entidad contractual de la cuenta pendiente de confirmar)\",\n      data: \"Solo si se habilita y activas el chat: mensajes y contexto autorizado necesario para responder, incluidos los datos que tú escribas. El chat no envía archivos originales para análisis documental; Document AI real permanece deshabilitada.\",\n      references: [\n        {\n          label: \"Tratamiento y conservación de la API de OpenAI\",\n          href: \"https://developers.openai.com/api/docs/guides/your-data\",\n        },\n      ],\n      location:\n        \"Servicio internacional; no se ha acreditado residencia europea para el proyecto. Puede haber tratamiento fuera del Espacio Económico Europeo.\",\n      safeguards:\n        \"Verificar y conservar el acuerdo de tratamiento de la cuenta y sus garantías de transferencia antes de abrir la IA. store=false no equivale a retención cero; desactivar la cesión voluntaria para entrenamiento. Document AI real sigue deshabilitada.\",\n    },\n  ],\n};\n",
+    "frontend/src/views/WaitlistLegalView.vue": "<script setup>\nimport BrandLogo from \"../components/BrandLogo.vue\";\nimport { legalOperator as operator } from \"../content/legalOperator.js\";\ndefineProps({ privacy: { type: Boolean, default: false } });\n</script>\n\n<template>\n  <a class=\"waitlist-skip\" href=\"#contenido\">Saltar al contenido</a>\n  <div class=\"legal-page waitlist-legal\">\n    <header class=\"legal-header\">\n      <a href=\"/\" aria-label=\"Alquivo, volver al inicio\"><BrandLogo /></a\n      ><a href=\"/#solicitud\" class=\"button\">Avísame cuando abra</a>\n    </header>\n    <main id=\"contenido\" class=\"legal-content\">\n      <p class=\"marketing-eyebrow\">\n        Web informativa · Actualizado el 23 de octubre de 2026\n      </p>\n      <h1>\n        {{ privacy ? \"Privacidad de la lista de espera\" : \"Aviso legal\" }}\n      </h1>\n      <p class=\"legal-summary\">\n        Esta información se aplica a la web pública de Alquivo, las solicitudes\n        para su próxima beta y las consultas de contacto. No regula todavía las\n        cuentas de la aplicación.\n      </p>\n      <section id=\"titular\" class=\"legal-section\">\n        <h2>{{ privacy ? \"Quién trata tus datos\" : \"Titular de esta web\" }}</h2>\n        <dl class=\"legal-identity\">\n          <div>\n            <dt>{{ privacy ? \"Responsable\" : \"Titular\" }}</dt>\n            <dd>{{ operator.name }}</dd>\n          </div>\n          <div>\n            <dt>NIF</dt>\n            <dd>{{ operator.taxId }}</dd>\n          </div>\n          <div>\n            <dt>Domicilio</dt>\n            <dd>{{ operator.address }}</dd>\n          </div>\n          <div>\n            <dt>Contacto</dt>\n            <dd>\n              <a :href=\"`mailto:${operator.email}`\">{{ operator.email }}</a>\n            </dd>\n          </div>\n        </dl>\n      </section>\n      <template v-if=\"privacy\">\n        <section id=\"lista-espera\" class=\"legal-section\">\n          <h2>Solicitud de acceso a la beta</h2>\n          <p>\n            Recogemos tu email y, si los facilitas, tu nombre y un rango\n            aproximado de inmuebles. No necesitamos direcciones de inmuebles,\n            datos de inquilinos, contratos, facturas ni documentación personal\n            en este formulario.\n          </p>\n          <p>\n            La finalidad es gestionar tu solicitud y enviarte la invitación o\n            las comunicaciones necesarias sobre tu acceso a la beta. La base\n            jurídica es tu consentimiento (artículo 6.1.a del RGPD), solicitado\n            de forma específica en el formulario. Puedes retirarlo en cualquier\n            momento escribiendo al correo de contacto, sin afectar al\n            tratamiento realizado previamente.\n          </p>\n          <p>\n            No usaremos la solicitud para enviarte campañas publicitarias ni la\n            cederemos para publicidad. Solicitar acceso no crea una cuenta, no\n            inicia una suscripción y no garantiza una fecha de apertura.\n          </p>\n          <p>\n            Conservaremos la solicitud hasta que recibas acceso, retires tu\n            consentimiento o transcurran 12 meses desde la solicitud, lo que\n            ocurra antes. Si creas una cuenta, su tratamiento se explicará por\n            separado. Las solicitudes canceladas se eliminarán de los sistemas\n            activos. Las copias de recuperación del proveedor pueden conservar\n            temporalmente versiones anteriores según sus plazos; una\n            restauración deberá reaplicar las bajas y eliminaciones.\n          </p>\n        </section>\n        <section class=\"legal-section\">\n          <h2>Consultas de contacto y seguridad de la web</h2>\n          <p>\n            Si nos escribes, tratamos tu email y el contenido que envíes para\n            responder a tu consulta. Cuando pides información sobre el servicio,\n            la base es atender medidas precontractuales solicitadas por ti\n            (artículo 6.1.b del RGPD); para otras consultas y la prevención de\n            abusos, nuestro interés legítimo en atender y proteger el servicio\n            (artículo 6.1.f).\n          </p>\n          <p>\n            Guardaremos las consultas durante su tramitación y hasta 12 meses\n            después de su cierre. Los datos que deban conservarse por obligación\n            legal o para atender responsabilidades se mantendrán restringidos\n            durante el plazo legal aplicable.\n          </p>\n          <p>\n            El proveedor de alojamiento puede tratar datos técnicos, como la\n            dirección IP y la información de la petición, para servir y proteger\n            la web, conforme a sus condiciones de tratamiento. No realizamos\n            decisiones automatizadas con efectos jurídicos ni perfiles\n            comerciales.\n          </p>\n        </section>\n        <section id=\"proveedores\" class=\"legal-section\">\n          <h2>Proveedores y transferencias</h2>\n          <p>\n            El formulario pertenece a Alquivo. Cloudflare presta el alojamiento,\n            ejecuta el guardado de solicitudes mediante Pages Functions,\n            almacena las respuestas en D1 y ofrece la comprobación antispam\n            Turnstile, conforme a sus condiciones de tratamiento. No enviamos\n            los datos del formulario a OpenAI, Stripe ni proveedores de\n            formularios externos.\n          </p>\n          <p>\n            Los correos nuevos enviados a soporte se reciben en OVHcloud Zimbra,\n            sin reenvío a Gmail. El proveedor contratado es OVH HISPANO S.L.\n            OVHcloud indica que el buzón se almacena en\n            Francia; sus condiciones de tratamiento y subencargados determinan\n            los accesos y garantías aplicables. No envíes datos sensibles ni\n            documentación de terceros en consultas iniciales.\n          </p>\n          <p>\n            Pueden quedar mensajes de consultas anteriores en Google (Gmail),\n            utilizado antes del cambio de buzón. La migración no los borra\n            automáticamente. Su conservación sigue sujeta a las finalidades y\n            plazos indicados, sin reutilizarlos para publicidad.\n          </p>\n          <p>\n            Algunos proveedores o subproveedores pueden tratar datos fuera del\n            Espacio Económico Europeo. Cloudflare prevé las cláusulas\n            contractuales tipo para las transferencias a las que se aplican;\n            consulta también las condiciones y subencargados de OVHcloud y, para\n            los mensajes anteriores que aún se conserven, las condiciones de\n            Google. No hay pagos, subida de archivos, integraciones\n            publicitarias ni envío automático de las respuestas del formulario\n            por email.\n          </p>\n          <ul class=\"legal-related\">\n            <li>\n              <a\n                href=\"https://www.ovhcloud.com/es-es/terms-and-conditions/contracts/\"\n                rel=\"noopener noreferrer\"\n                target=\"_blank\"\n                >Condiciones y tratamiento de datos de OVHcloud ↗</a\n              >\n            </li>\n            <li>\n              <a\n                href=\"https://www.cloudflare.com/cloudflare-customer-dpa/\"\n                rel=\"noopener noreferrer\"\n                target=\"_blank\"\n                >Acuerdo de tratamiento de Cloudflare ↗</a\n              >\n            </li>\n            <li>\n              <a\n                href=\"https://policies.google.com/privacy?hl=es\"\n                rel=\"noopener noreferrer\"\n                target=\"_blank\"\n                >Privacidad de Google: mensajes anteriores ↗</a\n              >\n            </li>\n          </ul>\n        </section>\n        <section class=\"legal-section\">\n          <h2>Tus derechos</h2>\n          <p>\n            Puedes solicitar acceso, rectificación, supresión, limitación o\n            portabilidad, y oponerte al tratamiento cuando proceda, escribiendo\n            al correo indicado. No es necesario enviar una copia del DNI de\n            forma preventiva: solo pediremos información adicional si es\n            necesaria para verificar tu identidad. Puedes retirar el\n            consentimiento y salir de la lista de espera por el mismo medio.\n          </p>\n          <p>\n            Responderemos en el plazo previsto por el RGPD, normalmente un mes.\n            Si consideras que no se han respetado tus derechos, puedes reclamar\n            ante la\n            <a\n              href=\"https://www.aepd.es/\"\n              rel=\"noopener noreferrer\"\n              target=\"_blank\"\n              >Agencia Española de Protección de Datos ↗</a\n            >.\n          </p>\n        </section>\n        <section id=\"cookies\" class=\"legal-section\">\n          <h2>Cookies y servicios externos</h2>\n          <p>\n            Esta landing no incorpora analítica de visitantes, píxeles\n            publicitarios, fuentes remotas ni cookies propias de seguimiento.\n            Cloudflare puede utilizar mecanismos técnicos de seguridad en\n            función de la configuración del alojamiento.\n          </p>\n          <p>\n            Turnstile se carga al interactuar con el formulario para comprobar\n            que la solicitud no es automatizada. Cloudflare puede tratar datos\n            técnicos del navegador para esta comprobación; no le enviamos los\n            campos de nombre, email o inmuebles al verificar el desafío. Alquivo\n            no guarda la IP original ni el token en la lista de espera. Para\n            limitar abusos usa un identificador seudonimizado por intervalos de\n            diez minutos, que se limpia en solicitudes posteriores.\n          </p>\n          <p>\n            No habilitamos el modo de autorización previa de Turnstile ni sus\n            integraciones publicitarias. Si añadimos cookies no necesarias o\n            nuevas integraciones, revisaremos esta información y solicitaremos\n            el consentimiento que corresponda antes de activarlas.\n          </p>\n          <p>\n            <a\n              href=\"https://www.cloudflare.com/turnstile-privacy-policy/\"\n              rel=\"noopener noreferrer\"\n              target=\"_blank\"\n              >Privacidad de Turnstile ↗</a\n            >\n          </p>\n        </section>\n      </template>\n      <template v-else>\n        <section class=\"legal-section\">\n          <h2>Objeto de la web</h2>\n          <p>\n            Esta web presenta Alquivo, una aplicación de gestión de alquileres\n            para propietarios y pequeños inversores, y permite solicitar\n            información o acceso a una futura beta gratuita. No es una\n            plataforma de contratación ni permite realizar pagos.\n          </p>\n          <p>\n            Los ejemplos mostrados son ilustrativos y utilizan datos ficticios.\n            El producto está en pruebas y puede cambiar. No sustituye el\n            asesoramiento legal, fiscal ni financiero.\n          </p>\n        </section>\n        <section class=\"legal-section\">\n          <h2>Uso y contenidos</h2>\n          <p>\n            Utiliza la web de forma lícita, sin intentar dañar su funcionamiento\n            ni enviar datos de terceros sin autorización. Los contenidos, la\n            marca y los elementos gráficos pertenecen a sus titulares o se\n            utilizan conforme a sus licencias; su publicación no concede una\n            licencia de explotación comercial.\n          </p>\n          <p>\n            Procuramos mantener la información actualizada, sin excluir los\n            derechos ni las responsabilidades que reconoce la normativa\n            aplicable. Los enlaces externos se facilitan como información y\n            tienen sus propias condiciones.\n          </p>\n        </section>\n        <section class=\"legal-section\">\n          <h2>Solicitar acceso no es una compra</h2>\n          <p>\n            No se cobra por apuntarse y no se pide tarjeta. La invitación\n            llegará cuando podamos dar acceso; no se promete una fecha ni una\n            plaza inmediata. Antes de crear una cuenta podrás consultar las\n            condiciones de uso y la privacidad de la aplicación.\n          </p>\n        </section>\n        <section class=\"legal-section\">\n          <h2>Privacidad y contacto</h2>\n          <p>\n            Consulta la <a href=\"/privacidad\">información de privacidad</a> para\n            conocer el tratamiento de solicitudes y consultas. Para cualquier\n            duda o reclamación puedes escribir al correo de contacto indicado.\n          </p>\n          <p>\n            Se aplica la legislación española, respetando en todo caso los\n            derechos y las normas imperativas que correspondan a las personas\n            consumidoras.\n          </p>\n        </section>\n      </template>\n      <footer class=\"legal-footer\">\n        <nav class=\"legal-links\" aria-label=\"Información legal\">\n          <a href=\"/privacidad\">Privacidad</a\n          ><a href=\"/aviso-legal\">Aviso legal</a>\n        </nav>\n        <a href=\"/\">Volver a Alquivo</a>\n      </footer>\n    </main>\n  </div>\n</template>\n",
+    "frontend/src/waitlist/contract.js": "// Shared public contract. No credentials or application/user data belong here.\nexport const waitlistConsent = {\n  version: \"2026-10-02.waitlist.v1\",\n  text: \"Quiero recibir por email la invitación y las comunicaciones necesarias sobre mi acceso a la beta de Alquivo.\",\n};\nexport const waitlistAction = \"beta_waitlist\";\nexport const waitlistPropertyCounts = [\n  { value: \"0\", label: \"Aún ninguno\" },\n  { value: \"1\", label: \"1 inmueble\" },\n  { value: \"2-5\", label: \"De 2 a 5\" },\n  { value: \"6-10\", label: \"De 6 a 10\" },\n  { value: \"11+\", label: \"Más de 10\" },\n];\nexport const waitlistSuccess =\n  \"Te avisaremos cuando puedas entrar en la beta gratuita de Alquivo. No necesitas hacer nada más.\";\n\nexport function isTurnstileTestKey(key) {\n  return /^[123]x0+(?:AA|AB|BB|FF)$/.test(key);\n}\n",
+    "frontend/src/components/AssistantWidget.vue": "<div v-else-if=\"!enabled\" class=\"assistant-empty\">\n                <AssistantMascot\n                  state=\"greeting\"\n                  class=\"assistant-consent-mascot\"\n                />\n                <strong>Activa Alquivo AI</strong>\n                <p class=\"assistant-consent-summary\">\n                  Para responder, enviaremos a OpenAI tus preguntas y los datos\n                  necesarios de tu cartera. No se envía el contenido de tus\n                  archivos.\n                </p>\n                <p class=\"assistant-consent-summary\">\n                  Tu historial se elimina a los {{ retentionDays }} días. Puedes\n                  desactivar el asistente y borrarlo cuando quieras.\n                </p>\n                <details class=\"assistant-privacy-details\">\n                  <summary>Cómo se usan y protegen mis datos</summary>\n                  <div>\n                    <p>\n                      Conservamos por separado evidencia mínima de tu permiso y\n                      su retirada, sin conversaciones ni documentos, con el\n                      plazo y finalidad indicados en la política de privacidad.\n                    </p>\n                    <p>\n                      Se comparte el historial reciente y la información de\n                      inmuebles y finanzas necesaria para cada respuesta. Para\n                      localizar contactos puede compartirse su nombre, pero no\n                      su teléfono actual, correo, DNI, dirección completa ni\n                      notas existentes.\n                    </p>\n                    <p>\n                      Si están disponibles las acciones, podrás pedir borradores\n                      de gastos y cobros, actualizar teléfonos y añadir notas a\n                      inmuebles. Las altas de inmuebles, contactos y contratos\n                      en borrador están en revisión administrativa. Nada se\n                      guarda sin que revises y confirmes la propuesta. Los datos\n                      nuevos que escribas —incluidos direcciones, correos,\n                      teléfonos o notas— sí se enviarán a OpenAI; puedes usar\n                      los formularios de Alquivo si prefieres no compartirlos.\n                    </p>\n                    <p>\n                      Dentro del mismo chat puede recordarse durante 30 minutos\n                      el inmueble recién consultado. Se conserva sólo una\n                      referencia, no sus saldos ni una confirmación de pago, y\n                      se vuelven a comprobar sus datos en cada pregunta. No se\n                      comparte memoria entre chats o cuentas.\n                    </p>\n                    <p>\n                      Evita escribir DNI, datos bancarios, datos de salud u otra\n                      información sensible. Los nombres y títulos de tus\n                      inmuebles o incidencias pueden compartirse. OpenAI puede\n                      conservar registros de seguridad hasta 30 días, salvo\n                      excepciones legales.\n                    </p>\n                  </div>\n                </details>\n                <RouterLink to=\"/privacy\" @click=\"close\"\n                  >Ver la política de privacidad completa</RouterLink\n                >\n                <button\n                  class=\"button primary\"\n                  :disabled=\"loading\"\n                  @click=\"enableAssistant\"\n                >\n                  Activar asistente\n                </button>\n              </div>\n\n              ",
+    "frontend/src/views/DocumentImportView.vue": "<section v-if=\"!settings.accepted\" class=\"import-panel\">\n        <h2>Un permiso separado para tus documentos</h2>\n        <p>\n          Esta prueba guarda borradores y fragmentos cifrados durante un máximo\n          de 30 días. Puedes revocar el permiso y eliminarlos aquí; no borra\n          documentos ni operaciones ya confirmadas.\n        </p>\n        <details class=\"privacy-first-layer\">\n          <summary>Información de privacidad</summary>\n          <p>\n            Un análisis real podría enviar el archivo completo y datos de\n            terceros al proveedor. Está bloqueado y requerirá un nuevo aviso y\n            aceptación; este permiso sólo cubre la simulación local.\n          </p>\n          <p>\n            Conservamos evidencia mínima del permiso y su retirada, sin archivos\n            ni borradores, según la\n            <RouterLink to=\"/privacy#conservacion\"\n              >política de privacidad</RouterLink\n            >.\n          </p>\n        </details>\n        <label class=\"import-check\"\n          ><input v-model=\"accepted\" type=\"checkbox\" />Entiendo el alcance de\n          esta prueba documental.</label\n        >\n        <button\n          class=\"button primary\"\n          :disabled=\"!accepted || busy\"\n          @click=\"consent\"\n        >\n          Permitir simulación local\n        </button>\n      ",
+    "backend/config/legal.php": "<?php\n\nreturn [\n    // Version of the conditions and processing agreement shown during registration.\n    // Keep in sync with frontend/src/content/legal.js; do not rewrite past acceptances.\n    'terms_version' => '2026-10-23-r2',\n    // Technical policy, not a universal statutory deadline. Confirm with counsel\n    // before publishing; synchronize any change with the privacy notice/version.\n    'evidence_retention_days' => 1095,\n];\n",
+    "backend/config/assistant.php": "'notice_version' => '2026-10-05'",
+    "backend/config/ai_documents.php": "'notice_version' => 'documents-simulation-2026-10-01'",
+    "backend/config/ai_quality.php": "<?php\n\nreturn [\n    'notice_version' => 'quality-2026-10-22',\n    'notice_text' => 'Permito que personal autorizado revise mis nuevas conversaciones con Alquivo AI y los datos consultados necesarios para detectar y corregir errores. Se guardan cifrados hasta 30 días. Es opcional: puedo usar el asistente sin compartirlas y retirar el permiso para borrar estos registros. Las exportaciones necesitan depuración y revisión antes de utilizarse fuera de Alquivo.',\n    'retention_days' => 30,\n    'max_payload_bytes' => 160000,\n    'max_tool_bytes' => 24000,\n];\n",
+    "frontend/src/components/AssistantQualityConsent.vue": "<script setup>\nimport { onMounted, ref } from \"vue\";\nimport api from \"../api\";\n\ndefineProps({ enabled: Boolean, busy: Boolean });\nconst settings = ref(null);\nconst accepted = ref(false);\nconst loading = ref(false);\nconst error = ref(\"\");\nconst message = ref(\"\");\nasync function load() {\n  loading.value = true;\n  error.value = \"\";\n  try {\n    settings.value = (await api.get(\"/assistant/quality-consent\")).data;\n  } catch {\n    error.value = \"No hemos podido cargar tu elección. No se ha cambiado.\";\n  } finally {\n    loading.value = false;\n  }\n}\nasync function change(sharing) {\n  if (loading.value || (sharing && !accepted.value)) return;\n  loading.value = true;\n  error.value = \"\";\n  message.value = \"\";\n  try {\n    settings.value = (\n      sharing\n        ? await api.post(\"/assistant/quality-consent\", {\n            accepted: true,\n            notice_version: settings.value.notice_version,\n          })\n        : await api.delete(\"/assistant/quality-consent\")\n    ).data;\n    accepted.value = false;\n    message.value = sharing\n      ? \"Gracias. Solo se compartirán las nuevas conversaciones a partir de ahora.\"\n      : \"Permiso retirado y registros de mejora eliminados. Tu historial de chat sigue disponible.\";\n  } catch (e) {\n    error.value =\n      e.response?.status === 409\n        ? \"Espera a que termine la consulta y vuelve a intentarlo.\"\n        : \"No hemos podido guardar tu elección. Inténtalo de nuevo.\";\n  } finally {\n    loading.value = false;\n  }\n}\nonMounted(load);\n</script>\n\n<template>\n  <section class=\"quality-consent\">\n    <h2>Ayuda a mejorar Alquivo AI</h2>\n    <p>\n      Compartir es opcional. Puedes usar el asistente aunque no lo permitas.\n      Solo afecta a las conversaciones nuevas; no se recuperan las anteriores.\n    </p>\n    <template v-if=\"settings\">\n      <details class=\"privacy-first-layer\">\n        <summary>Información de privacidad</summary>\n        <p>{{ settings.notice_text }}</p>\n        <p>\n          Los mensajes pueden contener datos personales de otras personas. Evita\n          incluir información innecesaria o sensible. Este permiso no autoriza\n          publicar tus conversaciones ni entrenar modelos de OpenAI.\n        </p>\n        <RouterLink to=\"/privacy#mejora-ia\">Política de privacidad</RouterLink>\n      </details>\n      <p v-if=\"settings.enabled\" class=\"quality-status\">\n        Estás compartiendo para mejorar.\n      </p>\n      <template v-else>\n        <label class=\"quality-check\">\n          <input\n            v-model=\"accepted\"\n            type=\"checkbox\"\n            :disabled=\"loading || busy || !enabled\"\n          />\n          Permito la revisión de mis nuevas conversaciones y sus datos de\n          diagnóstico para mejorar Alquivo AI.\n        </label>\n        <button\n          class=\"button secondary\"\n          :disabled=\"!enabled || !accepted || loading || busy\"\n          @click=\"change(true)\"\n        >\n          Permitir compartir para mejorar\n        </button>\n        <p v-if=\"!enabled\">\n          Activa primero el asistente si quieres participar.\n        </p>\n      </template>\n      <button\n        v-if=\"settings.has_consent\"\n        class=\"button secondary\"\n        :disabled=\"loading || busy\"\n        @click=\"change(false)\"\n      >\n        Dejar de compartir y borrar registros\n      </button>\n    </template>\n    <p v-else-if=\"loading\" role=\"status\">Cargando tu elección…</p>\n    <button v-else class=\"button secondary\" @click=\"load\">\n      Volver a cargar\n    </button>\n    <p v-if=\"message\" role=\"status\">{{ message }}</p>\n    <p v-if=\"error\" class=\"error\" role=\"alert\">{{ error }}</p>\n  </section>\n</template>\n\n<style scoped>\n.quality-consent {\n  padding: 20px;\n  display: grid;\n  gap: 16px;\n  font-size: 1rem;\n  line-height: 1.6;\n}\n.quality-consent h2 {\n  font-size: 1.2rem;\n  margin: 0;\n}\n.quality-consent p {\n  margin: 0;\n}\n.quality-check {\n  display: flex;\n  align-items: flex-start;\n  gap: 12px;\n  cursor: pointer;\n}\n.quality-check input {\n  flex: 0 0 auto;\n  width: 20px;\n  height: 20px;\n  margin-top: 3px;\n}\n.quality-status {\n  color: var(--accent, #7dd3c7);\n}\n.quality-consent .button {\n  white-space: normal;\n}\n</style>\n",
+    "frontend/src/components/PrivacyNotice.vue": "<script setup>\nimport { operator } from \"../content/legal.js\";\ndefineProps({ context: { type: String, default: \"register\" } });\n</script>\n<template>\n  <details class=\"privacy-first-layer\">\n    <summary>{{ $t(\"privacy.summary\") }}</summary>\n    <p>\n      {{ $t(\"privacy.controller\") }}\n      {{ operator.name || $t(\"privacy.unknown\") }}.\n      {{\n        context === \"register\" ? $t(\"privacy.register\") : $t(\"privacy.support\")\n      }}\n      {{ $t(\"privacy.access\") }}\n      <a :href=\"`mailto:${operator.email}`\">{{ operator.email }}</a\n      >.\n      <RouterLink to=\"/privacy\" target=\"_blank\" rel=\"noopener\">{{\n        $t(\"privacy.full\")\n      }}</RouterLink\n      >.\n    </p>\n  </details>\n</template>\n",
+    "frontend/src/i18n.js": "[\"privacy: {\\n      summary: \\\"Información de privacidad\\\",\\n      heading: \\\"Sobre tus datos.\\\",\\n      controller: \\\"Responsable:\\\",\\n      unknown: \\\"titular de Alquivo (identificación pendiente)\\\",\\n      register:\\n        \\\"Usamos tus datos para crear y gestionar tu cuenta, ejecutar el contrato y proteger el servicio.\\\",\\n      support:\\n        \\\"Usamos tus datos y los archivos que compartas para atender esta consulta: por el contrato o las medidas precontractuales, o por el interés legítimo en gestionar otras consultas.\\\",\\n      access:\\n        \\\"Acceden el personal autorizado y los proveedores necesarios que se identifican en la política de privacidad. Puedes ejercer tus derechos en\\\",\\n      full: \\\"Leer la información completa\\\",\\n    },\",\"privacy: {\\n      summary: \\\"Privacy information\\\",\\n      heading: \\\"About your data.\\\",\\n      controller: \\\"Data controller:\\\",\\n      unknown: \\\"Alquivo operator (identification pending)\\\",\\n      register:\\n        \\\"We use your data to create and manage your account, perform the contract and protect the service.\\\",\\n      support:\\n        \\\"We use your data and the files you share to handle this request, under the contract or pre-contractual steps, or our legitimate interest in handling other enquiries.\\\",\\n      access:\\n        \\\"Authorised staff and the necessary providers named in our privacy policy can access your data. You can exercise your rights by emailing\\\",\\n      full: \\\"Read the full information\\\",\\n    },\"]",
+    "frontend/src/views/WaitlistLandingView.vue": "<details class=\"waitlist-privacy\">\n            <summary>Información de privacidad</summary>\n            <p>\n              <strong>Responsable:</strong> {{ legalOperator.name }}. Usaremos\n              los datos para gestionar tu solicitud y avisarte de tu acceso a la\n              beta, con tu consentimiento. No te añadimos a una lista de\n              publicidad. Puedes retirarte escribiendo a\n              <a :href=\"`mailto:${legalOperator.email}`\">{{\n                legalOperator.email\n              }}</a\n              >. <a href=\"/privacidad#lista-espera\">Política de privacidad</a>.\n            </p>\n          "
+  }
+}

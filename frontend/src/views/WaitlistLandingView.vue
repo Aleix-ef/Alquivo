@@ -183,19 +183,19 @@ defineProps({ settings: { type: Object, required: true } });
             </h3>
             <p>{{ waitlistSuccess }}</p>
           </div>
-          <p class="waitlist-privacy">
-            <strong>Responsable:</strong> {{ legalOperator.name }}. Usaremos los
-            datos para gestionar tu solicitud y avisarte de tu acceso a la beta,
-            con tu consentimiento. No te añadimos a una lista de publicidad.
-            Puedes retirarte escribiendo a
-            <a :href="`mailto:${legalOperator.email}`">{{
-              legalOperator.email
-            }}</a
-            >.
-            <a href="/privacidad#lista-espera"
-              >Más información sobre tus datos</a
-            >.
-          </p>
+          <details class="waitlist-privacy">
+            <summary>Información de privacidad</summary>
+            <p>
+              <strong>Responsable:</strong> {{ legalOperator.name }}. Usaremos
+              los datos para gestionar tu solicitud y avisarte de tu acceso a la
+              beta, con tu consentimiento. No te añadimos a una lista de
+              publicidad. Puedes retirarte escribiendo a
+              <a :href="`mailto:${legalOperator.email}`">{{
+                legalOperator.email
+              }}</a
+              >. <a href="/privacidad#lista-espera">Política de privacidad</a>.
+            </p>
+          </details>
         </div>
       </section>
     </template>

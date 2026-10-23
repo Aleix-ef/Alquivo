@@ -350,10 +350,26 @@ html {
   margin-bottom: 1.25rem;
 }
 .waitlist-card .waitlist-privacy {
-  font-size: 0.9375rem;
+  font-size: 1rem;
   line-height: 1.75;
   padding-top: 1.25rem;
   border-top: 1px solid var(--line);
+}
+.waitlist-privacy summary {
+  width: fit-content;
+  min-height: 44px;
+  padding-block: 8px;
+  color: var(--green);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.waitlist-privacy summary:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 4px;
+}
+.waitlist-privacy > p {
+  margin-top: 12px;
 }
 .waitlist-support {
   position: fixed;

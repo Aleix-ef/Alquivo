@@ -189,14 +189,32 @@ summary:focus-visible {
   text-underline-offset: 3px;
 }
 .privacy-first-layer {
-  padding: 16px;
+  color: var(--ink);
+  font-size: 16px;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+.privacy-first-layer summary {
+  width: fit-content;
+  padding-block: 10px;
+  min-height: 44px;
+  color: var(--green);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.privacy-first-layer[open] {
+  padding: 8px 16px;
   border: 1px solid var(--line);
   border-radius: 12px;
   background: var(--surface-soft);
-  color: var(--ink);
-  font-size: 15px;
-  line-height: 1.7;
-  overflow-wrap: anywhere;
+}
+.privacy-first-layer p {
+  margin: 8px 0 12px;
+}
+.privacy-first-layer summary:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 4px;
 }
 .legal-links {
   display: flex;

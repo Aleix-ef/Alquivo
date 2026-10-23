@@ -13,6 +13,9 @@ RUN apk add --no-cache icu-dev libpq-dev libzip-dev poppler-utils util-linux \
 WORKDIR /app
 COPY --from=vendor /app /app
 COPY docker/uploads.ini /usr/local/etc/php/conf.d/99-uploads.ini
+# Keep the supported 8.3 patch stream, but refuse a cached image older than the
+# critical 2026-10-21 fixes. This is a build check, not a runtime ini_set mitigation.
+RUN php -r 'exit(version_compare(PHP_VERSION, "8.3.36", ">=") && !filter_var(ini_get("session.upload_progress.enabled"), FILTER_VALIDATE_BOOL) ? 0 : 1);'
 RUN chown -R www-data:www-data storage bootstrap/cache
 USER www-data
 EXPOSE 9000

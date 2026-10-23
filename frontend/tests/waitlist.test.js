@@ -311,6 +311,22 @@ test("native form matches the brand, requires consent and has a no-JavaScript co
     /Tally|tally\.so|<iframe|<script src="https:|SECRET_MUST_NEVER_BE_IN_HTML/,
   );
   assert.match(page, /id="waitlist-success"[^>]* hidden/);
+  const privacy = page.match(
+    /<details class="waitlist-privacy">[\s\S]*?<\/details>/,
+  )?.[0];
+  assert.ok(
+    privacy,
+    "Privacy information is available in a native disclosure without JavaScript",
+  );
+  assert.match(privacy, /<summary>Información de privacidad<\/summary>/);
+  assert.doesNotMatch(privacy, /<details[^>]*\bopen\b/);
+  assert.ok(privacy.includes(escapeHtml(legalOperator.name)));
+  assert.match(privacy, /href="\/privacidad#lista-espera"/);
+  const body = page.slice(page.indexOf("<body>"));
+  assert.ok(
+    !body.replace(privacy, "").includes(escapeHtml(legalOperator.name)),
+    "Operator identity is in the disclosure, not repeated in the signup view",
+  );
 });
 test("the form script URL is versioned with the published bytes, not a stale shared URL", async () => {
   const content = await readFile(join(production.output, "assets/form.js"));
@@ -427,6 +443,15 @@ test("legal copy describes the waitlist, consent, retention and actual providers
   assert.match(privacy, /D1/);
   assert.match(privacy, /Turnstile/);
   assert.match(privacy, /Gmail/);
+  assert.match(privacy, /OVHcloud Zimbra/);
+  assert.match(privacy, /sin reenvío a Gmail/);
+  assert.match(privacy, /consultas anteriores/);
+  assert.match(privacy, /migración no los borra/);
+  assert.match(
+    privacy,
+    /ovhcloud\.com\/es-es\/terms-and-conditions\/contracts\//,
+  );
+  assert.doesNotMatch(privacy, /se reenvían mediante Cloudflare Email/);
   assert.match(
     privacy,
     /No enviamos los datos del formulario a OpenAI, Stripe/,
@@ -449,7 +474,7 @@ test("legal pages omit the optional legal-form mention without hiding the operat
           page.includes(escapeHtml(legalOperator[field])),
           `${path}: ${field}`,
         );
-      assert.match(page, /Actualizado el 3 de octubre de 2026/);
+      assert.match(page, /Actualizado el 23 de octubre de 2026/);
       assert.match(page, /mailto:soporte@alquivo.com/);
       assert.match(page, /href="\/#solicitud"/);
       if (path.startsWith("privacidad"))

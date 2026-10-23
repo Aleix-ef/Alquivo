@@ -299,18 +299,21 @@ onBeforeUnmount(() => {
           de 30 días. Puedes revocar el permiso y eliminarlos aquí; no borra
           documentos ni operaciones ya confirmadas.
         </p>
-        <p>
-          Un análisis real podría enviar el archivo completo y datos de terceros
-          al proveedor. Está bloqueado y requerirá un nuevo aviso y aceptación;
-          este permiso sólo cubre la simulación local.
-        </p>
-        <p>
-          Conservamos evidencia mínima del permiso y su retirada, sin archivos
-          ni borradores, según la
-          <RouterLink to="/privacy#conservacion"
-            >política de privacidad</RouterLink
-          >.
-        </p>
+        <details class="privacy-first-layer">
+          <summary>Información de privacidad</summary>
+          <p>
+            Un análisis real podría enviar el archivo completo y datos de
+            terceros al proveedor. Está bloqueado y requerirá un nuevo aviso y
+            aceptación; este permiso sólo cubre la simulación local.
+          </p>
+          <p>
+            Conservamos evidencia mínima del permiso y su retirada, sin archivos
+            ni borradores, según la
+            <RouterLink to="/privacy#conservacion"
+              >política de privacidad</RouterLink
+            >.
+          </p>
+        </details>
         <label class="import-check"
           ><input v-model="accepted" type="checkbox" />Entiendo el alcance de
           esta prueba documental.</label

@@ -16,11 +16,18 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const paths = [
   "frontend/src/content/legal.js",
   "frontend/src/content/legalOperator.js",
+  "frontend/src/views/WaitlistLegalView.vue",
+  "frontend/src/waitlist/contract.js",
   "frontend/src/components/AssistantWidget.vue",
   "frontend/src/views/DocumentImportView.vue",
   "backend/config/legal.php",
   "backend/config/assistant.php",
   "backend/config/ai_documents.php",
+  "backend/config/ai_quality.php",
+  "frontend/src/components/AssistantQualityConsent.vue",
+  "frontend/src/components/PrivacyNotice.vue",
+  "frontend/src/i18n.js",
+  "frontend/src/views/WaitlistLandingView.vue",
 ];
 const sources = Object.fromEntries(
   await Promise.all(
@@ -43,6 +50,11 @@ if (!/^\d{4}-\d{2}-\d{2}(?:-r\d+)?$/.test(legalVersion))
 // require a new contractual acceptance. Fail closed if the notice is moved.
 for (const [file, start, end] of [
   [
+    "frontend/src/views/WaitlistLandingView.vue",
+    '<details class="waitlist-privacy">',
+    "</details>",
+  ],
+  [
     "frontend/src/components/AssistantWidget.vue",
     '<div v-else-if="!enabled" class="assistant-empty">',
     '<div v-else-if="!messages.length"',
@@ -59,6 +71,15 @@ for (const [file, start, end] of [
     throw new Error(`Cannot extract consent notice: ${file}`);
   sources[file] = sources[file].slice(from, to);
 }
+// Store the actual first-layer translations, not unrelated interface strings.
+const firstLayerNotices = [
+  ...sources["frontend/src/i18n.js"].matchAll(
+    /privacy: \{([\s\S]*?)\n    \},/g,
+  ),
+].map((match) => match[0]);
+if (firstLayerNotices.length !== 2)
+  throw new Error("Cannot extract the Spanish and English privacy notices.");
+sources["frontend/src/i18n.js"] = JSON.stringify(firstLayerNotices);
 for (const file of [
   "backend/config/assistant.php",
   "backend/config/ai_documents.php",

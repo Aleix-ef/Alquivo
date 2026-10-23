@@ -20,7 +20,7 @@ class ProductionReadiness
         } catch (\Throwable) {
             $vaultReady = false;
         }
-        $failures = [];
+        $failures = app(PhpRuntimeSecurity::class)->failures();
         $checks = [
             'APP_ENV debe ser production.' => app()->isProduction(),
             'APP_DEBUG debe estar desactivado.' => config('app.debug') === false,

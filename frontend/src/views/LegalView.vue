@@ -142,6 +142,10 @@ function printPage() {
                   <dt>Entidad</dt>
                   <dd>{{ provider.name || pendingValue }}</dd>
                 </div>
+                <div v-if="provider.data">
+                  <dt>Datos tratados y alcance</dt>
+                  <dd>{{ provider.data }}</dd>
+                </div>
                 <div>
                   <dt>Ubicación del tratamiento</dt>
                   <dd>{{ provider.location || pendingValue }}</dd>
@@ -151,6 +155,19 @@ function printPage() {
                   <dd>{{ provider.safeguards || pendingValue }}</dd>
                 </div>
               </dl>
+              <ul v-if="provider.references?.length" class="legal-related">
+                <li
+                  v-for="reference in provider.references"
+                  :key="reference.href"
+                >
+                  <a
+                    :href="reference.href"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >{{ reference.label }} (sitio externo)</a
+                  >
+                </li>
+              </ul>
             </section>
           </div>
           <ul

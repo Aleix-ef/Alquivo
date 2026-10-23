@@ -4,6 +4,7 @@ const messages = {
   es: {
     language: { choose: "Idioma de la aplicación", numberLocale: "es-ES" },
     privacy: {
+      summary: "Información de privacidad",
       heading: "Sobre tus datos.",
       controller: "Responsable:",
       unknown: "titular de Alquivo (identificación pendiente)",
@@ -306,6 +307,7 @@ const messages = {
   en: {
     language: { choose: "Application language", numberLocale: "en-GB" },
     privacy: {
+      summary: "Privacy information",
       heading: "About your data.",
       controller: "Data controller:",
       unknown: "Alquivo operator (identification pending)",
