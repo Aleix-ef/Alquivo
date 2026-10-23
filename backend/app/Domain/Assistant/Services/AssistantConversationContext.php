@@ -4,14 +4,67 @@ namespace App\Domain\Assistant\Services;
 
 use App\Domain\Assistant\Models\AiActionProposal;
 use App\Domain\Assistant\Models\AiConversation;
+use App\Domain\Assistant\Models\AiMessage;
 use App\Domain\Assistant\Models\AiRun;
 use App\Domain\Portfolio\Models\Portfolio;
+use App\Domain\Properties\Actions\CreateProperty;
 use App\Models\User;
 
 /** Short-lived entity references, never remembered balances or implicit confirmation. */
 final class AssistantConversationContext
 {
     public function previousProperty(Portfolio $portfolio, User $user, AiRun $run): ?int
+    {
+        $message = $this->previousMessage($portfolio, $user, $run);
+        if (! $message) {
+            return null;
+        }
+        $id = $message->metadata['property_reference_id'] ?? null;
+        if ($id === null) {
+            // A new property did not exist when its preview was sent. Only the separate,
+            // successful confirmation receipt can supply its ID on a later chat turn.
+            $proposalIds = array_column($message->metadata['proposals'] ?? [], 'id');
+            $proposals = AiActionProposal::whereIn('id', $proposalIds)->where('portfolio_id', $portfolio->id)
+                ->where('user_id', $user->id)->where('type', 'property_create')->where('status', 'executed')
+                ->where('confirmed_by', $user->id)->whereHas('run', fn ($query) => $query
+                ->where('conversation_id', $run->conversation_id)->where('assistant_message_id', $message->id)->where('status', 'completed'))
+                ->limit(2)->get();
+            $id = $proposals->count() === 1 ? ($proposals->first()->result['property_id'] ?? null) : null;
+        }
+
+        return is_int($id) && $portfolio->properties()->whereKey($id)->exists() ? $id : null;
+    }
+
+    /** Only filters/page from the last completed directory reply, never remembered results. */
+    public function previousDirectory(Portfolio $portfolio, User $user, AiRun $run): ?array
+    {
+        $message = $this->previousMessage($portfolio, $user, $run);
+        $reference = $message?->metadata['directory_reference'] ?? null;
+        if (! is_array($reference) || ! in_array($reference['tool'] ?? null, ['list_properties', 'list_contacts'], true)
+            || ! is_int($reference['page'] ?? null) || $reference['page'] < 1 || $reference['page'] > 10000) {
+            return null;
+        }
+        if ($reference['tool'] === 'list_properties') {
+            $type = $reference['type'] ?? null;
+            $city = $reference['city'] ?? null;
+            if ($city !== null && (! is_string($city) || trim($city) === '' || mb_strlen($city) > 120)) {
+                return null;
+            }
+
+            return $type === null || in_array($type, CreateProperty::TYPES, true)
+                ? ['tool' => 'list_properties', 'page' => $reference['page'], 'type' => $type, 'city' => $city] : null;
+        }
+        $propertyId = $reference['property_id'] ?? null;
+        $query = $reference['query'] ?? null;
+        if (($propertyId !== null && (! is_int($propertyId) || ! $portfolio->properties()->whereKey($propertyId)->exists()))
+            || ($query !== null && (! is_string($query) || mb_strlen($query) < 2 || mb_strlen($query) > 120))) {
+            return null;
+        }
+
+        return ['tool' => 'list_contacts', 'page' => $reference['page'], 'query' => $query, 'property_id' => $propertyId];
+    }
+
+    private function previousMessage(Portfolio $portfolio, User $user, AiRun $run): ?AiMessage
     {
         $conversation = $this->conversation($portfolio, $user, $run);
         $message = $conversation->messages()->where('role', 'assistant')
@@ -29,20 +82,8 @@ final class AssistantConversationContext
         if ($newerUserTurn->exists()) {
             return null;
         }
-        $id = $message->metadata['property_reference_id'] ?? null;
-        if ($id === null) {
-            // A new property did not exist when its preview was sent. Only the separate,
-            // successful confirmation receipt can supply its ID on a later chat turn.
-            $proposalIds = array_column($message->metadata['proposals'] ?? [], 'id');
-            $proposals = AiActionProposal::whereIn('id', $proposalIds)->where('portfolio_id', $portfolio->id)
-                ->where('user_id', $user->id)->where('type', 'property_create')->where('status', 'executed')
-                ->where('confirmed_by', $user->id)->whereHas('run', fn ($query) => $query
-                ->where('conversation_id', $conversation->id)->where('assistant_message_id', $message->id)->where('status', 'completed'))
-                ->limit(2)->get();
-            $id = $proposals->count() === 1 ? ($proposals->first()->result['property_id'] ?? null) : null;
-        }
 
-        return is_int($id) && $portfolio->properties()->whereKey($id)->exists() ? $id : null;
+        return $message;
     }
 
     public function observe(Portfolio $portfolio, User $user, AiRun $run, string $tool, array $arguments, array $result): void

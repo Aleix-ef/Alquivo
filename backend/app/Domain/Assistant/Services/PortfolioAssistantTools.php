@@ -7,9 +7,11 @@ use App\Domain\Attention\Services\PortfolioAttention;
 use App\Domain\Finance\Models\Transaction;
 use App\Domain\Leasing\Models\Lease;
 use App\Domain\Portfolio\Models\Portfolio;
+use App\Domain\Properties\Actions\CreateProperty;
 use App\Domain\Properties\Models\Property;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use InvalidArgumentException;
 
@@ -36,7 +38,11 @@ class PortfolioAssistantTools
                 'direction' => ['type' => ['string', 'null'], 'enum' => ['income', 'expense', null]],
             ], ['from', 'to', 'property_id', 'direction']),
             $this->tool('get_portfolio_overview', 'Obtiene los principales indicadores actuales de la cartera.', []),
-            $this->tool('list_properties', 'Lista los inmuebles de la cartera con valor, deuda, ocupación y renta.', []),
+            $this->tool('list_properties', 'Cuenta o lista inmuebles sin exigir un nombre. Para pisos/casas/viviendas filtra housing; null incluye todos los tipos. Si preguntan por una ciudad, pasa city: no infieras un total local de una lista sin filtrar. Ciudad exacta, tolerando mayúsculas y tildes; no busca provincias ni nombres de inmuebles (usa search_properties). count es el total de scope, no el tamaño de la página. data incluye valor, deuda, ocupación y renta; count/list sólo nombres, ciudad y tipo.', [
+                'type' => ['type' => ['string', 'null'], 'enum' => [...CreateProperty::TYPES, null]],
+                'city' => ['type' => ['string', 'null'], 'maxLength' => 120, 'description' => 'Ciudad solicitada, sin preposiciones; null sólo si no se pide filtrar por ciudad.'],
+                ...AssistantDirectoryReply::parameters(),
+            ], ['type', 'city', 'response_mode', 'page']),
             $this->tool('get_property_details', 'Obtiene la ficha de un inmueble concreto, sus contratos, inquilinos e incidencias.', [
                 'property_id' => ['type' => 'integer', 'description' => 'Identificador del inmueble.'],
             ], ['property_id']),
@@ -59,7 +65,8 @@ class PortfolioAssistantTools
             'compare_months' => ['month' => ['nullable', 'date_format:Y-m'], 'property_id' => ['nullable', 'integer', 'min:1']],
             'compare_properties' => ['from' => ['nullable', 'date_format:Y-m-d'], 'to' => ['nullable', 'date_format:Y-m-d']],
             'list_movements' => ['from' => ['nullable', 'date_format:Y-m-d'], 'to' => ['nullable', 'date_format:Y-m-d'], 'property_id' => ['nullable', 'integer', 'min:1'], 'direction' => ['nullable', Rule::in(['income', 'expense'])]],
-            'get_portfolio_overview', 'list_properties' => [],
+            'get_portfolio_overview' => [],
+            'list_properties' => ['type' => ['nullable', Rule::in(CreateProperty::TYPES)], 'city' => ['nullable', 'string', 'min:1', 'max:120'], ...AssistantDirectoryReply::rules()],
             'get_property_details' => ['property_id' => ['required', 'integer', 'min:1']],
             'get_financial_summary' => ['time_scope' => ['sometimes', Rule::in(['period', 'all_time'])], 'from' => ['nullable', 'date_format:Y-m-d'], 'to' => ['nullable', 'date_format:Y-m-d'], 'property_id' => ['nullable', 'integer', 'min:1']],
             'get_pending_items' => ['kind' => ['required', Rule::in(['all', 'rents', 'leases', 'issues', 'documents', 'reminders'])]],
@@ -76,7 +83,7 @@ class PortfolioAssistantTools
             'compare_properties' => app(AssistantInsights::class)->properties($portfolio, $arguments),
             'list_movements' => app(AssistantInsights::class)->movements($portfolio, $arguments),
             'get_portfolio_overview' => $this->overview($portfolio),
-            'list_properties' => $this->properties($portfolio),
+            'list_properties' => $this->properties($portfolio, $arguments),
             'get_property_details' => $this->propertyDetails($portfolio, (int) ($arguments['property_id'] ?? 0)),
             'get_financial_summary' => $this->finances($portfolio, $arguments),
             'get_pending_items' => $this->pending($portfolio, (string) ($arguments['kind'] ?? 'all')),
@@ -132,21 +139,46 @@ class PortfolioAssistantTools
         ];
     }
 
-    private function properties(Portfolio $portfolio): array
+    private function properties(Portfolio $portfolio, array $arguments): array
     {
+        $query = $portfolio->properties();
+        if (! empty($arguments['type'])) {
+            $query->where('type', $arguments['type']);
+        }
+        $city = isset($arguments['city']) ? trim($arguments['city']) : null;
+        if ($city !== null) {
+            // Compare only authorized city labels, not names/addresses or another portfolio.
+            // Portable across SQLite/PostgreSQL/MySQL, with no fuzzy or substring match.
+            $normalize = fn (string $value) => Str::lower(Str::ascii(Str::squish($value)));
+            $cities = $portfolio->properties()->whereNotNull('city')->distinct()->pluck('city')
+                ->filter(fn ($value) => $normalize($value) === $normalize($city))->values()->all();
+            $query->whereIn('city', $cities);
+        }
+        $count = (clone $query)->count();
+        $page = $arguments['page'] ?? 1;
+        $data = ($arguments['response_mode'] ?? 'data') === 'data';
+        $columns = ['id', 'name', 'type', 'city'];
+        if ($data) {
+            $columns = [...$columns, 'current_value', 'outstanding_debt'];
+            $query->with(['leases' => fn ($query) => $query->where('portfolio_id', $portfolio->id)->where('status', 'active')]);
+        }
+        $rows = $query->orderBy('name')->orderBy('id')->forPage($page, AssistantDirectoryReply::PAGE_SIZE)->get($columns);
+
         return [
             'currency' => $portfolio->currency,
-            'properties' => $portfolio->properties()->with(['leases' => fn ($query) => $query->where('status', 'active')])
-                ->orderBy('name')->get()->map(fn (Property $property) => [
-                    'id' => $property->id,
-                    'name' => $property->name,
-                    'type' => $property->type,
-                    'city' => $property->city,
+            'scope' => ['type' => $arguments['type'] ?? null, 'city' => $city],
+            'scope_basis' => 'El total y las filas cubren exclusivamente los filtros de scope. city=null significa todas las ciudades; no demuestra un total de una ciudad concreta. No filtra provincia, calle, ocupación ni propietario.',
+            ...AssistantDirectoryReply::pagination($count, $page, $rows->count()),
+            'properties' => $rows->map(fn (Property $property) => [
+                'id' => $property->id, 'name' => $property->name, 'type' => $property->type, 'city' => $property->city,
+                ...($data ? [
                     'current_value' => $property->current_value !== null ? (float) $property->current_value : null,
                     'outstanding_debt' => (float) $property->outstanding_debt,
                     'occupied' => $property->leases->isNotEmpty(),
                     'monthly_rent' => (float) $property->leases->sum('monthly_rent'),
-                ])->all(),
+                ] : []),
+            ])->all(),
+            'app_path' => '/properties',
         ];
     }
 

@@ -169,13 +169,15 @@ final class ToolRegistry
         }
         if (in_array($name, array_column(app(AssistantLeasingQueries::class)->definitions(), 'name'), true)) {
             $result = app(AssistantLeasingQueries::class)->execute($portfolio, $name, $arguments);
-            if ($name === 'search_contacts' || $name === 'list_rent_charges') {
-                $field = $name === 'search_contacts' ? 'contact_ids' : 'rent_charge_ids';
-                $items = $result[$name === 'search_contacts' ? 'contacts' : 'charges'];
+            if (in_array($name, ['search_contacts', 'list_contacts', 'list_rent_charges'], true)) {
+                $contact = $name !== 'list_rent_charges';
+                $field = $contact ? 'contact_ids' : 'rent_charge_ids';
+                $items = $result[$contact ? 'contacts' : 'charges'];
                 // Never resolve from an incomplete list or from a paid/cancelled charge.
                 $single = $result['count'] === 1 && ! $result['truncated']
-                    && ($name === 'search_contacts' || bccomp($items[0]['remaining_amount'], '0', 2) > 0);
-                $run->steps()->create(['kind' => 'resolution', 'tool' => $name, 'status' => 'completed', 'metadata' => [$field => $single ? [$items[0]['id']] : []]]);
+                    && ($contact ? $name === 'search_contacts' && ($arguments['intent'] ?? 'resolve') === 'resolve'
+                        : bccomp($items[0]['remaining_amount'], '0', 2) > 0);
+                $run->steps()->create(['kind' => 'resolution', 'tool' => $contact ? 'search_contacts' : $name, 'status' => 'completed', 'metadata' => [$field => $single ? [$items[0]['id']] : []]]);
             }
 
             return $result;

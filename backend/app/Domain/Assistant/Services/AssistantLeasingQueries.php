@@ -6,6 +6,7 @@ use App\Domain\Finance\Queries\RentChargeBalances;
 use App\Domain\Leasing\Models\Contact;
 use App\Domain\Leasing\Models\Lease;
 use App\Domain\Portfolio\Models\Portfolio;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
@@ -20,8 +21,14 @@ final class AssistantLeasingQueries
         $property = ['property_id' => ['type' => ['integer', 'null'], 'description' => 'ID del inmueble autorizado, o null para toda la cartera.']];
 
         return [
+            $this->definition('list_contacts', 'Cuenta o lista contactos SIN necesitar un nombre. query null para todos; si se indica un nombre admite varias coincidencias como lista normal. No resuelve un destino de escritura ni devuelve teléfonos, correos o DNI. Los inmuebles asociados pueden proceder de contratos de cualquier estado, no implican inquilinos actuales.', [
+                'query' => ['type' => ['string', 'null'], 'minLength' => 2, 'maxLength' => 120], ...$property,
+                ...AssistantDirectoryReply::parameters(),
+            ]),
             $this->definition('search_contacts', 'Busca contactos por nombre e inmueble. No devuelve teléfonos guardados, correos ni DNI. Una coincidencia única es obligatoria antes de proponer un cambio de teléfono.', [
                 'query' => ['type' => 'string', 'minLength' => 2, 'maxLength' => 120], ...$property,
+                'intent' => ['type' => 'string', 'enum' => ['read', 'resolve'],
+                    'description' => 'read para consultar coincidencias; resolve para identificar a una única persona antes de proponer un cambio. Para todos los contactos sin nombre usa list_contacts.'],
             ]),
             $this->definition('list_rent_charges', 'Consulta mensualidades y saldos reales de todos los periodos; cada fila incluye nombres de inquilinos autorizados del contrato para responder quién debe. No crea cargos. Antes de proponer un cobro, filtra hasta una única mensualidad pendiente. No sumes la muestra: usa summary.', [
                 ...$property, 'lease_id' => ['type' => ['integer', 'null']],
@@ -42,7 +49,8 @@ final class AssistantLeasingQueries
     {
         $property = ['property_id' => ['nullable', 'integer', 'min:1']];
         $rules = match ($name) {
-            'search_contacts' => ['query' => ['required', 'string', 'min:2', 'max:120'], ...$property],
+            'list_contacts' => ['query' => ['nullable', 'string', 'min:2', 'max:120'], ...$property, ...AssistantDirectoryReply::rules()],
+            'search_contacts' => ['query' => ['required', 'string', 'min:2', 'max:120'], ...$property, 'intent' => ['sometimes', Rule::in(['read', 'resolve'])]],
             'list_rent_charges' => [...$property, 'lease_id' => ['nullable', 'integer', 'min:1'], 'period' => ['nullable', 'date_format:Y-m'], 'status' => ['required', Rule::in(['pending', 'paid', 'all'])]],
             'list_leases' => [...$property, 'status' => ['required', Rule::in(['active', 'draft', 'ended', 'cancelled', 'all'])], 'expires_within_days' => ['nullable', 'integer', 'between:1,365']],
             'get_lease_details' => ['lease_id' => ['required', 'integer', 'min:1']],
@@ -57,7 +65,8 @@ final class AssistantLeasingQueries
         }
 
         return match ($name) {
-            'search_contacts' => $this->contacts($portfolio, $data),
+            'search_contacts' => $this->contacts($portfolio, $data, resolve: ($data['intent'] ?? 'resolve') === 'resolve'),
+            'list_contacts' => $this->contacts($portfolio, $data, resolve: false),
             'list_rent_charges' => $this->charges($portfolio, $data),
             'list_leases' => $this->leases($portfolio, $data),
             'get_lease_details' => $this->lease($portfolio, $data['lease_id']),
@@ -75,30 +84,49 @@ final class AssistantLeasingQueries
         return $this->charges($portfolio, ['property_id' => $propertyId, 'status' => 'pending'], summaryOnly: true)['summary'];
     }
 
-    private function contacts(Portfolio $portfolio, array $data): array
+    private function contacts(Portfolio $portfolio, array $data, bool $resolve): array
     {
-        $needle = mb_strtolower(Str::ascii(trim($data['query'])));
-        if (mb_strlen($needle) < 2) {
+        $needle = isset($data['query']) ? mb_strtolower(Str::ascii(trim($data['query']))) : null;
+        if ($needle !== null && mb_strlen($needle) < 2) {
             throw new InvalidArgumentException('Concreta el nombre del contacto.');
         }
         $query = Contact::where('portfolio_id', $portfolio->id);
         if (! empty($data['property_id'])) {
             $query->whereHas('leases', fn ($q) => $q->where('portfolio_id', $portfolio->id)->where('property_id', $data['property_id']));
         }
-        // Bounded accent-independent matching. A truncated scan can never resolve a write target.
-        $rows = $query->orderBy('id')->limit(1001)->get(['id', 'name', 'kind']);
-        $scanTruncated = $rows->count() > 1000;
-        $words = preg_split('/\s+/', $needle);
-        $matches = $rows->take(1000)->filter(fn ($contact) => collect($words)->every(fn ($word) => str_contains(mb_strtolower(Str::ascii($contact->name)), $word)))->values();
-        // Do not prefer an exact name over other people sharing that name plus a surname.
-        $visible = $matches->take(20);
-        $visible->load(['leases' => fn ($q) => $q->where('portfolio_id', $portfolio->id)->whereHas('property', fn ($p) => $p->where('portfolio_id', $portfolio->id))->with('property:id,name')]);
+        $page = $data['page'] ?? 1;
+        $scanTruncated = false;
+        if ($needle === null) {
+            $count = (clone $query)->count();
+            $visible = $query->orderBy('id')->forPage($page, AssistantDirectoryReply::PAGE_SIZE)->get(['id', 'name', 'kind']);
+        } else {
+            // Same bounded accent-independent search for reads and write resolution.
+            // A partial scan never supplies a total or authorizes a write.
+            $rows = $query->orderBy('id')->limit(1001)->get(['id', 'name', 'kind']);
+            $scanTruncated = $rows->count() > 1000;
+            $words = preg_split('/\s+/', $needle);
+            $matches = $rows->take(1000)->filter(fn ($contact) => collect($words)->every(fn ($word) => str_contains(mb_strtolower(Str::ascii($contact->name)), $word)))->values();
+            $count = $scanTruncated ? null : $matches->count();
+            $visible = $matches->forPage($page, AssistantDirectoryReply::PAGE_SIZE)->values();
+        }
 
-        return ['contacts' => $visible->map(fn ($contact) => [
+        return ['contacts' => $this->contactProjection($portfolio, $visible),
+            ...AssistantDirectoryReply::pagination($count, $page, $visible->count(), $scanTruncated),
+            'needs_clarification' => $resolve && ($scanTruncated || $count !== 1),
+            'property' => ! empty($data['property_id']) ? $portfolio->properties()->findOrFail($data['property_id'], ['id', 'name', 'city'])->toArray() : null,
+            'association_basis' => 'Contratos registrados de cualquier estado; no prueba ocupación actual.',
+            'app_path' => '/contacts'];
+    }
+
+    private function contactProjection(Portfolio $portfolio, Collection $visible): array
+    {
+        $visible->load(['leases' => fn ($q) => $q->where('portfolio_id', $portfolio->id)->whereHas('property', fn ($p) => $p->where('portfolio_id', $portfolio->id))->with('property:id,name,city')]);
+
+        return $visible->map(fn ($contact) => [
             'id' => $contact->id, 'name' => $contact->name, 'kind' => $contact->kind,
-            'properties' => $contact->leases->map(fn ($lease) => ['id' => $lease->property->id, 'name' => $lease->property->name])->unique('id')->values()->take(10)->all(),
-        ])->all(), 'count' => $scanTruncated ? null : $matches->count(), 'truncated' => $scanTruncated || $matches->count() > 20,
-            'needs_clarification' => $scanTruncated || $matches->count() !== 1, 'app_path' => '/contacts'];
+            'properties' => $contact->leases->map(fn ($lease) => ['id' => $lease->property->id, 'name' => $lease->property->name, 'city' => $lease->property->city])->unique('id')->values()->take(10)->all(),
+            'properties_truncated' => $contact->leases->pluck('property_id')->unique()->count() > 10,
+        ])->all();
     }
 
     private function leaseQuery(Portfolio $portfolio)
