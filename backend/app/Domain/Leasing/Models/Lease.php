@@ -14,9 +14,16 @@ class Lease extends Model
 
     protected $guarded = ['id'];
 
+    protected $appends = ['payment_day_start'];
+
+    public function getPaymentDayStartAttribute(mixed $value): int
+    {
+        return $value === null ? (int) ($this->attributes['payment_day'] ?? 1) : (int) $value;
+    }
+
     protected function casts(): array
     {
-        return ['start_date' => 'date', 'end_date' => 'date', 'monthly_rent' => 'decimal:2', 'deposit_amount' => 'decimal:2'];
+        return ['start_date' => 'date', 'end_date' => 'date', 'monthly_rent' => 'decimal:2', 'deposit_amount' => 'decimal:2', 'payment_day' => 'integer'];
     }
 
     public function property()

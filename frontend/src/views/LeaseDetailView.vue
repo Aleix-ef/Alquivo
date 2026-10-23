@@ -12,6 +12,8 @@ import { useRoute, useRouter } from "vue-router";
 import api from "../api";
 import { fetchAllPages } from "../pagination";
 import TenantSelector from "../components/TenantSelector.vue";
+import PaymentWindowFields from "../components/PaymentWindowFields.vue";
+import { paymentWindowLabel, validPaymentWindow } from "../paymentWindow";
 
 const route = useRoute();
 const router = useRouter();
@@ -77,6 +79,7 @@ function prepareEdit() {
     monthly_rent: lease.value.monthly_rent,
     deposit_amount: lease.value.deposit_amount,
     payment_day: lease.value.payment_day,
+    payment_day_start: lease.value.payment_day_start ?? lease.value.payment_day,
     notes: lease.value.notes || "",
   };
   error.value = "";
@@ -94,6 +97,7 @@ function openRenew() {
     monthly_rent: lease.value.monthly_rent,
     deposit_amount: lease.value.deposit_amount,
     payment_day: lease.value.payment_day,
+    payment_day_start: lease.value.payment_day_start ?? lease.value.payment_day,
     notes: "Renovación del contrato anterior",
   };
   error.value = "";
@@ -104,6 +108,16 @@ async function saveEdit() {
   saving.value = true;
   error.value = "";
   try {
+    if (
+      !validPaymentWindow(
+        editForm.value.payment_day_start,
+        editForm.value.payment_day,
+      )
+    ) {
+      error.value =
+        "El primer día de cobro no puede ser posterior al último; elige días del 1 al 31.";
+      return;
+    }
     if (!editForm.value.contact_ids.length && !newContacts.value.length) {
       error.value = "Añade al menos un inquilino.";
       return;
@@ -119,6 +133,7 @@ async function saveEdit() {
       monthly_rent: Number(editForm.value.monthly_rent),
       deposit_amount: Number(editForm.value.deposit_amount || 0),
       payment_day: Number(editForm.value.payment_day),
+      payment_day_start: Number(editForm.value.payment_day_start),
     });
     router.replace(`/leases/${lease.value.id}`);
     await load();
@@ -134,12 +149,23 @@ async function saveRenewal() {
   saving.value = true;
   error.value = "";
   try {
+    if (
+      !validPaymentWindow(
+        renewalForm.value.payment_day_start,
+        renewalForm.value.payment_day,
+      )
+    ) {
+      error.value =
+        "El primer día de cobro no puede ser posterior al último; elige días del 1 al 31.";
+      return;
+    }
     const { data } = await api.post(`/leases/${lease.value.id}/renew`, {
       ...renewalForm.value,
       end_date: renewalForm.value.end_date || null,
       monthly_rent: Number(renewalForm.value.monthly_rent),
       deposit_amount: Number(renewalForm.value.deposit_amount || 0),
       payment_day: Number(renewalForm.value.payment_day),
+      payment_day_start: Number(renewalForm.value.payment_day_start),
     });
     router.push(`/leases/${data.id}`);
   } catch (e) {
@@ -207,6 +233,7 @@ onBeforeUnmount(() => {
       <article>
         <span>Renta mensual</span
         ><strong>{{ money(lease.monthly_rent) }}</strong>
+        <small>Cobro {{ paymentWindowLabel(lease) }}</small>
       </article>
       <article>
         <span>Fianza</span><strong>{{ money(lease.deposit_amount) }}</strong>
@@ -337,15 +364,17 @@ onBeforeUnmount(() => {
             type="number"
             min="0"
             step="0.01"
-            inputmode="decimal" /></label
-        ><label
-          >Día de cobro<input
-            v-model="editForm.payment_day"
-            type="number"
-            min="1"
-            max="28"
-            required /></label
-        ><label
+            inputmode="decimal"
+        /></label>
+        <PaymentWindowFields
+          v-model:start="editForm.payment_day_start"
+          v-model:end="editForm.payment_day"
+        />
+        <p class="muted">
+          El nuevo plazo se aplicará a futuras mensualidades; las ya generadas
+          conservan su vencimiento.
+        </p>
+        <label
           >Notas<textarea v-model="editForm.notes" rows="4"></textarea>
         </label>
         <footer>
@@ -388,15 +417,13 @@ onBeforeUnmount(() => {
             type="number"
             min="0"
             step="0.01"
-            inputmode="decimal" /></label
-        ><label
-          >Día de cobro<input
-            v-model="renewalForm.payment_day"
-            type="number"
-            min="1"
-            max="28"
-            required /></label
-        ><label
+            inputmode="decimal"
+        /></label>
+        <PaymentWindowFields
+          v-model:start="renewalForm.payment_day_start"
+          v-model:end="renewalForm.payment_day"
+        />
+        <label
           >Notas<textarea v-model="renewalForm.notes" rows="4"></textarea>
         </label>
         <footer>

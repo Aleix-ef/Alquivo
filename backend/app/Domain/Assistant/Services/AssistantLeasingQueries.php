@@ -158,7 +158,9 @@ final class AssistantLeasingQueries
     {
         $lease = $this->leaseQuery($portfolio)->with(['property:id,name', 'participants' => fn ($q) => $q->where('portfolio_id', $portfolio->id)])->findOrFail($id);
 
-        return ['lease' => [...$this->leaseProjection($lease), 'deposit_amount' => $lease->deposit_amount, 'payment_day' => $lease->payment_day,
+        return ['lease' => [...$this->leaseProjection($lease), 'deposit_amount' => $lease->deposit_amount,
+            'payment_day_start' => $lease->payment_day_start, 'payment_day' => $lease->payment_day,
+            'payment_window_basis' => 'Del primer al último día de cobro, ambos incluidos. payment_day es el último día permitido; si el mes es más corto se usa su último día. Las mensualidades ya generadas conservan su vencimiento registrado.',
             'participants' => $lease->participants->take(20)->map(fn ($person) => ['id' => $person->id, 'name' => $person->name, 'role' => $person->pivot->role])->all(),
             'participant_count' => $lease->participants->count(), 'participants_truncated' => $lease->participants->count() > 20],
             'rent_summary' => $this->charges($portfolio, ['lease_id' => $id, 'status' => 'all'], summaryOnly: true)['summary'],

@@ -6,6 +6,8 @@ import api from "../api";
 import { fetchAllPages } from "../pagination";
 import ConfirmDialog from "../components/ConfirmDialog.vue";
 import TenantSelector from "../components/TenantSelector.vue";
+import PaymentWindowFields from "../components/PaymentWindowFields.vue";
+import { paymentWindowLabel, validPaymentWindow } from "../paymentWindow";
 import { useConfirmDialog } from "../composables/useConfirmDialog";
 const route = useRoute(),
   router = useRouter(),
@@ -24,7 +26,8 @@ const form = ref({
   end_date: "",
   monthly_rent: "",
   deposit_amount: "",
-  payment_day: 1,
+  payment_day_start: 1,
+  payment_day: 5,
   status: "active",
 });
 const selectedContactIds = ref([]);
@@ -75,6 +78,13 @@ async function save() {
   saving.value = true;
   error.value = "";
   try {
+    if (
+      !validPaymentWindow(form.value.payment_day_start, form.value.payment_day)
+    ) {
+      error.value =
+        "Elige un plazo de cobro válido: del día 1 al 31, con el primero anterior o igual al último.";
+      return;
+    }
     if (!selectedContactIds.value.length && !newContacts.value.length) {
       error.value = "Añade al menos un inquilino.";
       return;
@@ -93,6 +103,7 @@ async function save() {
       monthly_rent: Number(form.value.monthly_rent),
       deposit_amount: Number(form.value.deposit_amount || 0),
       payment_day: Number(form.value.payment_day),
+      payment_day_start: Number(form.value.payment_day_start),
     });
     if (route.query.from === "property" && route.query.property) {
       await router.replace(`/properties/${route.query.property}?tab=alquiler`);
@@ -160,7 +171,7 @@ onBeforeUnmount(() =>
         </div>
         <div>
           <strong>{{ money(l.monthly_rent) }}/mes</strong
-          ><small>Cobro el día {{ l.payment_day }}</small>
+          ><small>Cobro {{ paymentWindowLabel(l) }}</small>
         </div>
         <button
           v-if="l.status === 'active'"
@@ -227,15 +238,12 @@ onBeforeUnmount(() =>
             type="number"
             min="0"
             step="0.01"
-            inputmode="decimal" /></label
-        ><label
-          >Día de cobro<input
-            v-model="form.payment_day"
-            type="number"
-            min="1"
-            max="28"
-            required
+            inputmode="decimal"
         /></label>
+        <PaymentWindowFields
+          v-model:start="form.payment_day_start"
+          v-model:end="form.payment_day"
+        />
         <footer>
           <button class="button primary" :disabled="saving">
             {{ saving ? "Creando…" : "Crear arrendamiento" }}

@@ -43,7 +43,7 @@ class RentChargeService
                 'due_date' => $dueDate,
                 'amount' => $lease->monthly_rent,
                 'paid_amount' => 0,
-                'status' => $dueDate->isPast() ? 'overdue' : 'pending',
+                'status' => $dueDate->lt(Carbon::today()) ? 'overdue' : 'pending',
             ],
         );
     }

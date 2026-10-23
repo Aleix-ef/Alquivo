@@ -55,8 +55,8 @@ class ReportController extends Controller
                 Property::where('portfolio_id', $portfolio->id)->orderBy('name')->get()->map(fn (Property $property) => [$property->name, $property->type, $property->address_line, $property->city, $property->purchase_price, $property->current_value, $property->outstanding_debt]),
             ],
             'leases' => [
-                ['Propiedad', 'Inquilinos', 'Estado', 'Inicio', 'Fin', 'Renta mensual', 'Fianza', 'Día cobro'],
-                Lease::where('portfolio_id', $portfolio->id)->with(['property', 'participants'])->orderByDesc('start_date')->get()->map(fn (Lease $lease) => [$lease->property->name, $lease->participants->pluck('name')->join(', '), $lease->status, $lease->start_date->toDateString(), $lease->end_date?->toDateString(), $lease->monthly_rent, $lease->deposit_amount, $lease->payment_day]),
+                ['Propiedad', 'Inquilinos', 'Estado', 'Inicio', 'Fin', 'Renta mensual', 'Fianza', 'Cobro desde el día', 'Cobro hasta el día'],
+                Lease::where('portfolio_id', $portfolio->id)->with(['property', 'participants'])->orderByDesc('start_date')->get()->map(fn (Lease $lease) => [$lease->property->name, $lease->participants->pluck('name')->join(', '), $lease->status, $lease->start_date->toDateString(), $lease->end_date?->toDateString(), $lease->monthly_rent, $lease->deposit_amount, $lease->payment_day_start, $lease->payment_day]),
             ],
             'transactions' => [
                 ['Fecha', 'Tipo', 'Categoría', 'Concepto', 'Propiedad', 'Importe', 'Estado', 'Método'],
@@ -73,5 +73,4 @@ class ReportController extends Controller
             fclose($output);
         }, 'alquivo-'.$resource.'-'.today()->format('Y-m-d').'.csv', ['Content-Type' => 'text/csv; charset=UTF-8']);
     }
-
 }

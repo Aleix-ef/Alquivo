@@ -5,6 +5,7 @@ namespace App\Domain\Leasing\Actions;
 use App\Domain\Finance\Services\RentChargeService;
 use App\Domain\Leasing\Models\Contact;
 use App\Domain\Leasing\Models\Lease;
+use App\Domain\Leasing\Services\LeasePaymentWindow;
 use App\Domain\Portfolio\Models\Portfolio;
 use App\Domain\Portfolio\Services\PropertyAccess;
 use App\Models\User;
@@ -33,9 +34,10 @@ final class CreateLease
             'end_date' => ['nullable', 'date_format:Y-m-d', 'after_or_equal:start_date'],
             'monthly_rent' => ['required', ...$money, 'gt:0'],
             'deposit_amount' => ['nullable', ...$money, 'min:0'],
-            'payment_day' => ['required', 'integer', 'between:1,28'],
+            ...LeasePaymentWindow::rules(required: true),
             'notes' => ['nullable', 'string', 'max:10000'],
         ])->validate();
+        $data = LeasePaymentWindow::normalize($data);
         app(PropertyAccess::class)->assertWritable($portfolio, (int) $data['property_id']);
         $property = $portfolio->properties()->whereKey($data['property_id'])->lockForUpdate()->firstOrFail();
         $ids = $data['contact_ids'] ?? [];

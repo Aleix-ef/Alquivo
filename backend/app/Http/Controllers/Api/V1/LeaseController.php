@@ -6,6 +6,7 @@ use App\Domain\Finance\Services\RentChargeService;
 use App\Domain\Leasing\Actions\CreateLease;
 use App\Domain\Leasing\Models\Contact;
 use App\Domain\Leasing\Models\Lease;
+use App\Domain\Leasing\Services\LeasePaymentWindow;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -53,7 +54,7 @@ class LeaseController extends Controller
             'end_date' => ['sometimes', 'nullable', 'date', 'after_or_equal:'.($request->input('start_date') ?: $lease->start_date->toDateString())],
             'monthly_rent' => ['sometimes', 'numeric', 'gt:0'],
             'deposit_amount' => ['sometimes', 'nullable', 'numeric', 'min:0'],
-            'payment_day' => ['sometimes', 'integer', 'between:1,28'],
+            ...LeasePaymentWindow::rules(),
             'notes' => ['sometimes', 'nullable', 'string', 'max:10000'],
         ]);
         if (($data['status'] ?? $lease->status) === 'active' && Lease::where('property_id', $lease->property_id)
@@ -73,6 +74,8 @@ class LeaseController extends Controller
             throw ValidationException::withMessages(['new_contacts' => ['Un contrato admite hasta 20 inquilinos.']]);
         }
         DB::transaction(function () use ($lease, $portfolio, $data, $contacts, $newContacts) {
+            $current = Lease::where('portfolio_id', $portfolio->id)->whereKey($lease->id)->lockForUpdate()->firstOrFail();
+            $data = LeasePaymentWindow::normalize($data, $current);
             $ids = $contacts ?? ($newContacts ? $lease->participants()->pluck('contacts.id')->all() : null);
             if ($ids !== null) {
                 // Lock contact rows, not an aggregate (unsupported by PostgreSQL).
@@ -97,6 +100,7 @@ class LeaseController extends Controller
                 ));
             }
         });
+        $lease->refresh();
         $this->charges->ensureCurrentCharge($lease);
 
         return $lease->fresh()->load(['property', 'participants', 'charges', 'renewal']);
@@ -111,9 +115,10 @@ class LeaseController extends Controller
             'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
             'monthly_rent' => ['required', 'numeric', 'gt:0'],
             'deposit_amount' => ['nullable', 'numeric', 'min:0'],
-            'payment_day' => ['required', 'integer', 'between:1,28'],
+            ...LeasePaymentWindow::rules(required: true),
             'notes' => ['nullable', 'string', 'max:10000'],
         ]);
+        $data = LeasePaymentWindow::normalize($data);
         $renewal = DB::transaction(function () use ($lease, $data) {
             $renewal = Lease::create([
                 ...$data, 'portfolio_id' => $lease->portfolio_id, 'property_id' => $lease->property_id,

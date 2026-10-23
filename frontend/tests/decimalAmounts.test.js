@@ -15,7 +15,12 @@ const monetaryFields = new Set([
   "acquisition_costs",
   "outstanding_debt",
 ]);
-const integerFields = new Set(["payment_day", "bedrooms", "bathrooms"]);
+const integerFields = new Set([
+  "payment_day",
+  "payment_day_start",
+  "bedrooms",
+  "bathrooms",
+]);
 const numericInputs = [];
 for (const directory of ["views", "components"]) {
   const base = new URL(`../src/${directory}/`, import.meta.url);
@@ -74,9 +79,12 @@ test("counts and payment days remain integers, and new number fields require cla
       [undefined, "1"].includes(input.attribute("step")),
       `${input.filename}: ${field} must keep the native integer step`,
     );
-    if (field === "payment_day") {
+    if (field === "payment_day" || field === "payment_day_start") {
       assert.equal(input.attribute("min"), "1");
-      assert.equal(input.attribute("max"), "28");
+      assert.equal(
+        input.attribute("max"),
+        input.filename === "AssistantActionPreview.vue" ? "28" : "31",
+      );
     }
     checked.add(field);
   }
