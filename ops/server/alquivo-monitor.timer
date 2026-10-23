@@ -1,0 +1,11 @@
+[Unit]
+Description=Check Alquivo operational health every two minutes
+
+[Timer]
+OnBootSec=5min
+OnUnitActiveSec=2min
+AccuracySec=10s
+Unit=alquivo-monitor.service
+
+[Install]
+WantedBy=timers.target

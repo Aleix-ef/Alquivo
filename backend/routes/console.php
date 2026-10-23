@@ -1,5 +1,6 @@
 <?php
 
+use App\Console\Commands\OperationalHealth;
 use App\Domain\Assistant\Models\AiActionProposal;
 use App\Domain\Assistant\Models\AiConversation;
 use App\Domain\Assistant\Models\AiDocumentExtraction;
@@ -9,6 +10,7 @@ use App\Domain\Documents\Services\PrivateFileDeletion;
 use App\Domain\Identity\Models\LegalAcceptance;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schedule;
 
@@ -18,6 +20,10 @@ Artisan::command('inspire', function () {
 
 Schedule::command('rent:generate')->dailyAt('00:10')->withoutOverlapping();
 Schedule::command('finance:generate-recurring')->dailyAt('00:20')->withoutOverlapping();
+
+// A running container alone does not prove the scheduler is executing its events.
+Schedule::call(fn () => Cache::put(OperationalHealth::SCHEDULER_KEY, now()->timestamp, 600))
+    ->everyMinute()->name('ops:scheduler-heartbeat');
 
 Artisan::command('assistant:prune', function () {
     AiDocumentExtraction::where('expires_at', '<', now())->update(['draft' => null]);

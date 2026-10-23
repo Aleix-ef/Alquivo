@@ -1,0 +1,24 @@
+[Unit]
+Description=Alquivo private operational watchdog
+Wants=network-online.target
+After=network-online.target
+# Intentionally NOT Requires=docker: alert delivery must work if Docker is down.
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 /usr/local/lib/alquivo/monitor.py
+TimeoutStartSec=110
+UMask=0077
+User=root
+Group=root
+StateDirectory=alquivo-monitor
+StateDirectoryMode=0700
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/alquivo-monitor
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+LockPersonality=true
+MemoryMax=160M
+Nice=10
