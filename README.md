@@ -1,5 +1,10 @@
 # Alquivo
 
+## Acceso web público habilitado — 27/10/2026
+
+**https://app.alquivo.com** ya admite HTTPS IPv4 público por autorización expresa del titular, que confirmó carga desde datos móviles. Política persistente y reversión temporal cancelada tras verificaciones; servicios internos e IPv6 siguen cerrados. Sin reiniciar/reconstruir la app: código `050731bc131b7e4a4f2d8f16b7fb86217b79b37a`, legal `2026-10-27-r1`, secretos/IA/permisos/cuotas intactos. La landing conserva lista de espera mientras se confirman acuerdos/opciones privadas de proveedores. **Apertura técnica no equivale a cierre jurídico.** [Apertura y verificaciones](docs/public-web-opening-20261027.md), [pasos del titular](docs/provider-closeout-quick-guide.md). Los checkpoints siguientes son históricos.
+
+
 ## Textos publicados y logs temporales aplicados — 27/10/2026
 
 Código desplegado **`050731bc131b7e4a4f2d8f16b7fb86217b79b37a`**, revisión legal **`2026-10-27-r1`** en app y landing. Pies compactos con Privacidad/Información legal, desplegables cerrados y aceptación explícita de condiciones al registrarse, sin reescribir el historial. Los siete servicios usan journal nativo con ventana de 30 días, límite de 256 MB y mantenimiento horario comprobado. Copia externa previa completada; monitor, señal externa, scheduler y servicios sanos. **599 backend/4.101 aserciones, 217 frontend y 3 pruebas de logs correctas**; dos pruebas de IA real omitidas, sin inferencias facturadas.

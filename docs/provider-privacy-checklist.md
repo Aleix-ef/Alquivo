@@ -1,5 +1,9 @@
 # Cierre de proveedores y privacidad antes de beta
 
+## Revisión privada pendiente con web ya accesible — 27/10/2026
+
+El titular autorizó abrir HTTPS mientras revisa estos acuerdos. Acceso público confirmado desde datos móviles, sin cambios de datos/IA/permisos; landing todavía en lista de espera. Esto **no completa** contratos ni opciones privadas por inferencia. [Guía concreta, por proveedor](provider-closeout-quick-guide.md), [alcance de apertura](public-web-opening-20261027.md). No se han firmado contratos ni inspeccionado facturas/cuentas privadas en esta tarea.
+
 ## Publicación y conservación comprobadas — 27/10/2026
 
 La revisión legal `2026-10-27-r1` se ha desplegado en app y landing. Se ha instalado/verificado `journald` para los siete servicios con ventana de 30 días, límite de 256 MB y tarea horaria; ya no se considera pendiente su migración temporal. Monitor, copias y restricción de acceso siguen activos. [Entrega y comprobaciones](deployment-legal-retention-20261027.md).

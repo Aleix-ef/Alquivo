@@ -1,4 +1,10 @@
-# Despliegue restringido de Alquivo — 20–27/10/2026
+# Despliegue de Alquivo — 20–27/10/2026
+
+## Apertura técnica HTTPS — 27/10/2026, 17:25 UTC
+
+**Acceso IPv4 público habilitado por petición expresa.** Confirmación del titular desde datos móviles; siete comprobaciones HTTPS por DNS, diez locales, trece regresiones de firewall y puertos internos cerrados. Política persistente, solo recarga: no se reinician Docker ni contenedores. Código y legal sin cambios respecto a la entrega de esta mañana. Reversión temporal cancelada después de verificar; monitor real correcto. IPv6 de app sigue cerrado y no hay DNS IPv6 nativo.
+
+La landing continúa en lista de espera. El registro directo de la app es accesible; no se ha añadido invitación/privacidad de beta ni se da por revisada la contratación de proveedores. [Evidencia y rollback](public-web-opening-20261027.md), [guía breve de proveedores](provider-closeout-quick-guide.md). Los estados anteriores de acceso restringido son históricos.
 
 ## Estado vigente — 27/10/2026
 

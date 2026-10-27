@@ -1,5 +1,5 @@
 [Unit]
-Description=Alquivo restricted Docker ingress for deployment validation
+Description=Alquivo controlled Docker ingress for web access
 Wants=network-online.target
 After=network-online.target ufw.service
 Before=docker.service

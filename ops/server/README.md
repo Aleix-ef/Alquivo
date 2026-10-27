@@ -104,6 +104,8 @@ habilita IA/pagos ni abre la beta. Continuar por la
 
 ## Protección del despliegue de prueba
 
+**Actualización 27/10:** apertura IPv4 web aplicada por autorización expresa, documentada en [apertura pública](../../docs/public-web-opening-20261027.md). El script mantiene `ALQUIVO_WEB_ACCESS=restricted` por defecto; solo `public` abre TCP/443 al proxy DNAT fijo. Los dos modos bloquean ingreso de app por IPv6. La IP de prueba se conserva para poder volver al modo restringido. Cambiar el modo en el archivo privado del host y **recargar**, no reiniciar, `alquivo-docker-firewall.service`; UFW debe concordar con la elección. No quitar la cadena ni la dependencia de Docker. Trece regresiones sin comandos de red reales: `node --test tools/tests/docker-firewall.test.mjs`. Los párrafos siguientes describen la preparación restringida inicial.
+
 `alquivo-docker-firewall` y su unidad systemd añaden una cadena propia en
 `DOCKER-USER` para ambas familias, sin vaciar reglas ajenas. Copiar el ejecutable
 a `/usr/local/sbin/`, la unidad a `/etc/systemd/system/` y la dependencia de Docker

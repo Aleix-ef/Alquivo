@@ -38,3 +38,4 @@ jobs:
       - run: npm test && npm run build
         working-directory: frontend
       - run: node tools/archive-legal.mjs --check
+      - run: node --test tools/tests/docker-firewall.test.mjs

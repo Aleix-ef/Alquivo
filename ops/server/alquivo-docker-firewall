@@ -1,11 +1,13 @@
 #!/usr/bin/env bash
-# Initial single-VPS validation: HTTP for ACME, HTTPS for one tester IPv4 only.
+# Single-VPS ingress: HTTP for ACME; HTTPS restricted by default, public by opt-in.
 # Install as root; Docker must require the companion systemd service at boot.
 set -Eeuo pipefail
 [[ $EUID -eq 0 ]] || { printf 'Run as root.\n' >&2; exit 1; }
 : "${ALQUIVO_PUBLIC_INTERFACE:?Set the actual public interface}"
 : "${ALQUIVO_TEST_IPV4:?Set the tester IPv4 (without CIDR)}"
 : "${ALQUIVO_PROXY_IPV4:?Set the fixed Compose proxy IPv4}"
+web_access=${ALQUIVO_WEB_ACCESS:-restricted}
+case "$web_access" in restricted|public) ;; *) printf 'Invalid web access mode.\n' >&2; exit 1 ;; esac
 [[ $ALQUIVO_PUBLIC_INTERFACE =~ ^[a-zA-Z0-9_.:-]{1,15}$ ]] || exit 1
 ip link show dev "$ALQUIVO_PUBLIC_INTERFACE" >/dev/null
 validate_ipv4() {
@@ -20,6 +22,10 @@ validate_ipv4() {
 validate_ipv4 "$ALQUIVO_TEST_IPV4"
 validate_ipv4 "$ALQUIVO_PROXY_IPV4"
 [[ $ALQUIVO_TEST_IPV4 != 0.0.0.0 ]] || exit 1
+https_source="-s $ALQUIVO_TEST_IPV4/32"
+if [[ $web_access == public ]]; then
+    https_source=""
+fi
 
 # Change only our own chain, atomically per address family. Never flush Docker,
 # UFW, the global ruleset or another application's rules.
@@ -35,13 +41,13 @@ iptables-restore --wait 5 --noflush <<RULES
 -F ALQUIVO-INGRESS
 -A ALQUIVO-INGRESS -m conntrack --ctstate ESTABLISHED,RELATED -j RETURN
 -A ALQUIVO-INGRESS -i $ALQUIVO_PUBLIC_INTERFACE -d $ALQUIVO_PROXY_IPV4/32 -p tcp --dport 80 -m conntrack --ctstate DNAT --ctorigdstport 80 -j RETURN
--A ALQUIVO-INGRESS -i $ALQUIVO_PUBLIC_INTERFACE -s $ALQUIVO_TEST_IPV4/32 -d $ALQUIVO_PROXY_IPV4/32 -p tcp --dport 443 -m conntrack --ctstate DNAT --ctorigdstport 443 -j RETURN
+-A ALQUIVO-INGRESS -i $ALQUIVO_PUBLIC_INTERFACE $https_source -d $ALQUIVO_PROXY_IPV4/32 -p tcp --dport 443 -m conntrack --ctstate DNAT --ctorigdstport 443 -j RETURN
 -A ALQUIVO-INGRESS -i $ALQUIVO_PUBLIC_INTERFACE -j DROP
 -A ALQUIVO-INGRESS -j RETURN
 COMMIT
 RULES
 
-# No public IPv6 application access during validation (and no DNS AAAA).
+# IPv6 application ingress stays closed in both modes; do not publish DNS AAAA.
 # Replies to connections initiated by containers must remain possible.
 ip6tables-restore --wait 5 --noflush <<RULES
 *filter
@@ -63,4 +69,4 @@ for table in iptables ip6tables; do
         "$table" -w 5 -I FORWARD 1 -j DOCKER-USER
     fi
 done
-printf 'Docker ingress validation policy applied (IPv4 and IPv6).\n'
+printf 'Docker ingress policy applied: %s IPv4 HTTPS; IPv6 application ingress closed.\n' "$web_access"
