@@ -1,5 +1,11 @@
 # Textos legales de la beta
 
+## Entrega aplicada — 27/10/2026, revisión r1
+
+La revisión **2026-10-27-r1** está desplegada en la app y publicada en la landing. Release de código `050731bc131b7e4a4f2d8f16b7fb86217b79b37a`; archivo legal inmutable SHA-256 `b8eb87498730cf821f89b00d17ff128aaeab545e47bbdb44a4e955773dfcd9db`. Se han aplicado las páginas/enlaces y la conservación nativa de logs descrita en el texto. No se reescriben aceptaciones ni se abre el acceso público. Revisión editorial, no certificación jurídica ni verificación de contratos privados.
+
+[Entrega, pruebas, comprobaciones y reversiones](deployment-legal-retention-20261027.md). Los checkpoints siguientes son históricos; donde contradigan este apartado, prevalece el estado de esta entrega.
+
 ## Aclaración del buzón de pruebas — 27/10/2026
 
 El titular confirma que Gmail nunca tuvo consultas/documentos de clientes, solo pruebas. Nueva edición local **2026-10-27**: elimina su ficha como posible custodio de consultas de clientes y las referencias correspondientes en app/landing; conserva las revisiones anteriores y no modifica aceptaciones existentes. No se han leído ni eliminado mensajes. «Soporte cerrado» ya está creada en Zimbra; la revisión y supresión siguen siendo manuales. La información pública de logs sigue describiendo su estado real de rotación por tamaño: el cambio temporal preparado no se presenta como instalado. [Operación](privacy-operations.md), [logs](log-retention.md).

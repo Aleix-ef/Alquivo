@@ -1,4 +1,11 @@
-# Despliegue restringido de Alquivo — 20–21/10/2026
+# Despliegue restringido de Alquivo — 20–27/10/2026
+
+## Estado vigente — 27/10/2026
+
+Release **`050731bc131b7e4a4f2d8f16b7fb86217b79b37a`**, textos **`2026-10-27-r1`** publicados en app y landing. Actualización aislada de legal/presentación/aceptación y logs nativos; no incluye el trabajo de IA pendiente del árbol principal. Siete contenedores activos con `journald`; conservación del journal del host de 30 días/256 MB, rotación diaria y limpieza horaria comprobada. Copia externa previa de 06:08:40 UTC correcta; entrega final a 06:25 UTC y monitor real sin incidencias. [Evidencia, pruebas y dos reversiones del procedimiento](deployment-legal-retention-20261027.md).
+
+**La beta no está abierta:** firewall IPv4/IPv6 y entorno privado idénticos por comprobación antes/después. Landing con lista de espera y formulario, no acceso directo. Sin migraciones, cambios de usuarios, permisos, modelos o flags de IA. Monitor, copias, vigilancia de copias y conservación activos; señal externa configurada y monitor ejecutado con éxito. Los apartados inferiores son históricos; este apartado prevalece para el estado efectivo.
+
 
 ## Estado actual
 

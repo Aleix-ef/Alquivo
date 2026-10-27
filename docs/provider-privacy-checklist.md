@@ -1,5 +1,11 @@
 # Cierre de proveedores y privacidad antes de beta
 
+## Publicación y conservación comprobadas — 27/10/2026
+
+La revisión legal `2026-10-27-r1` se ha desplegado en app y landing. Se ha instalado/verificado `journald` para los siete servicios con ventana de 30 días, límite de 256 MB y tarea horaria; ya no se considera pendiente su migración temporal. Monitor, copias y restricción de acceso siguen activos. [Entrega y comprobaciones](deployment-legal-retention-20261027.md).
+
+Este avance no acredita los acuerdos de cuentas privadas ni una supresión de correo. Gmail solo tuvo pruebas según el titular; Zimbra se revisa manualmente. Los apartados siguientes conservan sus checkpoints históricos y no sustituyen este estado actualizado.
+
 ## Correo aclarado y conservación preparada — 27/10/2026
 
 El titular confirma que Gmail solo tuvo pruebas: no hay consultas ni documentos de clientes que migrar/eliminar de ese buzón. No se ha inspeccionado ni borrado correo. Zimbra ya tiene «Soporte cerrado», según el titular; queda adoptada la organización prevista para revisar consultas cerradas, sin afirmar que exista borrado automático o una purga ya ejecutada. [Procedimiento manual](privacy-operations.md).

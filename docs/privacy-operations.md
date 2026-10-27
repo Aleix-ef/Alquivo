@@ -1,5 +1,11 @@
 # Operación de privacidad antes de beta
 
+## Entrega legal y logs aplicada — 27/10/2026
+
+Publicada la revisión `2026-10-27-r1` en app/landing. Conservación de journal instalada y comprobada en los siete servicios, con ventana temporal de 30 días y límite de 256 MB; monitor, copias y acceso restringido preservados. [Evidencia técnica y alcance](deployment-legal-retention-20261027.md).
+
+No se han leído/eliminado mensajes. Zimbra sigue requiriendo revisión manual de consultas cerradas; no se promete purga automática. La confirmación de Gmail solo de pruebas se mantiene, sin eliminar su uso administrativo/alertas. Contratos, derechos y demás procedimientos privados no se declaran completados por publicar las páginas. Los apartados inferiores son cronológicos y se interpretan según su fecha.
+
 ## Avance de conservación — 27/10/2026
 
 El titular confirma que el Gmail anterior contenía **solo pruebas**, no consultas ni documentación de clientes; no existe una migración de datos de clientes pendiente desde ese buzón. No se ha leído ni eliminado correo ni se solicita cerrar la cuenta administrativa o su canal de alertas. También confirma que ha creado **«Soporte cerrado»** en Zimbra. Las páginas preparadas se actualizan a la revisión `2026-10-27` para no identificar Gmail como receptor o custodio de consultas de clientes; se preservan los archivos legales anteriores.

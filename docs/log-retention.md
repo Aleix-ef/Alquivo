@@ -1,5 +1,11 @@
 # Conservación operativa de registros — 27/10/2026
 
+## Aplicación efectiva — 27/10/2026, 06:25 UTC
+
+**Instalado y verificado** con la release `050731bc131b7e4a4f2d8f16b7fb86217b79b37a`: siete contenedores con `journald`, política nativa de 30 días/256 MB, rotación diaria y mantenimiento horario habilitado/activo y ejecutado con éxito. Mensaje de prueba exclusivamente sintético. Sin contenedores detenidos del proyecto con logging anterior; Docker mantiene `local` como valor por defecto. Monitor sin incidencias, copia y alertas activas, entorno y firewall sin cambios. La revisión legal publicada `2026-10-27-r1` refleja los límites por bloques y las políticas independientes.
+
+[Registro de entrega y verificaciones](deployment-legal-retention-20261027.md). Los apartados siguientes documentan la comprobación anterior y el procedimiento preparado, no un estado pendiente actual.
+
 ## Estado comprobado y alcance
 
 Consulta SSH de solo lectura del 27/10: release activa `ae5309f4cf17142ec0ad675e756f855dbe2428d4`; siete servicios activos, backend/PostgreSQL/ClamAV sanos y HTTPS `/up` 200. Backend/worker/scheduler/web usan `json-file` con tres archivos de 10 MB; PostgreSQL/ClamAV/proxy usan `local` con ese mismo límite. Journal del host: 60,2 MB. Monitor y copia siguen activos. No se han leído mensajes, logs de usuarios ni `.env`.

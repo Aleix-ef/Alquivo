@@ -1,5 +1,12 @@
 # Alquivo
 
+## Textos publicados y logs temporales aplicados — 27/10/2026
+
+Código desplegado **`050731bc131b7e4a4f2d8f16b7fb86217b79b37a`**, revisión legal **`2026-10-27-r1`** en app y landing. Pies compactos con Privacidad/Información legal, desplegables cerrados y aceptación explícita de condiciones al registrarse, sin reescribir el historial. Los siete servicios usan journal nativo con ventana de 30 días, límite de 256 MB y mantenimiento horario comprobado. Copia externa previa completada; monitor, señal externa, scheduler y servicios sanos. **599 backend/4.101 aserciones, 217 frontend y 3 pruebas de logs correctas**; dos pruebas de IA real omitidas, sin inferencias facturadas.
+
+No se ha abierto el acceso público: la landing sigue siendo lista de espera y la app mantiene su firewall. Sin cambios de IA, secretos, usuarios, volúmenes ni migraciones. Los contratos privados y el mantenimiento manual del buzón no se dan por completados por publicar textos. [Registro de entrega, alcance y reversiones](docs/deployment-legal-retention-20261027.md). Los apartados inferiores son checkpoints históricos; este apartado prevalece para el estado actual.
+
+
 ## Primera versión beta — 6 de octubre de 2026
 
 Entrega `v0.1.0-beta.1` en la rama `release/alquivo-beta-validation`. Incluye «Mostrar/Ocultar» con ojo en todos los campos de contraseña y los cambios pendientes del asistente. Es una referencia de código en GitHub, no el despliegue de la aplicación. Los textos legales definitivos, infraestructura y comprobaciones HTTPS se cerrarán después. [Contenido y recuperación de esta versión](docs/beta-0.1.0.md).
