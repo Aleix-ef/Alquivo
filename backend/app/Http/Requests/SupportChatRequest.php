@@ -32,7 +32,9 @@ class SupportChatRequest extends FormRequest
             'name' => [$creating && app(SupportAccess::class)->isPublic($this) ? 'required' : 'sometimes', 'string', 'max:100'],
             'email' => ['nullable', 'email:rfc', 'max:254'],
             'message' => ['required', 'string', 'min:1', 'max:5000', 'not_regex:/^\s*$/u'],
-            'privacy_acknowledged' => [$creating ? 'required' : 'sometimes', 'accepted'],
+            // The short privacy notice accompanies the form; asking for help
+            // does not require a blanket privacy/marketing consent.
+            'privacy_acknowledged' => ['sometimes', 'boolean'],
             'company_website' => ['nullable', 'string', 'max:0'],
             'attachments' => ['sometimes', 'array', 'max:3'],
             'attachments.*' => ['required', 'file', 'max:2048', 'mimes:jpg,jpeg,png,webp,pdf', 'mimetypes:image/jpeg,image/png,image/webp,application/pdf'],

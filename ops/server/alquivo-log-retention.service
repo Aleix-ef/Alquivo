@@ -1,0 +1,21 @@
+[Unit]
+Description=Rotate and expire Alquivo host journal blocks
+After=systemd-journald.service
+Requires=systemd-journald.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/journalctl --rotate --vacuum-time=30d --vacuum-size=256M
+TimeoutStartSec=90
+UMask=0077
+User=root
+Group=root
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=-/var/log/journal -/run/log/journal
+RestrictAddressFamilies=AF_UNIX
+LockPersonality=true
+MemoryMax=128M
+Nice=10

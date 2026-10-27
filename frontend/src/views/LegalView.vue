@@ -191,7 +191,7 @@ function printPage() {
         ><RouterLink to="/">Volver al inicio</RouterLink>
       </div>
       <footer class="legal-footer">
-        <LegalLinks />
+        <LegalLinks expanded />
         <p>
           Contacto:
           <a :href="`mailto:${operator.email}`">{{ operator.email }}</a>

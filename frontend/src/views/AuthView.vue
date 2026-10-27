@@ -5,6 +5,7 @@ import { useI18n } from "vue-i18n";
 import { useSession } from "../session";
 import BrandLogo from "../components/BrandLogo.vue";
 import PrivacyNotice from "../components/PrivacyNotice.vue";
+import LegalLinks from "../components/LegalLinks.vue";
 import PasswordInput from "../components/PasswordInput.vue";
 import { legalVersion } from "../content/legal.js";
 import { safeReturnPath } from "../authNavigation";
@@ -303,6 +304,7 @@ async function resendCode() {
             >
           </p>
         </template>
+        <LegalLinks class="auth-legal-links" />
       </form>
     </section>
   </main>

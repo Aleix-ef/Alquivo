@@ -1,0 +1,11 @@
+[Unit]
+Description=Hourly journal retention maintenance for Alquivo
+
+[Timer]
+OnBootSec=10min
+OnUnitActiveSec=1h
+AccuracySec=1min
+Unit=alquivo-log-retention.service
+
+[Install]
+WantedBy=timers.target

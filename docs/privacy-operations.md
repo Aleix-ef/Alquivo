@@ -1,6 +1,20 @@
 # Operación de privacidad antes de beta
 
-Preparación actualizada el 4 de octubre de 2026. Procedimiento propuesto, **pendiente de aprobación y puesta en práctica por el titular**. No declara cumplimiento ni sustituye contratos/revisión profesional. No guardar aquí solicitudes reales, documentos de identidad, claves o registros de clientes: el repositorio puede ser público. Contratación, despliegue y recuperación paso a paso en [la guía de lanzamiento](beta-launch-guide.md).
+## Avance de conservación — 27/10/2026
+
+El titular confirma que el Gmail anterior contenía **solo pruebas**, no consultas ni documentación de clientes; no existe una migración de datos de clientes pendiente desde ese buzón. No se ha leído ni eliminado correo ni se solicita cerrar la cuenta administrativa o su canal de alertas. También confirma que ha creado **«Soporte cerrado»** en Zimbra. Las páginas preparadas se actualizan a la revisión `2026-10-27` para no identificar Gmail como receptor o custodio de consultas de clientes; se preservan los archivos legales anteriores.
+
+Operación ordinaria del buzón: mover las consultas resueltas a esa carpeta y revisar mensualmente el plazo de hasta 12 meses **desde el cierre**, incluidas las respuestas/adjuntos relacionados. No usar la fecha del primer correo si el asunto sigue abierto. Las obligaciones legales/reclamaciones requieren una excepción justificada y acceso restringido; no borrar de forma global facturas, contratos de proveedores o evidencias. La creación de una carpeta no configura purga automática ni acredita una primera supresión. Los tickets de la aplicación mantienen su propia limpieza de 180 días y no se aplican a todo el buzón.
+
+La caducidad temporal de logs de contenedores está **preparada y probada localmente**, no desplegada. La consulta SSH confirmó que los siete contenedores siguen con rotación por tamaño; no se modificó el servidor. La configuración nativa propuesta, su alcance sobre el journal del host y la migración durante la entrega se detallan en [conservación de registros](log-retention.md). No se escribe una política de 30 días en los textos públicos como si ya estuviera aplicada.
+
+## Estado técnico actualizado — 23/10/2026
+
+La infraestructura ya no es una previsión: alojamiento OVH en Gravelines (Francia), copias cifradas en Hetzner Storage Box de Falkenstein (Alemania) y restauración aislada comprobada. La conservación de copias es 30 días más la última válida. Laravel tiene rotación diaria de 14 días y seguridad de 30; los contenedores rotan por tamaño, sin máximo temporal comprobado. La política del buzón y el historial Gmail aún requieren aplicación operativa. La revisión legal local es `2026-10-23`, sin aprobación definitiva. Ver [cierre de proveedores](provider-privacy-checklist.md). Las previsiones de abajo son históricas donde contradigan este estado; los procedimientos organizativos siguen pendientes de aprobación/aplicación por el titular.
+
+## Procedimiento preparado — 19/10/2026
+
+Preparación actualizada el 19 de octubre de 2026. Procedimiento propuesto, **pendiente de aprobación y puesta en práctica por el titular**. No declara cumplimiento ni sustituye contratos/revisión profesional. No guardar aquí solicitudes reales, documentos de identidad, claves o registros de clientes: el repositorio puede ser público. Contratación, despliegue y recuperación paso a paso en [la guía de lanzamiento](beta-launch-guide.md). OVH ya recibe soporte; acuerdos, MFA del área de cliente, conservación y mensajes anteriores se detallan en [cierre de proveedores](provider-privacy-checklist.md).
 
 ## Responsabilidad y registros restringidos
 
@@ -31,9 +45,9 @@ Restaurar en entorno aislado, sin correo/IA/pagos ni acceso de usuarios; verific
 
 ## Proveedores y cambios
 
-Inventario y contratos efectivos de alojamiento, backup, Resend, Cloudflare Email Routing, buzón y OpenAI; revisar entidades, ubicación, garantías, subencargados y finalidad. Confirmar la política de evidencia (1.095 días de referencia técnica), copias, buzón y registros. No asumir que `store=false` elimina los registros de seguridad de OpenAI.
+Inventario y contratos efectivos de alojamiento, backup, Resend, Cloudflare (Pages/D1/Turnstile/DNS), OVHcloud Zimbra y OpenAI, además de Google para mensajes históricos que aún se conserven; revisar entidades, ubicación, garantías, subencargados y finalidad. Email Routing ya no es la recepción actual. Confirmar la política de evidencia (1.095 días de referencia técnica), copias, buzón y registros. No asumir que `store=false` elimina los registros de seguridad de OpenAI.
 
-Conservar privadamente un registro de actividades de tratamiento y una evaluación de riesgos: funciones, finalidad/base, datos/personas, responsables/encargados, transferencias, acceso, conservación y controles. Valorar/documentar si procede evaluación de impacto; una beta pequeña no elimina esta tarea. Las metas del borrador `2026-10-04` (copias 30 días, buzón 12 meses tras cierre, logs propios 14/30 días) no acreditan que ya se estén aplicando. Gmail sigue siendo real y alojamiento/copias previstos. Confirmar políticas/cuentas antes de cambiar el aviso a definitivo.
+Conservar privadamente un registro de actividades de tratamiento y una evaluación de riesgos: funciones, finalidad/base, datos/personas, responsables/encargados, transferencias, acceso, conservación y controles. Valorar/documentar si procede evaluación de impacto; una beta pequeña no elimina esta tarea. Las metas del borrador vigente `2026-10-19` (copias 30 días, buzón 12 meses tras cierre, logs propios 14/30 días) no acreditan que ya se estén aplicando. OVH es el buzón actual y Gmail puede conservar mensajes anteriores; alojamiento/copias siguen previstos. Confirmar políticas/cuentas antes de cambiar el aviso a definitivo.
 
 Cerrar los campos de `legalOperator.js`, incrementar la revisión y archivar el artefacto final. Cumplir el aviso de cambios de subencargados/fin de beta prometido en condiciones. Si se trasladan cuentas reales anteriores, resolver su incorporación bajo condiciones vigentes; no sobrescribir o inventar aceptación. No importar las cuentas/documentos de desarrollo a producción.
 

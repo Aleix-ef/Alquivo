@@ -336,19 +336,6 @@ const {
           </li>
         </ul>
         <PrivacyNotice v-if="!selected && !team" context="support" />
-        <label v-if="!selected" class="support-consent"
-          ><input
-            v-model="form.privacy_acknowledged"
-            type="checkbox"
-            required
-          /><span
-            >He leído la
-            <RouterLink to="/privacy" target="_blank" rel="noopener"
-              >política de privacidad</RouterLink
-            >. La conversación y sus adjuntos se guardarán para atender mi
-            consulta.</span
-          ></label
-        >
         <button class="button primary support-submit" type="submit">
           <Send :size="18" /> {{ busy ? "Guardando…" : "Enviar mensaje" }}
         </button>

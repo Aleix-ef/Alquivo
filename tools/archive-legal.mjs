@@ -26,6 +26,7 @@ const paths = [
   "backend/config/ai_quality.php",
   "frontend/src/components/AssistantQualityConsent.vue",
   "frontend/src/components/PrivacyNotice.vue",
+  "frontend/src/views/AuthView.vue",
   "frontend/src/i18n.js",
   "frontend/src/views/WaitlistLandingView.vue",
 ];
@@ -49,6 +50,11 @@ if (!/^\d{4}-\d{2}-\d{2}(?:-r\d+)?$/.test(legalVersion))
 // Archive the actual notices, not unrelated UI/limits whose changes should not
 // require a new contractual acceptance. Fail closed if the notice is moved.
 for (const [file, start, end] of [
+  [
+    "frontend/src/views/AuthView.vue",
+    '<label v-if="isRegister" class="check-label legal-check"',
+    "</label",
+  ],
   [
     "frontend/src/views/WaitlistLandingView.vue",
     '<details class="waitlist-privacy">',
@@ -79,7 +85,19 @@ const firstLayerNotices = [
 ].map((match) => match[0]);
 if (firstLayerNotices.length !== 2)
   throw new Error("Cannot extract the Spanish and English privacy notices.");
-sources["frontend/src/i18n.js"] = JSON.stringify(firstLayerNotices);
+const termsNotices = [
+  ...sources["frontend/src/i18n.js"].matchAll(
+    /acceptPrefix: [\s\S]*?(?=\s+accessError:)/g,
+  ),
+].map((match) => match[0]);
+if (termsNotices.length !== 2)
+  throw new Error(
+    "Cannot extract the Spanish and English terms acceptance labels.",
+  );
+sources["frontend/src/i18n.js"] = JSON.stringify({
+  privacy: firstLayerNotices,
+  terms: termsNotices,
+});
 for (const file of [
   "backend/config/assistant.php",
   "backend/config/ai_documents.php",

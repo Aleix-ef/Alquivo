@@ -1,5 +1,6 @@
 // Public information only: this file is included in the website and static HTML.
-// Complete it using the signed provider agreements before publishing the beta.
+// Editorially reviewed public notices. Private provider agreements and operational
+// checks are tracked separately in docs/provider-privacy-checklist.md.
 // Never put credentials or private infrastructure details here.
 export const legalOperator = {
   name: "Aleix Escañuela Fresneda",
@@ -8,14 +9,14 @@ export const legalOperator = {
   address: "C/ Vistabella, 8, 2.º B, 03802 Alcoy (Alicante), España",
   registry: "", // Only if registration details apply to the operator.
   email: "soporte@alquivo.com",
-  reviewedForPublication: false,
-  // Confirmed infrastructure; private agreements/account settings still need owner review.
+  // Content review only: not a certification or proof of private account settings.
+  reviewedForPublication: true,
   backupRetention:
     "Copias externas diarias cifradas de la base de datos y los archivos, en Alemania, con una ventana de conservación de 30 días. Se conserva además la última copia válida si se interrumpe la generación de copias nuevas; esa excepción puede superar la ventana mientras se resuelve la incidencia. La eliminación en la aplicación no borra inmediatamente las copias: no se usan como archivo ordinario y, al restaurarlas, deben reaplicarse las bajas y caducidades. Se ha comprobado la restauración en un entorno aislado. Las copias técnicas del proveedor de alojamiento se rigen por las condiciones de ese servicio.",
   mailboxRetention:
-    "Política prevista: consultas hasta 12 meses después de su cierre, salvo información concreta que deba conservarse por obligación legal o reclamación, con acceso restringido. Pendiente de aplicar y verificar en OVHcloud, sus copias y los mensajes históricos que puedan seguir en Gmail; cambiar de buzón no acredita su borrado.",
+    "Las consultas se conservan durante su tramitación y hasta 12 meses después de su cierre. La revisión y supresión del buzón son manuales; este plazo no implica un borrado automático al cumplir el año. Solo se conserva información concreta durante más tiempo cuando exista una obligación legal o una reclamación que lo justifique, con acceso restringido. Las copias y la recuperación de mensajes del proveedor tienen sus propios plazos; borrar un mensaje del buzón no acredita su eliminación inmediata de todas esas copias.",
   infrastructureLogRetention:
-    "Los registros diarios de la aplicación tienen una rotación configurada de 14 días y los de auditoría de seguridad, de 30 días; la limpieza depende de las ejecuciones de rotación. Los registros operativos de los contenedores se limitan por tamaño, no por antigüedad: queda pendiente establecer y comprobar su plazo máximo. No deben incluir cuerpos de mensajes, documentos ni credenciales. Los registros propios de cada proveedor se rigen por sus condiciones, no por estos plazos.",
+    "Los registros diarios de la aplicación tienen una rotación configurada de 14 días y los de auditoría de seguridad, de 30 días; la limpieza depende de las ejecuciones de rotación. Los registros operativos del servidor y los contenedores se conservan en el journal del VPS con una ventana de 30 días y un límite de espacio de 256 MB. La rotación diaria y la limpieza horaria trabajan por bloques: puede haber un margen hasta el siguiente ciclo, y el límite de espacio puede reducir el historial disponible. Se utilizan para diagnosticar fallos y proteger el servicio, no como archivo de conversaciones o documentos. Los registros propios de cada proveedor y sus copias se rigen por sus condiciones, no por estos plazos.",
   providers: [
     {
       service: "Alojamiento y almacenamiento de documentos",
@@ -45,7 +46,7 @@ export const legalOperator = {
       location:
         "Falkenstein, Alemania (Unión Europea), separado del servidor principal en Francia.",
       safeguards:
-        "Copias cifradas antes de enviarse al destino externo y transporte cifrado. Material de recuperación separado del servidor; restauración aislada comprobada. Acuerdo de tratamiento y condiciones de Hetzner aplicables al servicio, sujetos a la comprobación documental de la cuenta.",
+        "Copias cifradas antes de enviarse al destino externo y transporte cifrado. Material de recuperación separado del servidor; restauración aislada comprobada. Hetzner publica sus condiciones de protección de datos y ofrece un acuerdo de encargo para los servicios que lo requieren. La ubicación de este destino no acredita por sí sola la ubicación de todos los subencargados.",
     },
     {
       service: "Envío de correo transaccional",
@@ -59,7 +60,7 @@ export const legalOperator = {
       ],
       location: "Estados Unidos (tratamiento principal según su DPA)",
       safeguards:
-        "Cláusulas contractuales tipo incorporadas al DPA de Resend; revisar la cuenta y sus subencargados antes de publicar",
+        "El DPA publicado por Resend incorpora cláusulas contractuales tipo para las transferencias a las que resultan aplicables y se incorpora a sus condiciones de servicio. La región de envío no equivale a almacenamiento exclusivo en Europa. Solo se comunica el contenido necesario para enviar cada correo.",
     },
     {
       service: "Web pública y lista de espera, DNS y antispam del formulario",
@@ -74,7 +75,7 @@ export const legalOperator = {
       location:
         "Infraestructura internacional; no se acredita residencia exclusivamente europea. D1 almacena solo la lista de espera, no la cartera ni sus documentos.",
       safeguards:
-        "DPA de Cloudflare y cláusulas contractuales tipo para transferencias restringidas. Revisar las condiciones de la cuenta y los subencargados. Email Routing ya no se utiliza para recibir el correo de soporte.",
+        "Cloudflare publica un DPA y cláusulas contractuales tipo para transferencias restringidas. El tratamiento depende del servicio y sus subencargados; no se atribuye residencia europea a toda su red. Email Routing ya no se utiliza para recibir el correo de soporte.",
     },
     {
       service: "Buzón receptor de soporte",
@@ -89,29 +90,18 @@ export const legalOperator = {
       location:
         "Almacenamiento del buzón en Francia según la información pública de Zimbra. No se afirma que todos los accesos de soporte o subencargados se limiten a Francia.",
       safeguards:
-        "Buzón contratado y recepción/respuesta confirmadas. El titular identifica OVH HISPANO S.L. en su factura y ha aportado el acuerdo de tratamiento de OVHcloud de 17/10/2025. Debe conservarse la evidencia de incorporación al pedido y las condiciones y subencargados aplicables. El cambio de proveedor no demuestra por sí solo cumplimiento ni aplica automáticamente la política de conservación.",
-    },
-    {
-      service: "Mensajes históricos del buzón anterior, si aún se conservan",
-      name: "Google (Gmail gratuito; sin recepción nueva de soporte)",
-      data: "Únicamente consultas y adjuntos del buzón anterior que aún deban conservarse. Este servicio ya no recibe las consultas nuevas de soporte.",
-      references: [
-        {
-          label: "Política de privacidad de Google",
-          href: "https://policies.google.com/privacy?hl=es",
-        },
-      ],
-      location:
-        "Servicio internacional; no se ha acreditado una región contractual europea para este buzón.",
-      safeguards:
-        "La recepción nueva se ha trasladado a OVHcloud. Pueden quedar mensajes, adjuntos o copias anteriores en Gmail: revisar su necesidad, restringir su acceso y suprimir lo que no deba conservarse. No se atribuye a Gmail gratuito el acuerdo empresarial de Google Workspace ni se da por borrado su historial.",
+        "Buzón profesional con acceso restringido. OVHcloud publica un acuerdo de tratamiento con obligaciones de confidencialidad, seguridad, asistencia y regulación de subencargados. El traslado del buzón no elimina los mensajes históricos ni supone cifrado de extremo a extremo. No se remiten las consultas nuevas a Gmail.",
     },
     {
       service:
         "Asistente de IA (OpenAI), solo cuando esté habilitado y lo actives",
-      name: "OpenAI (API; entidad contractual de la cuenta pendiente de confirmar)",
+      name: "OpenAI Ireland Ltd. (API; contraparte prevista en el DPA publicado para clientes establecidos en España/EEE)",
       data: "Solo si se habilita y activas el chat: mensajes y contexto autorizado necesario para responder, incluidos los datos que tú escribas. El chat no envía archivos originales para análisis documental; Document AI real permanece deshabilitada.",
       references: [
+        {
+          label: "Acuerdo de tratamiento de OpenAI",
+          href: "https://openai.com/policies/data-processing-addendum/",
+        },
         {
           label: "Tratamiento y conservación de la API de OpenAI",
           href: "https://developers.openai.com/api/docs/guides/your-data",
@@ -120,7 +110,7 @@ export const legalOperator = {
       location:
         "Servicio internacional; no se ha acreditado residencia europea para el proyecto. Puede haber tratamiento fuera del Espacio Económico Europeo.",
       safeguards:
-        "Verificar y conservar el acuerdo de tratamiento de la cuenta y sus garantías de transferencia antes de abrir la IA. store=false no equivale a retención cero; desactivar la cesión voluntaria para entrenamiento. Document AI real sigue deshabilitada.",
+        "El DPA publicado regula el tratamiento y las transferencias internacionales, incluidas cláusulas contractuales tipo o decisiones de adecuación cuando procedan. La app fuerza store=false; esto no equivale a retención cero de registros de prevención de abusos. La API no utiliza el contenido para entrenar modelos por defecto salvo adhesión voluntaria; Alquivo no solicita esa cesión. No se afirma residencia exclusivamente europea ni se habilita análisis documental real.",
     },
   ],
 };

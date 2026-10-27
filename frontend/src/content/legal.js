@@ -1,8 +1,8 @@
 import { legalOperator } from "./legalOperator.js";
 
 // Keep in sync with backend/config/legal.php. Archive each published revision.
-export const legalVersion = "2026-10-23-r2";
-export const legalUpdatedAt = "2026-10-23";
+export const legalVersion = "2026-10-27-r1";
+export const legalUpdatedAt = "2026-10-27";
 export const operator = legalOperator;
 export const pendingValue = "Pendiente de completar antes de publicar la beta";
 export const legalDraft =
@@ -71,8 +71,21 @@ export const legalPages = [
         ],
       },
       {
+        id: "documentos",
+        title: "4. Condiciones y privacidad",
+        paragraphs: [
+          "Puedes consultar y guardar estos documentos sin iniciar sesión. Las condiciones incluyen el acuerdo de encargo cuando corresponda; la política de privacidad explica el tratamiento de datos y la política de cookies describe el almacenamiento del navegador. La información legal no activa por sí sola ninguna función opcional.",
+        ],
+        links: [
+          { to: "/terms", label: "Condiciones de uso" },
+          links.privacy,
+          links.cookies,
+          links.processing,
+        ],
+      },
+      {
         id: "contacto",
-        title: "4. Contacto y comunicaciones",
+        title: "5. Contacto y comunicaciones",
         paragraphs: [
           `${contact} Puedes comunicar errores, incidencias o contenido que consideres ilícito indicando la información necesaria para localizarlo, sin enviar datos personales innecesarios. Los enlaces a páginas externas se ofrecen como referencia; cada tercero gestiona su propio sitio.`,
         ],
@@ -244,7 +257,7 @@ export const legalPages = [
           "Las propuestas de gastos, cobros o cambios de datos requieren tu confirmación antes de guardarse como operaciones reales. Borrar el chat no borra las operaciones que ya hayas confirmado. El servicio no adopta decisiones exclusivamente automatizadas con efectos jurídicos o similares sobre ti o tus inquilinos.",
           "En el mismo chat puede conservarse durante 30 minutos una referencia al inmueble recién consultado, limitada a esa conversación y cuenta, sin memorizar sus saldos como datos actuales. Las consultas vuelven a verificar los datos. Las propuestas de altas de inmuebles, contactos y contratos en borrador siguen en revisión administrativa; no activan alquileres ni emiten mensualidades. Las direcciones y datos de contacto nuevos que escribas en el chat también llegan al proveedor; puedes utilizar los formularios manuales para no enviarlos a la IA.",
           "El historial y los borradores del asistente se eliminan a los 30 días mediante la tarea de limpieza; también puedes borrarlos o desactivar la función. Las métricas de uso, coste y trazabilidad sin el texto de la conversación se conservan durante 12 meses completos más el mes en curso.",
-          "La aplicación usa la API de OpenAI y solicita no almacenar las respuestas con store=false. Esa opción no elimina los registros de prevención de abusos: OpenAI indica una conservación habitual de hasta 30 días, con posibles excepciones legales o de seguridad. Los datos de la API no se utilizan para entrenar modelos por defecto; las opciones de compartir datos de la cuenta deben mantenerse desactivadas. No se promete retención cero ni residencia exclusivamente europea. Antes de abrir la función pública deben verificarse el contrato, las opciones de la cuenta y las garantías que figuran en la relación de proveedores.",
+          "La aplicación usa la API de OpenAI y fuerza store=false para no guardar respuestas como historial recuperable en el proveedor. Esa opción no elimina los registros de prevención de abusos: OpenAI indica una conservación habitual de hasta 30 días, con posibles excepciones legales o de seguridad. La API no utiliza los datos para entrenar modelos por defecto salvo adhesión voluntaria; Alquivo no solicita compartirlos para esa finalidad. No se promete retención cero ni residencia exclusivamente europea. El acuerdo publicado por OpenAI contempla garantías para transferencias internacionales; puedes consultar su alcance en la relación de proveedores.",
           "La importación documental disponible para pruebas administrativas utiliza una simulación local que no envía archivos a OpenAI. Tiene un aviso separado y almacena sus borradores y fragmentos cifrados hasta 30 días o hasta revocar ese permiso. Los originales y las operaciones confirmadas siguen en sus módulos. Antes de habilitar análisis documental real se informará del proveedor y de los datos enviados y se solicitará una activación independiente; el permiso del chat no lo cubre.",
         ],
         links: [
@@ -488,7 +501,7 @@ export const legalPages = [
         title: "5. Subencargados y ubicación del tratamiento",
         providers: true,
         paragraphs: [
-          "La relación siguiente identifica el servicio, la entidad conocida, los datos tratados, la ubicación y las garantías de cada proveedor. Distingue los servicios operativos, las funciones opcionales todavía deshabilitadas y los mensajes históricos del buzón anterior. Los enlaces permiten consultar sus documentos públicos; no acreditan por sí solos la incorporación de todos los acuerdos u opciones a una cuenta concreta. La autorización del responsable se limita a los proveedores efectivamente contratados e identificados para las funciones que utilice.",
+          "La relación siguiente identifica el servicio, la entidad, los datos tratados, la ubicación y las garantías descritas por cada proveedor. Distingue los servicios operativos de las funciones opcionales. Los enlaces permiten consultar las condiciones públicas y sus subencargados; no acreditan por sí solos opciones especiales de una cuenta, retención cero ni residencia europea. La autorización del responsable se limita a los proveedores efectivamente contratados e identificados para las funciones que utilice.",
           "Alquivo impondrá a sus subencargados obligaciones de protección de datos equivalentes a las que correspondan en este acuerdo y seguirá respondiendo ante el responsable por el cumplimiento de sus obligaciones. Informará de las incorporaciones o sustituciones previstas con al menos 15 días de antelación, para que el responsable pueda objetar por razones de protección de datos. Si no se alcanza una solución, podrá dejar de utilizar la función afectada o finalizar el servicio con devolución o supresión de sus datos. No se someterán sus datos al proveedor objetado mientras se resuelve la objeción.",
           "La IA solo interviene cuando la función esté habilitada y el responsable la active tras consultar su aviso. Activar el chat no autoriza enviar archivos originales para análisis documental. No se atribuye al consentimiento del usuario la función de sustituir las garantías legales de una transferencia internacional.",
         ],

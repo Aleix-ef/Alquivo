@@ -18,7 +18,6 @@ const form = reactive({
   subject: "",
   message: "",
   company_website: "",
-  privacy_acknowledged: false,
 });
 const files = ref([]),
   busy = ref(false),
@@ -70,7 +69,6 @@ async function submit() {
     };
     form.subject = "";
     form.message = "";
-    form.privacy_acknowledged = false;
     files.value = [];
   } catch (e) {
     errors.value = e.response?.data?.errors || {};
@@ -228,18 +226,6 @@ async function submit() {
           Oculta los datos personales de terceros en tus capturas.
         </p>
         <PrivacyNotice context="support" />
-        <label class="support-consent"
-          ><input
-            v-model="form.privacy_acknowledged"
-            type="checkbox"
-            required
-          /><span
-            >He leído la
-            <RouterLink to="/privacy" target="_blank" rel="noopener"
-              >política de privacidad</RouterLink
-            >. Mis datos y adjuntos se usarán para atender esta consulta.</span
-          ></label
-        >
         <p v-if="error" class="error" role="alert">{{ error }}</p>
         <button
           class="button primary support-submit"

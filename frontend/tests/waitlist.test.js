@@ -13,6 +13,7 @@ import { tmpdir } from "node:os";
 import { createHash } from "node:crypto";
 import { waitlistConsent } from "../src/waitlist/contract.js";
 import { legalOperator } from "../src/content/legalOperator.js";
+import { legalVersion } from "../src/content/legal.js";
 import { escapeHtml } from "../src/seo.js";
 import {
   waitlistSettings,
@@ -442,11 +443,9 @@ test("legal copy describes the waitlist, consent, retention and actual providers
   assert.match(privacy, /Pages Functions/);
   assert.match(privacy, /D1/);
   assert.match(privacy, /Turnstile/);
-  assert.match(privacy, /Gmail/);
+  assert.doesNotMatch(privacy, /Google|mensajes de consultas anteriores/);
   assert.match(privacy, /OVHcloud Zimbra/);
   assert.match(privacy, /sin reenvío a Gmail/);
-  assert.match(privacy, /consultas anteriores/);
-  assert.match(privacy, /migración no los borra/);
   assert.match(
     privacy,
     /ovhcloud\.com\/es-es\/terms-and-conditions\/contracts\//,
@@ -474,7 +473,8 @@ test("legal pages omit the optional legal-form mention without hiding the operat
           page.includes(escapeHtml(legalOperator[field])),
           `${path}: ${field}`,
         );
-      assert.match(page, /Actualizado el 23 de octubre de 2026/);
+      assert.match(page, /Web informativa · Versión/);
+      assert.ok(page.includes(legalVersion));
       assert.match(page, /mailto:soporte@alquivo.com/);
       assert.match(page, /href="\/#solicitud"/);
       if (path.startsWith("privacidad"))

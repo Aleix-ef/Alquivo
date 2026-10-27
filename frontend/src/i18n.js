@@ -122,8 +122,7 @@ const messages = {
       createAccount: "Crear cuenta",
       acceptPrefix: "Acepto las",
       terms: "condiciones de uso",
-      acceptSuffix:
-        ", incluido el acuerdo de encargo cuando corresponda. He leído el aviso de privacidad anterior.",
+      acceptSuffix: ", incluido el acuerdo de encargo cuando corresponda.",
       accessError: "No hemos podido completar el acceso.",
       codeError: "No se pudo enviar el código.",
     },
@@ -425,7 +424,7 @@ const messages = {
       acceptPrefix: "I accept the",
       terms: "terms of use",
       acceptSuffix:
-        ", including the data processing agreement where applicable. I have read the privacy notice above.",
+        ", including the data processing agreement where applicable.",
       accessError: "We couldn't complete your sign-in.",
       codeError: "We couldn't send the code.",
     },

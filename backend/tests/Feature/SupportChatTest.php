@@ -43,6 +43,20 @@ class SupportChatTest extends TestCase
             ->assertCreated()->json('id');
     }
 
+    public function test_new_tickets_do_not_require_privacy_consent_or_create_legal_acceptances(): void
+    {
+        $payload = $this->payload();
+        unset($payload['privacy_acknowledged']);
+        $this->postJson('/api/v1/public/support/chat/conversations', $payload)->assertCreated();
+        $this->assertDatabaseCount('legal_acceptances', 0);
+        $this->actingAs(User::factory()->create());
+        $this->postJson('/api/v1/support/chat/conversations', [
+            ...$this->payload(), 'privacy_acknowledged' => false,
+        ])->assertCreated();
+        $this->assertDatabaseCount('support_conversations', 2);
+        $this->assertDatabaseCount('legal_acceptances', 0);
+    }
+
     private function agent(): User
     {
         $user = User::factory()->create(['two_factor_confirmed_at' => now()]);

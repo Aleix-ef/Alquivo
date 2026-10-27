@@ -5,6 +5,7 @@ import { useI18n } from "vue-i18n";
 import api, { csrf } from "../api";
 import BrandLogo from "../components/BrandLogo.vue";
 import PasswordInput from "../components/PasswordInput.vue";
+import LegalLinks from "../components/LegalLinks.vue";
 const { t } = useI18n({ useScope: "global" });
 const route = useRoute(),
   reset = computed(() => route.name === "reset"),
@@ -100,6 +101,7 @@ async function submit() {
         <p class="switch">
           <RouterLink to="/login">{{ $t("recovery.backToLogin") }}</RouterLink>
         </p>
+        <LegalLinks class="auth-legal-links" />
       </form>
     </section>
   </main>

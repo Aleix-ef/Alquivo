@@ -79,6 +79,34 @@ final class LegalEvidenceTest extends TestCase
         Http::assertNothingSent();
     }
 
+    public function test_mailbox_revision_rejects_stale_registration_without_rewriting_previous_acceptances(): void
+    {
+        $previousVersion = '2026-10-05';
+        $acceptedAt = now()->subDay();
+        $existing = User::factory()->create([
+            'terms_version' => $previousVersion,
+            'terms_accepted_at' => $acceptedAt,
+        ]);
+        DB::transaction(fn () => app(LegalEvidence::class)->accept($existing, 'terms', $previousVersion));
+        $previousProof = LegalAcceptance::sole()->getAttributes();
+        $this->assertNotSame($previousVersion, config('legal.terms_version'));
+
+        $payload = ['name' => 'Nueva sintética', 'email' => 'mailbox-revision@example.test',
+            'password' => 'testpass123', 'password_confirmation' => 'testpass123',
+            'terms_accepted' => true, 'terms_version' => $previousVersion];
+        $this->postJson('/api/v1/auth/register', $payload)
+            ->assertUnprocessable()->assertJsonValidationErrors('terms_version');
+        $this->assertDatabaseCount('users', 1);
+        $this->assertDatabaseCount('legal_acceptances', 1);
+        $this->postJson('/api/v1/auth/register', [...$payload, 'terms_version' => config('legal.terms_version')])
+            ->assertCreated();
+        $this->assertDatabaseCount('legal_acceptances', 2);
+        $this->assertSame($previousProof, LegalAcceptance::findOrFail($previousProof['id'])->getAttributes());
+        $this->assertSame($previousVersion, $existing->fresh()->terms_version);
+        $this->assertTrue($existing->fresh()->terms_accepted_at->equalTo($acceptedAt));
+        Http::assertNothingSent();
+    }
+
     public function test_assistant_acceptance_is_idempotent_and_rejected_requests_leave_no_evidence(): void
     {
         $user = $this->owner();

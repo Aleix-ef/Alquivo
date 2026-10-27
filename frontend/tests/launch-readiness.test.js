@@ -47,9 +47,9 @@ test("external backup refuses missing or unmounted destinations before invoking 
   }
 });
 
-test("confirmed hosting and external backups do not imply legal approval", () => {
-  assert.equal(legalDraft, true);
-  assert.equal(operator.reviewedForPublication, false);
+test("completed public copy has an editorial publication flag and accurate infrastructure", () => {
+  assert.equal(legalDraft, false);
+  assert.equal(operator.reviewedForPublication, true);
   assert.match(
     operator.providers.find((p) => p.service.startsWith("Alojamiento")).name,
     /OVH HISPANO S.L./,
@@ -101,10 +101,10 @@ test("each provider explains its data scope and links to public official conditi
     .sections.find((section) => section.id === "proveedores")
     .paragraphs.join(" ");
   assert.match(content, /no acreditan por sí solos/);
-  assert.equal(operator.reviewedForPublication, false);
+  assert.equal(operator.reviewedForPublication, true);
 });
 
-test("mailbox migration separates current providers from historical copies without inventing contract approval", () => {
+test("test-only Gmail is not misrepresented as processing customer support data", () => {
   const cloudflare = operator.providers.find((p) =>
     p.name.startsWith("Cloudflare"),
   );
@@ -115,15 +115,19 @@ test("mailbox migration separates current providers from historical copies witho
   );
   assert.match(mailbox.name, /OVH HISPANO S.L./);
   assert.match(mailbox.location, /Francia/);
-  assert.match(mailbox.safeguards, /evidencia de incorporación al pedido/);
+  assert.match(mailbox.safeguards, /publica un acuerdo de tratamiento/);
   assert.doesNotMatch(mailbox.name, /Gmail/);
-  const history = operator.providers.find((p) => p.name.startsWith("Google"));
-  assert.match(history.service, /históricos/);
-  assert.match(history.name, /sin recepción nueva/);
-  assert.match(history.safeguards, /ni se da por borrado su historial/);
-  assert.match(operator.mailboxRetention, /Pendiente de aplicar y verificar/);
-  assert.match(operator.mailboxRetention, /sus copias.*Gmail/);
-  assert.equal(operator.reviewedForPublication, false);
+  assert.equal(
+    operator.providers.some((p) => /Gmail|Google/.test(p.name)),
+    false,
+  );
+  assert.match(operator.mailboxRetention, /revisión y supresión.*manuales/);
+  assert.doesNotMatch(operator.mailboxRetention, /Gmail/);
+  assert.match(operator.mailboxRetention, /propios plazos/);
+  assert.doesNotMatch(
+    operator.mailboxRetention,
+    /borrado automático al cumplir el año\.$/,
+  );
 });
 
 test("mailbox legal revision preserves the previous archived terms and captures public waitlist information", async () => {
@@ -159,7 +163,7 @@ test("mailbox legal revision preserves the previous archived terms and captures 
       "utf8",
     ),
   );
-  assert.equal(current.draft, true);
+  assert.equal(current.draft, false);
   assert.match(
     current.sources["frontend/src/views/WaitlistLegalView.vue"],
     /OVHcloud Zimbra/,
@@ -173,6 +177,31 @@ test("mailbox legal revision preserves the previous archived terms and captures 
     "backend/config/ai_documents.php",
   ])
     assert.equal(current.sources[file], previous.sources[file]);
+});
+
+test("public legal copy describes native log retention without inventing account controls or exact per-message expiry", () => {
+  const content = JSON.stringify({ operator, pages: legalPages });
+  assert.doesNotMatch(
+    content,
+    /Pendiente de completar|Borrador previo|antes de publicar|identificación pendiente/,
+  );
+  assert.match(operator.infrastructureLogRetention, /journal del VPS/);
+  assert.match(operator.infrastructureLogRetention, /ventana de 30 días/);
+  assert.match(operator.infrastructureLogRetention, /por bloques/);
+  const openai = operator.providers.find((p) => p.name.startsWith("OpenAI"));
+  assert.match(openai.name, /OpenAI Ireland Ltd/);
+  assert.match(openai.name, /DPA publicado/);
+  assert.match(openai.safeguards, /no equivale a retención cero/);
+  assert.ok(
+    openai.references.some(
+      (r) => r.href === "https://openai.com/policies/data-processing-addendum/",
+    ),
+  );
+  const hub = legalPages.find((p) => p.name === "legal");
+  assert.deepEqual(
+    hub.sections.find((s) => s.id === "documentos").links.map((l) => l.to),
+    ["/terms", "/privacy", "/cookies", "/data-processing"],
+  );
 });
 
 test("AI privacy distinguishes API storage from abuse retention without promising EU-only processing", () => {

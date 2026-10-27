@@ -233,6 +233,12 @@ summary:focus-visible {
   color: var(--ink);
   font-weight: 700;
 }
+.auth-legal-links {
+  margin-top: 20px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+  font-size: 0.9375rem;
+}
 .marketing-footer > .legal-links {
   flex-basis: 100%;
 }

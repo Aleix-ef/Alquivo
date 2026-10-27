@@ -101,8 +101,16 @@ class SupportApiTest extends TestCase
     {
         $this->postJson('/api/v1/public/support', $this->payload(['company_website' => 'https://spam.test']))->assertUnprocessable();
         $this->postJson('/api/v1/public/support', $this->payload(['subject' => "Hola\r\nBcc: injected@example.test"]))->assertUnprocessable();
-        $this->postJson('/api/v1/public/support', $this->payload(['privacy_acknowledged' => false]))->assertUnprocessable();
         Mail::assertNothingSent();
+    }
+
+    public function test_requesting_support_does_not_require_blanket_privacy_consent(): void
+    {
+        $payload = $this->payload();
+        unset($payload['privacy_acknowledged']);
+        $this->postJson('/api/v1/public/support', $payload)->assertCreated();
+        $this->postJson('/api/v1/public/support', $this->payload(['privacy_acknowledged' => false]))->assertCreated();
+        Mail::assertSentCount(2);
     }
 
     public function test_rate_limit_is_shared_between_public_and_private_endpoints(): void

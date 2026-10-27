@@ -46,7 +46,6 @@ export function useSupportChat(props, emit) {
     name: session.user?.name || "",
     email: session.user?.email || "",
     subject: "",
-    privacy_acknowledged: false,
     company_website: "",
   });
   const blankDraft = () => ({
@@ -284,7 +283,6 @@ export function useSupportChat(props, emit) {
         drafts.new = blankDraft();
         newId.value = crypto.randomUUID();
         form.subject = "";
-        form.privacy_acknowledged = false;
       }
       drafts[data.id] = blankDraft();
       selected.value = data;
@@ -390,7 +388,6 @@ export function useSupportChat(props, emit) {
       form.name = session.user?.name || "";
       form.email = session.user?.email || "";
       form.subject = "";
-      form.privacy_acknowledged = false;
       newId.value = crypto.randomUUID();
       start();
     },

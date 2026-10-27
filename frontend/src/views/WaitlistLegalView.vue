@@ -1,6 +1,7 @@
 <script setup>
 import BrandLogo from "../components/BrandLogo.vue";
 import { legalOperator as operator } from "../content/legalOperator.js";
+import { legalVersion } from "../content/legal.js";
 defineProps({ privacy: { type: Boolean, default: false } });
 </script>
 
@@ -13,7 +14,7 @@ defineProps({ privacy: { type: Boolean, default: false } });
     </header>
     <main id="contenido" class="legal-content">
       <p class="marketing-eyebrow">
-        Web informativa · Actualizado el 23 de octubre de 2026
+        Web informativa · Versión {{ legalVersion }}
       </p>
       <h1>
         {{ privacy ? "Privacidad de la lista de espera" : "Aviso legal" }}
@@ -90,9 +91,10 @@ defineProps({ privacy: { type: Boolean, default: false } });
           </p>
           <p>
             Guardaremos las consultas durante su tramitación y hasta 12 meses
-            después de su cierre. Los datos que deban conservarse por obligación
-            legal o para atender responsabilidades se mantendrán restringidos
-            durante el plazo legal aplicable.
+            después de su cierre, mediante revisión y supresión manuales del
+            buzón. No se trata de un borrado automático. Los datos que deban
+            conservarse por obligación legal o para atender responsabilidades se
+            mantendrán restringidos durante el plazo legal aplicable.
           </p>
           <p>
             El proveedor de alojamiento puede tratar datos técnicos, como la
@@ -115,26 +117,18 @@ defineProps({ privacy: { type: Boolean, default: false } });
           <p>
             Los correos nuevos enviados a soporte se reciben en OVHcloud Zimbra,
             sin reenvío a Gmail. El proveedor contratado es OVH HISPANO S.L.
-            OVHcloud indica que el buzón se almacena en
-            Francia; sus condiciones de tratamiento y subencargados determinan
-            los accesos y garantías aplicables. No envíes datos sensibles ni
-            documentación de terceros en consultas iniciales.
-          </p>
-          <p>
-            Pueden quedar mensajes de consultas anteriores en Google (Gmail),
-            utilizado antes del cambio de buzón. La migración no los borra
-            automáticamente. Su conservación sigue sujeta a las finalidades y
-            plazos indicados, sin reutilizarlos para publicidad.
+            OVHcloud indica que el buzón se almacena en Francia; sus condiciones
+            de tratamiento y subencargados determinan los accesos y garantías
+            aplicables. No envíes datos sensibles ni documentación de terceros
+            en consultas iniciales.
           </p>
           <p>
             Algunos proveedores o subproveedores pueden tratar datos fuera del
             Espacio Económico Europeo. Cloudflare prevé las cláusulas
             contractuales tipo para las transferencias a las que se aplican;
-            consulta también las condiciones y subencargados de OVHcloud y, para
-            los mensajes anteriores que aún se conserven, las condiciones de
-            Google. No hay pagos, subida de archivos, integraciones
-            publicitarias ni envío automático de las respuestas del formulario
-            por email.
+            consulta también las condiciones y subencargados de OVHcloud. No hay
+            pagos, subida de archivos, integraciones publicitarias ni envío
+            automático de las respuestas del formulario por email.
           </p>
           <ul class="legal-related">
             <li>
@@ -151,14 +145,6 @@ defineProps({ privacy: { type: Boolean, default: false } });
                 rel="noopener noreferrer"
                 target="_blank"
                 >Acuerdo de tratamiento de Cloudflare ↗</a
-              >
-            </li>
-            <li>
-              <a
-                href="https://policies.google.com/privacy?hl=es"
-                rel="noopener noreferrer"
-                target="_blank"
-                >Privacidad de Google: mensajes anteriores ↗</a
               >
             </li>
           </ul>
