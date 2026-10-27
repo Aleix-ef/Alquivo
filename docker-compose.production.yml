@@ -107,6 +107,7 @@ services:
         ipv4_address: 172.30.20.11
     environment:
       PUBLIC_DOMAIN: ${PUBLIC_DOMAIN:?Set your real domain}
+      LEGACY_APP_DOMAIN: ${LEGACY_APP_DOMAIN:-app.alquivo.com}
       ACME_EMAIL: ${ACME_EMAIL:?Set the certificate contact email}
     volumes:
       - ./ops/Caddyfile:/etc/caddy/Caddyfile:ro

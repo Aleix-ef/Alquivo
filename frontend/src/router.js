@@ -20,6 +20,7 @@ const router = createRouter({
   },
   routes: [
     ...publicRoutes,
+    { path: "/aviso-legal", redirect: "/legal", meta: { public: true } },
     {
       path: "/login",
       name: "login",

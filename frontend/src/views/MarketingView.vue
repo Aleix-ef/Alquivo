@@ -146,7 +146,11 @@ onMounted(async () => {
           }}
         </p>
         <div class="hero-actions">
-          <RouterLink class="button button-large" :to="signupTarget">
+          <RouterLink
+            :id="waitlistMode ? undefined : 'solicitud'"
+            class="button button-large"
+            :to="signupTarget"
+          >
             {{
               product.features.beta_program
                 ? $t("marketing.tryBeta")
@@ -193,10 +197,8 @@ onMounted(async () => {
           </div>
           <div class="preview-main">
             <div class="preview-top">
-              <strong v-if="waitlistMode" class="preview-label"
-                >Vista previa</strong
-              >
-              <span v-else></span><i></i>
+              <strong class="preview-label">Vista previa</strong>
+              <i></i>
             </div>
             <p>{{ $t("marketing.previewPortfolio") }}</p>
             <div class="preview-value">
@@ -235,9 +237,6 @@ onMounted(async () => {
               </div>
             </div>
           </div>
-        </div>
-        <div v-if="!waitlistMode" class="preview-note">
-          {{ $t("marketing.sampleDisclaimer") }}
         </div>
       </div>
     </section>

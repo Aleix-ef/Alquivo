@@ -23,8 +23,8 @@ class ProductionMailLinksTest extends TestCase
     {
         parent::setUp();
         $this->freezeTime();
-        config(['app.url' => 'https://app.alquivo.com', 'services.frontend_url' => 'https://app.alquivo.com/']);
-        URL::forceRootUrl('https://app.alquivo.com');
+        config(['app.url' => 'https://alquivo.com', 'services.frontend_url' => 'https://alquivo.com/']);
+        URL::forceRootUrl('https://alquivo.com');
         URL::forceScheme('https');
         Http::preventStrayRequests();
         Notification::fake();
@@ -35,7 +35,7 @@ class ProductionMailLinksTest extends TestCase
         $user = User::factory()->create(['email' => 'synthetic+reset@example.test']);
         $mail = (new ResetPassword('synthetic-token-only'))->toMail($user);
         $this->assertSame('Recupera tu acceso a Alquivo', $mail->subject);
-        $this->assertSame('https://app.alquivo.com/reset-password', strtok($mail->actionUrl, '?'));
+        $this->assertSame('https://alquivo.com/reset-password', strtok($mail->actionUrl, '?'));
         parse_str(parse_url($mail->actionUrl, PHP_URL_QUERY), $query);
         $this->assertSame(['token' => 'synthetic-token-only', 'email' => $user->email], $query);
         Notification::assertNothingSent();
@@ -45,13 +45,13 @@ class ProductionMailLinksTest extends TestCase
     private function verificationRequest(User $user): Request
     {
         $mail = (new VerifyEmail)->toMail($user);
-        $this->assertSame('https://app.alquivo.com/verify-email', strtok($mail->actionUrl, '?'));
+        $this->assertSame('https://alquivo.com/verify-email', strtok($mail->actionUrl, '?'));
         parse_str(parse_url($mail->actionUrl, PHP_URL_QUERY), $query);
         $this->assertSame((string) $user->id, $query['id']);
         $this->assertSame(sha1($user->email), $query['hash']);
         $this->assertSame(now()->addMinutes(60)->timestamp, (int) $query['expires']);
 
-        return Request::create('https://app.alquivo.com/api/v1/auth/email/verify/'.$query['id'].'/'.$query['hash'].'?'.http_build_query([
+        return Request::create('https://alquivo.com/api/v1/auth/email/verify/'.$query['id'].'/'.$query['hash'].'?'.http_build_query([
             'expires' => $query['expires'], 'signature' => $query['signature'],
         ]));
     }
@@ -65,19 +65,42 @@ class ProductionMailLinksTest extends TestCase
         Http::assertNothingSent();
     }
 
+    public function test_a_request_on_the_legacy_host_does_not_sign_new_mail_against_the_wrong_host(): void
+    {
+        URL::forceRootUrl('https://app.alquivo.com');
+        $this->assertTrue(URL::hasValidSignature($this->verificationRequest(User::factory()->create())));
+        Notification::assertNothingSent();
+        Http::assertNothingSent();
+    }
+
     public function test_verification_signature_rejects_another_host_and_expiry(): void
     {
         $request = $this->verificationRequest(User::factory()->create());
-        $otherHost = Request::create(str_replace('app.alquivo.com', 'untrusted.example.test', $request->fullUrl()));
+        $otherHost = Request::create(str_replace('alquivo.com', 'untrusted.example.test', $request->fullUrl()));
         $this->assertFalse(URL::hasValidSignature($otherHost));
         $this->travel(61)->minutes();
         $this->assertFalse(URL::hasValidSignature($request));
     }
 
+    public function test_old_host_bound_links_remain_valid_after_the_canonical_origin_changes(): void
+    {
+        $user = User::factory()->create();
+        URL::forceRootUrl('https://app.alquivo.com');
+        $oldUrl = URL::temporarySignedRoute('verification.verify', now()->addMinutes(60), [
+            'id' => $user->id, 'hash' => sha1($user->email),
+        ]);
+        URL::forceRootUrl('https://alquivo.com');
+        $this->assertTrue(URL::hasValidSignature(Request::create($oldUrl)));
+        // A redirect to the apex would invalidate the old host-bound signature.
+        $this->assertFalse(URL::hasValidSignature(Request::create(str_replace('app.alquivo.com', 'alquivo.com', $oldUrl))));
+        Notification::assertNothingSent();
+        Http::assertNothingSent();
+    }
+
     public function test_support_link_uses_the_app_not_the_waitlist_or_localhost(): void
     {
         $mail = (new SupportTicketNotification('SYNTHETIC-ONLY', true))->toMail(User::factory()->make());
-        $this->assertSame('https://app.alquivo.com/support/inbox', $mail->actionUrl);
+        $this->assertSame('https://alquivo.com/support/inbox', $mail->actionUrl);
         $this->assertSame('Nuevo ticket de soporte · Alquivo', $mail->subject);
         $this->assertStringNotContainsString('localhost', json_encode($mail->toArray()));
         Notification::assertNothingSent();

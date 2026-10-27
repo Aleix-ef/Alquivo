@@ -218,16 +218,19 @@ test("AI privacy distinguishes API storage from abuse retention without promisin
   assert.match(text, /simulación local que no envía archivos/);
 });
 
-test("production example isolates the app from the waitlist and preserves launch gates and budget", async () => {
+test("production example uses the apex, keeps the legacy host and preserves launch gates and budget", async () => {
   const text = await readFile(
     new URL("../../.env.production.example", import.meta.url),
     "utf8",
   );
   for (const line of [
-    "PUBLIC_DOMAIN=app.alquivo.com",
-    "APP_URL=https://app.alquivo.com",
-    "FRONTEND_URL=https://app.alquivo.com",
-    "SANCTUM_STATEFUL_DOMAINS=app.alquivo.com",
+    "PUBLIC_DOMAIN=alquivo.com",
+    "LEGACY_APP_DOMAIN=app.alquivo.com",
+    "APP_URL=https://alquivo.com",
+    "FRONTEND_URL=https://alquivo.com",
+    "FRONTEND_URLS=https://alquivo.com,https://app.alquivo.com",
+    "SANCTUM_STATEFUL_DOMAINS=alquivo.com,app.alquivo.com",
+    "SESSION_DOMAIN=null",
     "VITE_SEO_INDEXABLE=false",
     "SESSION_COOKIE=alquivo-session",
     "SESSION_ENCRYPT=true",

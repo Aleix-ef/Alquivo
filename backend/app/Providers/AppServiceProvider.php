@@ -40,7 +40,16 @@ class AppServiceProvider extends ServiceProvider
             ->action('Crear una nueva contraseña', rtrim(config('services.frontend_url'), '/').'/reset-password?'.http_build_query(['token' => $token, 'email' => $user->getEmailForPasswordReset()]))
             ->line('El enlace caduca en '.config('auth.passwords.users.expire').' minutos.'));
         VerifyEmail::toMailUsing(function ($user) {
-            $signed = URL::temporarySignedRoute('verification.verify', now()->addMinutes(60), ['id' => $user->id, 'hash' => sha1($user->getEmailForVerification())]);
+            // Both hosts may serve the app during a domain transition. Sign new
+            // emails against the canonical origin, not the request's old host.
+            // Clone the generator so validation of existing links is unchanged.
+            $urls = clone app('url');
+            // Reset Laravel's cached RouteUrlGenerator, which otherwise still
+            // references the original instance and its request host.
+            $urls->setRequest(Request::create(config('app.url')));
+            $urls->forceRootUrl(config('app.url'));
+            $urls->forceScheme(parse_url(config('app.url'), PHP_URL_SCHEME));
+            $signed = $urls->temporarySignedRoute('verification.verify', now()->addMinutes(60), ['id' => $user->id, 'hash' => sha1($user->getEmailForVerification())]);
             parse_str(parse_url($signed, PHP_URL_QUERY), $query);
             $url = rtrim(config('services.frontend_url'), '/').'/verify-email?'.http_build_query([
                 'id' => $user->id, 'hash' => sha1($user->getEmailForVerification()), ...$query,

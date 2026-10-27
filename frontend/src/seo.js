@@ -6,7 +6,7 @@ export const publicPages = [
     path: "/",
     title: "Alquivo | Tus alquileres en orden",
     description:
-      "Organiza inmuebles, alquileres, cobros y contratos con Alquivo. Beta gratuita para propietarios; el asistente de IA está en preparación.",
+      "Tus alquileres en orden: inmuebles, cobros, gastos y contratos en un solo lugar, con Alquivo AI. Prueba la beta gratuita: hasta 50 inmuebles y 5 GB, sin tarjeta.",
   },
   {
     path: "/guias",
