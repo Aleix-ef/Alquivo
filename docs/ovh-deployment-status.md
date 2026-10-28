@@ -3,8 +3,9 @@
 ## Estado vigente — beta en el dominio principal, 28/10/2026
 
 **`https://alquivo.com` sirve la portada actual y la aplicación con registro
-directo.** Release `d4bcf4cde3bba7785cddfd538c1b71298d6c0816`, activado a las
-05:54:09 UTC tras copia externa de 05:53:38 UTC. `app.alquivo.com` se conserva
+directo.** Release actual `602c9f924061c50810dd3cc235a20d224c882f72`: ajuste
+del placeholder de registro, solo web, a las 06:11:33 UTC. El cambio de dominio
+se activó a las 05:54:09 UTC tras copia externa de 05:53:38 UTC. `app.alquivo.com` se conserva
 como alias no indexable; cookies host-only y enlaces firmados antiguos preservados.
 Certificado público nuevo, APIs privadas 401 y validación de registro/CSRF 422
 comprobados externamente en ambos hosts, sin crear cuentas ni llamadas de IA.
