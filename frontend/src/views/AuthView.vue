@@ -22,7 +22,7 @@ const route = useRoute(),
     email: "",
     password: "",
     password_confirmation: "",
-    portfolio_name: t("nav.portfolio"),
+    portfolio_name: "",
     terms_accepted: false,
     terms_version: legalVersion,
   });
@@ -238,7 +238,11 @@ async function resendCode() {
               required /></label
           ><label v-if="isRegister"
             >{{ $t("auth.portfolioName")
-            }}<input v-model="form.portfolio_name" required /></label
+            }}<input
+              v-model="form.portfolio_name"
+              :placeholder="$t('nav.portfolio')"
+              maxlength="100"
+              required /></label
           ><label
             >{{ $t("common.email")
             }}<input
