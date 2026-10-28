@@ -15,6 +15,9 @@ SPEC.loader.exec_module(monitor)
 
 
 class MonitorTest(unittest.TestCase):
+    def test_watchdog_targets_the_canonical_beta_host(self):
+        self.assertEqual("alquivo.com", monitor.HOST)
+
     def healthy(self):
         return {"version": 1, "checked_at": 1000, "database_ok": True, "queue_supported": True,
                 "queued_ready": 0, "oldest_ready_age_seconds": 0, "failed_last_hour": 0,

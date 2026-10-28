@@ -70,10 +70,39 @@ cambio no altera su esquema ni requiere deshacer datos de usuarios.
 
 ## Estado
 
-Preparación local: frontend (220 pruebas), backend y compilación SEO deben estar
-en verde antes de publicar. La revisión legal archivada no se modifica con este
-cambio de dominio. La activación efectiva depende del DNS y de la verificación
-posterior; no se considera completada por preparar los archivos.
+**Activado el 28/10/2026 a las 05:54:09 UTC (06:54:09 en España peninsular).**
+El titular cambió el DNS raíz a la IPv4 del VPS, sin proxy y sin AAAA residuales.
+La aplicación y la portada de la beta ya se sirven en `https://alquivo.com`.
+`app.alquivo.com` conserva acceso HTTPS compatible sin redirigir URLs firmadas.
+
+- Release: `d4bcf4cde3bba7785cddfd538c1b71298d6c0816`.
+- Copia externa previa finalizada a las 05:53:38 UTC; entorno anterior e imágenes
+  guardados en `/opt/alquivo/shared/apex-beta-20261027` (privado).
+- Antes del despliegue: 601 pruebas backend aprobadas y 2 live omitidas;
+  220 frontend aprobadas; compilación y SEO de 11 páginas.
+- Despliegue: 28 comprobaciones HTTP locales entre ambos hosts; nginx y
+  `security:check` correctos; scheduler, siete servicios y monitor sin incidencias.
+- Comprobación externa en ambos hosts: certificados públicos válidos, portada y
+  enlaces directos, canonical único, páginas privadas no indexables, CSP estricta,
+  plan beta único (50 inmuebles), IA existente activa y pagos/fiscalidad apagados.
+- CSRF y cookies seguras host-only verificados. Registro con campos vacíos y CSRF
+  válido devuelve 422 de validación; APIs privadas sin sesión devuelven 401.
+  No se ha creado una cuenta ni simulado un registro exitoso con estos checks.
+- Correos nuevos al origen canónico y enlaces anteriores comprobados mediante
+  regresiones sintéticas; no se han enviado nuevos correos a clientes.
+- Monitor del host actualizado para vigilar HTTPS y certificado de `alquivo.com`;
+  27 pruebas offline. Copias, vigilancia de copias, monitor y retención activos.
+
+No hubo migraciones, llamadas reales a IA, cambios de usuarios, permisos,
+contratos o documentos. La revisión legal archivada r1 no cambia. La actualización
+del watchdog se instala separadamente del release, como el resto de operaciones
+del host. No equivale a repetir la evaluación de IA ni a certificar seguridad
+absoluta o cumplimiento contractual de proveedores.
+
+**Limpieza de Pages pendiente en el panel:** no se ha retirado su asociación
+personalizada ni borrado el proyecto, D1 o solicitudes. El dominio principal ya
+no apunta allí; `alquivo-landing.pages.dev` puede seguir existiendo. La retirada
+administrativa debe preservar solicitudes y consentimientos.
 
 Referencias: [dominios de Pages](https://developers.cloudflare.com/pages/configuration/custom-domains/),
 [HTTPS automático de Caddy](https://caddyserver.com/docs/automatic-https).

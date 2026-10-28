@@ -1,4 +1,23 @@
-# Despliegue de Alquivo — 20–27/10/2026
+# Despliegue de Alquivo — 20–28/10/2026
+
+## Estado vigente — beta en el dominio principal, 28/10/2026
+
+**`https://alquivo.com` sirve la portada actual y la aplicación con registro
+directo.** Release `d4bcf4cde3bba7785cddfd538c1b71298d6c0816`, activado a las
+05:54:09 UTC tras copia externa de 05:53:38 UTC. `app.alquivo.com` se conserva
+como alias no indexable; cookies host-only y enlaces firmados antiguos preservados.
+Certificado público nuevo, APIs privadas 401 y validación de registro/CSRF 422
+comprobados externamente en ambos hosts, sin crear cuentas ni llamadas de IA.
+El monitor vigila ya el dominio principal y los temporizadores siguen activos.
+
+Solo beta gratuita visible (50 inmuebles y 5 GB), IA previamente validada sin
+cambios de flags; pagos, fiscalidad y funciones pendientes no se activan.
+No se han borrado usuarios, archivos, solicitudes D1 ni el proyecto Pages. El
+retiro administrativo de su dominio personalizado queda pendiente del panel.
+La versión legal sigue en r1; no se acredita con ello contratación de proveedores.
+
+[Evidencia y reversión del dominio](apex-beta-cutover.md).
+**Los apartados inferiores describen estados históricos y no prevalecen sobre este.**
 
 ## Apertura técnica HTTPS — 27/10/2026, 17:25 UTC
 
@@ -6,14 +25,14 @@
 
 La landing continúa en lista de espera. El registro directo de la app es accesible; no se ha añadido invitación/privacidad de beta ni se da por revisada la contratación de proveedores. [Evidencia y rollback](public-web-opening-20261027.md), [guía breve de proveedores](provider-closeout-quick-guide.md). Los estados anteriores de acceso restringido son históricos.
 
-## Estado vigente — 27/10/2026
+## Histórico — entrega de legal y logs del 27/10/2026
 
 Release **`050731bc131b7e4a4f2d8f16b7fb86217b79b37a`**, textos **`2026-10-27-r1`** publicados en app y landing. Actualización aislada de legal/presentación/aceptación y logs nativos; no incluye el trabajo de IA pendiente del árbol principal. Siete contenedores activos con `journald`; conservación del journal del host de 30 días/256 MB, rotación diaria y limpieza horaria comprobada. Copia externa previa de 06:08:40 UTC correcta; entrega final a 06:25 UTC y monitor real sin incidencias. [Evidencia, pruebas y dos reversiones del procedimiento](deployment-legal-retention-20261027.md).
 
 **La beta no está abierta:** firewall IPv4/IPv6 y entorno privado idénticos por comprobación antes/después. Landing con lista de espera y formulario, no acceso directo. Sin migraciones, cambios de usuarios, permisos, modelos o flags de IA. Monitor, copias, vigilancia de copias y conservación activos; señal externa configurada y monitor ejecutado con éxito. Los apartados inferiores son históricos; este apartado prevalece para el estado efectivo.
 
 
-## Estado actual
+## Histórico — primer despliegue restringido
 
 Alquivo funciona en **https://app.alquivo.com**, con certificado público válido de
 Let's Encrypt. **No se ha abierto la beta.** HTTPS solo permite la conexión IPv4

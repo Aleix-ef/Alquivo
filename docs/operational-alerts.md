@@ -1,5 +1,12 @@
 # Avisos operativos de Alquivo
 
+Actualización 28/10/2026: el watchdog del host comprueba HTTPS y caducidad del
+certificado de `alquivo.com`, el nuevo dominio principal. Se conservan la misma
+política de alertas, destinatarios y heartbeat. Validado sin incidencias tras el
+cambio de dominio, con 27 pruebas offline; no se simula otra caída ni se envía
+otro correo de prueba. Esto sigue sin ser una comprobación entrante externa
+continua de DNS/Internet; las comprobaciones externas del despliegue son puntuales.
+
 Preparación del 23/10/2026. Esta página describe el contrato del monitor; el estado de instalación y las recepciones reales se registran al final, sin inferirlas de los tests. No abre la beta ni cambia IA, pagos o permisos.
 
 ## Dónde llegan

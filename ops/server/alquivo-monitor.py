@@ -45,7 +45,7 @@ CONFIG = Path("/etc/alquivo/monitor.json")
 STATE = Path("/var/lib/alquivo-monitor/state.json")
 HEARTBEAT_FILE = Path("/opt/alquivo/shared/.monitor-heartbeat-url")
 ENV_FILE = Path("/opt/alquivo/shared/.env.production")
-HOST = "app.alquivo.com"
+HOST = "alquivo.com"
 
 
 class NoRedirect(urllib.request.HTTPRedirectHandler):
