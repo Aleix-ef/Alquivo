@@ -27,4 +27,24 @@ cero avisos en la entrega. Pruebas de traducción y suite frontend incluidas.
 - Comprobación de formato, diff y secretos antes de empaquetar.
 - El despliegue reconstruye solo web y conserva imagen anterior para reversión.
 
-La publicación efectiva y sus comprobaciones se anotarán al finalizarla.
+## Publicación efectiva
+
+- Fuente activa: `f7160cd232a6a9aa987700e732b03fd8438966c0`, en
+  `https://alquivo.com`; el alias `app.alquivo.com` se conserva.
+- Copia externa previa finalizada a las 17:37:18 UTC del 29/10/2026.
+- Se reconstruyó y recreó únicamente web. Los seis contenedores restantes,
+  entorno y firewall conservan sus identificadores/huellas por comprobación.
+- Sin migraciones, escrituras de datos de usuario, envíos a clientes o llamadas
+  a modelos. El prototipo del resumen está ausente del paquete y el dashboard
+  coincide byte a byte con el anterior antes de activar.
+- Reversión: imagen anterior `alquivo-landing-rollback:f7160cd232a6`, release
+  `602c9f9` y checkpoint privado en
+  `/opt/alquivo/shared/landing-creative-20261029`.
+- Ambos hosts: portada, registro, acceso y políticas actual/histórica 200;
+  APIs de usuario e inmuebles sin sesión 401. Nginx y monitor correctos.
+- Verificación externa de SEO, recursos, estados, CSP, rutas privadas y sesión
+  anónima aprobada. Chrome sin sesión: construcción, selector, ancla, marco azul,
+  demostración y anchura móvil correctos, sin excepciones JavaScript.
+- Copias y monitorización reanudadas; el monitor no observó incidencias.
+
+El commit posterior a esta fuente solo registra esta evidencia documental.
