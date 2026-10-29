@@ -10,6 +10,33 @@ test("the app home shares the concise public brand title", () => {
   );
 });
 
+test("public sharing uses the existing brand image, never private page or token URLs", () => {
+  const settings = { origin: "https://alquivo.com", indexable: true };
+  for (const page of publicPages) {
+    const seo = pageSeo(page.path, settings);
+    assert.equal(seo.image, "https://alquivo.com/brand/alquivo-social.png");
+    const head = renderHead(seo);
+    assert.match(head, /property="og:image"/);
+    assert.match(head, /name="twitter:image"/);
+    assert.match(head, /property="og:image:width" content="1080"/);
+  }
+  for (const path of [
+    "/login",
+    "/documents",
+    "/reset-password?token=secret",
+    "/unknown",
+  ]) {
+    const seo = pageSeo(path, settings);
+    assert.equal(seo.image, "");
+    assert.doesNotMatch(renderHead(seo), /og:image|twitter:image|token=secret/);
+  }
+  assert.equal(pageSeo("/", { origin: "", indexable: false }).image, "");
+  assert.doesNotMatch(
+    pageSeo("/", settings).description,
+    /en preparación|en revisión/,
+  );
+});
+
 test("SEO is opt-in and refuses local, placeholder or unsafe canonical origins", () => {
   assert.deepEqual(seoSettings(), { origin: "", indexable: false });
   assert.throws(() => seoSettings({ VITE_SEO_INDEXABLE: "true" }));

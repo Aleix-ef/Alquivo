@@ -14,7 +14,9 @@ const router = createRouter({
   history: createWebHistory(),
   scrollBehavior(to, from, savedPosition) {
     if (savedPosition) return savedPosition;
-    if (to.hash) return { el: to.hash, top: 24 };
+    // The public landing has a sticky header; preserve the existing behavior
+    // for guides, private screens and browser history restoration.
+    if (to.hash) return { el: to.hash, top: to.name === "home" ? 100 : 24 };
     if (to.path === from.path) return false;
     return { top: 0 };
   },

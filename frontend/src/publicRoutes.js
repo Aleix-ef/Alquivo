@@ -6,7 +6,7 @@ export const publicRoutes = [
   {
     path: "/",
     name: "home",
-    component: () => import("./views/MarketingView.vue"),
+    component: () => import("./views/BetaLandingView.vue"),
     meta: { public: true },
   },
   {

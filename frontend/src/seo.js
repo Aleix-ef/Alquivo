@@ -6,7 +6,7 @@ export const publicPages = [
     path: "/",
     title: "Alquivo | Tus alquileres en orden",
     description:
-      "Tus alquileres en orden: inmuebles, cobros, gastos y contratos en un solo lugar, con Alquivo AI. Prueba la beta gratuita: hasta 50 inmuebles y 5 GB, sin tarjeta.",
+      "Controla lo cobrado, los alquileres pendientes y los gastos de cada inmueble con Alquivo. Para propietarios que gestionan sus alquileres. Prueba la beta gratis, sin tarjeta.",
   },
   {
     path: "/guias",
@@ -79,6 +79,10 @@ export function pageSeo(path, settings) {
         ? "index, follow, max-image-preview:large"
         : "noindex, nofollow",
     canonical: page && settings.origin ? `${settings.origin}${path}` : "",
+    image:
+      page && settings.origin
+        ? `${settings.origin}/brand/alquivo-social.png`
+        : "",
     type: page?.article ? "article" : "website",
   };
 }
@@ -105,6 +109,22 @@ export function headEntries(seo) {
     { name: "twitter:card", content: "summary" },
     { name: "twitter:title", content: seo.title },
     { name: "twitter:description", content: seo.description },
+    ...(seo.image
+      ? [
+          { property: "og:image", content: seo.image },
+          { property: "og:image:width", content: "1080" },
+          { property: "og:image:height", content: "1080" },
+          {
+            property: "og:image:alt",
+            content: "Alquivo. Tus alquileres, en orden.",
+          },
+          { name: "twitter:image", content: seo.image },
+          {
+            name: "twitter:image:alt",
+            content: "Alquivo. Tus alquileres, en orden.",
+          },
+        ]
+      : []),
     ...(seo.canonical
       ? [
           { property: "og:url", content: seo.canonical },

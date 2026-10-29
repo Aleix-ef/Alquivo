@@ -93,6 +93,44 @@ for (const path of paths) {
   }
   if (path === "/") {
     assert.match(html, /schema.org\/SoftwareApplication/);
+    assert.match(html, /Para quienes llevan sus propios alquileres/);
+    assert.match(html, /id="demostracion"/);
+    assert.match(html, /href="#demostracion"/);
+    assert.match(html, /href="\/register"[^>]*>Probar gratis/);
+    assert.match(html, /Datos de ejemplo/);
+    assert.match(html, /no consulta tus datos ni ejecuta la IA/);
+    assert.doesNotMatch(
+      html,
+      /asistente de IA está en preparación|La IA sigue en revisión/,
+    );
+    const ids = [...html.matchAll(/\bid="([^"]+)"/g)].map((match) => match[1]);
+    assert.equal(
+      new Set(ids).size,
+      ids.length,
+      "Home: unique accessibility/anchor IDs",
+    );
+    for (const anchor of html.matchAll(/\bhref="#([^"]+)"/g)) {
+      assert.ok(ids.includes(anchor[1]), `Home: anchor ${anchor[1]} resolves`);
+    }
+    const initialStyles = await Promise.all(
+      [...html.matchAll(/<link[^>]+rel="stylesheet"[^>]+href="([^"]+)"/g)].map(
+        (match) =>
+          readFile(new URL(`../dist${match[1]}`, import.meta.url), "utf8"),
+      ),
+    );
+    assert.match(
+      initialStyles.join("\n"),
+      /\.beta-landing\s*\{/,
+      "Home: styles load from HTML, not only after JavaScript",
+    );
+    if (settings.origin) {
+      assert.match(html, /property="og:image"/);
+      const socialImage = await readFile(
+        new URL("../dist/brand/alquivo-social.png", import.meta.url),
+      );
+      assert.equal(socialImage.readUInt32BE(16), 1080);
+      assert.equal(socialImage.readUInt32BE(20), 1080);
+    }
     if (betaProgram) assert.match(html, /Beta gratuita/);
     else assert.doesNotMatch(html, /Beta gratuita/);
     assert.doesNotMatch(html, /Pack fundador|6,99|Creator Founder/);
@@ -165,7 +203,30 @@ if (process.env.SEO_BASE_URL) {
         ),
       `${path}: HTTP indexing header`,
     );
-    if (publicPaths.has(path)) assert.match(await response.text(), /<h1[\s>]/);
+    if (publicPaths.has(path)) {
+      const body = await response.text();
+      assert.match(body, /<h1[\s>]/);
+      if (path === "/") {
+        assert.match(body, /id="demostracion"/);
+        assert.doesNotMatch(
+          body,
+          /asistente de IA está en preparación|La IA sigue en revisión/,
+        );
+        const styles = await Promise.all(
+          [
+            ...body.matchAll(/<link[^>]+rel="stylesheet"[^>]+href="([^"]+)"/g),
+          ].map(async (match) => {
+            const stylesheet = await request(match[1]);
+            assert.equal(stylesheet.status, 200, match[1]);
+            return stylesheet.text();
+          }),
+        );
+        assert.match(styles.join("\n"), /\.beta-landing\s*\{/);
+        const image = await request("/brand/alquivo-social.png");
+        assert.equal(image.status, 200);
+        assert.match(image.headers.get("content-type"), /image\/png/);
+      }
+    }
   }
   for (const path of [
     "/pagina-inexistente",

@@ -13,6 +13,9 @@ import "./reports.css";
 import "./plans.css";
 import "./shell.css";
 import "./marketing.css";
+// Prerendered home must be styled before JavaScript or API configuration loads.
+import "./beta-landing.css";
+import "./landing-editorial.css";
 import "./assistant.css";
 import "./support.css";
 import "./support-chat.css";

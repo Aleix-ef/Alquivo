@@ -7,14 +7,15 @@ import { pageSeo } from "../src/seo.js";
 const source = (file) => readFile(new URL(file, import.meta.url), "utf8");
 
 test("beta landing sends visitors to registration, not the retired waitlist", async () => {
-  const page = await source("../src/views/MarketingView.vue");
-  assert.match(page, /waitlistMode \? "\/#solicitud" : "\/register"/);
-  assert.match(page, /waitlistMode \? undefined : 'solicitud'/);
+  const page = await source("../src/views/BetaLandingView.vue");
+  assert.match(page, /to="\/register"/);
+  assert.match(page, /id="solicitud"/);
   assert.match(page, /to="\/login"/);
   assert.doesNotMatch(page, /WaitlistForm|turnstile|\/api\/waitlist/i);
   const seo = pageSeo("/", { indexable: true, origin: "https://alquivo.com" });
   assert.equal(seo.canonical, "https://alquivo.com/");
-  assert.match(seo.description, /50 inmuebles y 5 GB/);
+  assert.match(seo.description, /cobrado.*pendientes.*gastos/);
+  assert.match(seo.description, /beta gratis, sin tarjeta/);
   assert.doesNotMatch(seo.description, /preparación|lista de espera/);
 });
 
