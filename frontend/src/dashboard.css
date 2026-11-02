@@ -24,74 +24,6 @@
   font-size: 13px;
   font-weight: 600;
 }
-.dashboard-ai-intro {
-  align-items: flex-start;
-  background: linear-gradient(115deg, var(--surface), var(--surface-soft));
-  border: 1px solid var(--line);
-  border-radius: 16px;
-  display: grid;
-  gap: 18px;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  margin: 0 0 24px;
-  padding: 25px 28px;
-}
-.dashboard-ai-intro.is-live {
-  align-items: center;
-  background:
-    radial-gradient(
-      ellipse at 100% 0%,
-      color-mix(in srgb, var(--green) 12%, transparent),
-      transparent 48%
-    ),
-    linear-gradient(115deg, var(--surface), var(--surface-soft));
-  border-color: color-mix(in srgb, var(--green) 38%, var(--line));
-  padding: 32px;
-}
-.dashboard-ai-action {
-  display: grid;
-  justify-items: end;
-  gap: 12px;
-}
-.dashboard-ai-intro.is-live .button {
-  min-height: 46px;
-  white-space: nowrap;
-}
-.dashboard-ai-icon {
-  align-items: center;
-  background: color-mix(in srgb, var(--green) 13%, transparent);
-  border: 1px solid color-mix(in srgb, var(--green) 22%, transparent);
-  border-radius: 12px;
-  color: var(--green);
-  display: grid;
-  height: 48px;
-  justify-content: center;
-  width: 48px;
-}
-.dashboard-ai-intro .eyebrow {
-  color: var(--green);
-  margin-bottom: 5px;
-}
-.dashboard-ai-intro h2 {
-  font: 600 clamp(22px, 2.4vw, 28px)/1.3 var(--font);
-  margin: 0;
-}
-.dashboard-ai-intro p:last-child {
-  color: var(--muted);
-  font-size: 15px;
-  line-height: 1.65;
-  margin: 8px 0 0;
-  max-width: 850px;
-}
-.dashboard-ai-status {
-  background: var(--pale);
-  border: 1px solid var(--line);
-  border-radius: 99px;
-  color: var(--ink);
-  font-size: 13px;
-  font-weight: 600;
-  padding: 7px 12px;
-  white-space: nowrap;
-}
 .wealth-card {
   position: relative;
   isolation: isolate;
@@ -517,6 +449,279 @@
   grid-column: 1 / -1;
   height: 240px;
 }
+/* The visual portfolio leads; finances and attention share the row below. */
+.dashboard-page > .portfolio-scene {
+  margin: 0 0 20px;
+}
+.dashboard-page {
+  padding-bottom: 92px;
+}
+.dashboard-overview {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+  align-items: stretch;
+  gap: 20px;
+}
+.dashboard-overview-finances {
+  display: flex;
+  min-width: 0;
+}
+.dashboard-overview-finances .wealth-card {
+  flex: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 145px;
+  grid-template-rows: auto minmax(80px, 1fr) auto;
+  align-items: start;
+  gap: 16px 20px;
+  padding: 22px 24px;
+}
+.dashboard-overview-finances .wealth-value {
+  font-size: clamp(28px, 2.8vw, 40px);
+  line-height: 1.2;
+  margin-block: 12px 6px;
+  overflow-wrap: anywhere;
+  font-variant-numeric: tabular-nums;
+}
+.dashboard-overview-finances .wealth-content > p {
+  margin-bottom: 14px;
+}
+.dashboard-overview-finances .wealth-foot {
+  gap: 10px 16px;
+}
+.dashboard-overview-finances .wealth-yield {
+  align-content: start;
+  border-left: 1px solid #ffffff20;
+  border-top: 0;
+  display: grid;
+  gap: 6px;
+  margin-top: 0;
+  min-width: 0;
+  padding: 0 0 0 20px;
+}
+.dashboard-overview-finances .wealth-icon {
+  height: 28px;
+  margin: 0;
+  width: 28px;
+}
+.dashboard-overview-finances .wealth-icon svg {
+  height: 18px;
+  width: 18px;
+}
+.dashboard-overview-finances .wealth-yield strong {
+  font-size: 26px;
+  line-height: 1.3;
+}
+.dashboard-overview-finances .wealth-yield small {
+  line-height: 1.5;
+}
+.wealth-activity {
+  align-content: center;
+  align-self: stretch;
+  background: #ffffff08;
+  border: 1px solid #ffffff14;
+  border-radius: 12px;
+  display: grid;
+  gap: 16px;
+  grid-column: 1 / -1;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  padding: 14px 16px;
+}
+.wealth-activity > div {
+  display: grid;
+  align-content: start;
+  gap: 5px;
+  min-width: 0;
+}
+.wealth-activity span,
+.wealth-activity small {
+  color: #c5d9df;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.wealth-activity strong {
+  font-size: clamp(22px, 2vw, 27px);
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+  letter-spacing: -0.03em;
+  overflow-wrap: anywhere;
+}
+.wealth-activity progress {
+  appearance: none;
+  background: #ffffff20;
+  border: 0;
+  border-radius: 4px;
+  color: #8fe7d0;
+  height: 5px;
+  margin-top: 6px;
+  width: 100%;
+}
+.wealth-activity progress::-webkit-progress-bar {
+  background: #ffffff20;
+  border-radius: 4px;
+}
+.wealth-activity progress::-webkit-progress-value {
+  background: #8fe7d0;
+  border-radius: 4px;
+}
+.wealth-activity progress::-moz-progress-bar {
+  background: #8fe7d0;
+  border-radius: 4px;
+}
+.dashboard-overview-finances .dashboard-metrics {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0;
+  margin: 0;
+  padding-top: 16px;
+  border-top: 1px solid #ffffff20;
+}
+.dashboard-overview-finances .dashboard-metrics article {
+  display: grid;
+  align-content: start;
+  gap: 4px;
+  min-width: 0;
+  padding: 0 14px;
+  border-left: 1px solid #ffffff20;
+}
+.dashboard-overview-finances .dashboard-metrics article:first-child {
+  border-left: 0;
+  padding-left: 0;
+}
+.dashboard-overview-finances .dashboard-metrics article:last-child {
+  padding-right: 0;
+}
+.dashboard-overview-finances .metric-top {
+  align-items: flex-start;
+  min-width: 0;
+}
+.dashboard-overview-finances .metric-top > span:first-child {
+  color: #c5d9df;
+  line-height: 1.45;
+  min-width: 0;
+}
+.dashboard-overview-finances .metric-icon {
+  height: 25px;
+  width: 25px;
+}
+.wealth-metrics .metric-icon.income {
+  background: #71d3bc1a;
+  color: #8fe7d0;
+}
+.wealth-metrics .metric-icon.expense {
+  background: #e8c57a1a;
+  color: #f2d597;
+}
+.wealth-metrics .metric-icon.neutral {
+  background: #ffffff12;
+  color: #d7e7ef;
+}
+.dashboard-overview-finances .dashboard-metrics strong {
+  color: #fff;
+  font-size: clamp(19px, 1.75vw, 24px);
+  overflow-wrap: anywhere;
+  font-variant-numeric: tabular-nums;
+}
+.dashboard-overview-finances .dashboard-metrics strong.negative-value {
+  color: #ffb3b7;
+}
+.dashboard-overview-finances .dashboard-metrics small {
+  color: #b6cdd5;
+  font-size: 12px;
+  line-height: 1.5;
+}
+@media (max-width: 1050px) {
+  .dashboard-overview {
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
+  }
+}
+@media (max-width: 650px) {
+  .dashboard-overview-finances .wealth-card {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: none;
+    gap: 0;
+    padding: 22px 20px 18px;
+  }
+  .wealth-activity {
+    gap: 14px;
+    margin-top: 16px;
+    padding: 14px 12px;
+  }
+  .dashboard-overview-finances .wealth-yield {
+    align-items: center;
+    border-left: 0;
+    border-top: 1px solid #ffffff20;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    margin-top: 16px;
+    padding: 12px 0 0;
+  }
+  .dashboard-overview-finances .wealth-yield strong {
+    font-size: 22px;
+    margin-left: auto;
+  }
+  .dashboard-overview-finances .wealth-yield small {
+    flex-basis: 100%;
+    padding-left: 38px;
+  }
+  .dashboard-overview-finances .dashboard-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px 0;
+    margin-top: 16px;
+  }
+  .dashboard-overview-finances .dashboard-metrics article {
+    padding: 0 0 0 14px;
+  }
+  .dashboard-overview-finances .dashboard-metrics article:first-child {
+    padding-right: 14px;
+  }
+  .dashboard-overview-finances .dashboard-metrics article:last-child {
+    border-left: 0;
+    border-top: 1px solid #ffffff20;
+    grid-column: 1 / -1;
+    padding: 12px 0 0;
+  }
+  .dashboard-overview-finances .dashboard-metrics strong {
+    font-size: 23px;
+  }
+}
+@media (max-width: 380px) {
+  .wealth-activity {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .dashboard-overview-finances .dashboard-metrics {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+  .dashboard-overview-finances .dashboard-metrics article {
+    grid-template-columns: minmax(0, 1fr) auto;
+    border-left: 0;
+    border-top: 1px solid #ffffff20;
+    padding: 12px 0 0;
+    column-gap: 12px;
+  }
+  .dashboard-overview-finances .dashboard-metrics article:first-child {
+    border-top: 0;
+    padding: 0;
+  }
+  .dashboard-overview-finances .metric-top {
+    margin: 0;
+  }
+  .dashboard-overview-finances .metric-icon {
+    display: none;
+  }
+  .dashboard-overview-finances .dashboard-metrics strong {
+    align-self: center;
+    grid-column: 2;
+    grid-row: 1 / 3;
+    font-size: 20px;
+  }
+  .dashboard-overview-finances .dashboard-metrics small {
+    grid-column: 1;
+  }
+}
 @media (max-width: 1150px) {
   .dashboard-grid {
     grid-template-columns: 1fr;
@@ -534,19 +739,6 @@
   }
 }
 @media (max-width: 650px) {
-  .dashboard-ai-intro {
-    gap: 12px;
-    grid-template-columns: auto minmax(0, 1fr);
-    padding: 20px;
-  }
-  .dashboard-ai-status {
-    grid-column: 2;
-    justify-self: start;
-  }
-  .dashboard-ai-action {
-    grid-column: 2;
-    justify-items: start;
-  }
   .wealth-card {
     flex-direction: column;
     align-items: stretch;
@@ -649,8 +841,7 @@
   justify-content: center;
 }
 .welcome-icon,
-.welcome-ai-icon,
-.next-step-icon {
+.welcome-ai-icon {
   display: grid;
   place-items: center;
   color: var(--green);
@@ -733,51 +924,8 @@
   color: var(--muted);
   font-size: 14px;
 }
-.dashboard-next-step {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  margin: 0 0 20px;
-  padding: 13px 17px;
-  border: 1px solid var(--line);
-  border-radius: 13px;
-  background: var(--surface);
-}
-.next-step-icon {
-  width: 38px;
-  height: 38px;
-  flex-shrink: 0;
-}
-.dashboard-next-step > div {
-  display: grid;
-  gap: 1px;
-  min-width: 0;
-  flex: 1;
-}
-.dashboard-next-step strong {
-  font-size: 14px;
-}
-.dashboard-next-step span:not(.next-step-icon) {
-  color: var(--muted);
-  font-size: 13px;
-}
-.dashboard-next-step a {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  color: var(--green);
-  font-size: 14px;
-  font-weight: 650;
-  white-space: nowrap;
-}
 .dashboard-page .dashboard-heading > div > p:not(.eyebrow) {
   font-size: 15px;
-}
-.dashboard-ai-intro.is-live {
-  padding: 22px 25px;
-}
-.dashboard-ai-action {
-  align-self: center;
 }
 @media (max-width: 900px) {
   .dashboard-welcome {
@@ -791,17 +939,5 @@
 @media (max-width: 650px) {
   .dashboard-metrics {
     grid-template-columns: 1fr;
-  }
-  .dashboard-next-step {
-    flex-wrap: wrap;
-  }
-  .dashboard-next-step a {
-    margin-left: 52px;
-  }
-  .dashboard-ai-intro.is-live {
-    padding: 20px;
-  }
-  .dashboard-ai-action {
-    justify-items: start;
   }
 }

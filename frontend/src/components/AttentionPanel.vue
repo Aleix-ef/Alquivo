@@ -9,6 +9,7 @@ import {
 const props = defineProps({
   items: { type: Array, default: () => [] },
   summary: { type: Object, required: true },
+  compact: { type: Boolean, default: false },
 });
 const visible = ref(2);
 const shown = computed(() => props.items.slice(0, visible.value));
@@ -18,15 +19,20 @@ const shown = computed(() => props.items.slice(0, visible.value));
   <section
     id="attention"
     class="panel attention-panel"
+    :class="{ 'is-compact': compact }"
     aria-labelledby="attention-heading"
   >
     <header>
-      <p class="eyebrow">Según tus registros</p>
-      <h2 id="attention-heading">Qué necesita mi atención</h2>
+      <p v-if="!compact" class="eyebrow">Según tus registros</p>
+      <h2 id="attention-heading">
+        {{ compact ? "Avisos" : "Qué necesita mi atención" }}
+      </h2>
       <p class="attention-intro" role="status">
         {{
           summary.total
-            ? `Hay ${summary.total} ${summary.total === 1 ? "asunto que necesita" : "asuntos que necesitan"} tu atención.`
+            ? compact
+              ? `${summary.total} por revisar`
+              : `Hay ${summary.total} ${summary.total === 1 ? "asunto que necesita" : "asuntos que necesitan"} tu atención.`
             : "Todo al día."
         }}
       </p>
@@ -43,7 +49,9 @@ const shown = computed(() => props.items.slice(0, visible.value));
           <p class="attention-property">
             {{ item.property?.name || "Cartera general" }}
           </p>
-          <p>{{ item.description.text }}</p>
+          <p v-if="!compact" class="attention-description">
+            {{ item.description.text }}
+          </p>
           <time v-if="item.date" :datetime="item.date">{{
             attentionDate(item.date)
           }}</time>
@@ -208,6 +216,100 @@ li[data-priority="today"] .attention-badge {
   cursor: pointer;
   min-height: 32px;
   color: var(--ink);
+}
+.attention-panel.is-compact {
+  margin: 0;
+  padding: 20px;
+  min-width: 0;
+}
+.is-compact > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.is-compact h2 {
+  font: 600 18px/1.4 var(--font);
+  margin: 0;
+}
+.is-compact .attention-intro {
+  margin: 0;
+  font-size: 13px;
+}
+.is-compact .attention-facts {
+  max-height: 265px;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line) transparent;
+  margin-bottom: 12px;
+}
+.is-compact .attention-facts li {
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 2px 14px 0;
+}
+.is-compact .attention-facts li:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+.is-compact .attention-fact-main h3 {
+  font-size: 14px;
+  line-height: 1.5;
+  margin: 6px 0;
+}
+.is-compact .attention-fact-main p {
+  font-size: 13px;
+  line-height: 1.5;
+}
+.is-compact .attention-description {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+.is-compact .attention-badge {
+  font-size: 12px;
+  padding: 2px 8px;
+}
+.is-compact .attention-fact-main time,
+.is-compact .attention-fact-main > span:last-child {
+  font-size: 12px;
+  margin-top: 6px;
+}
+.is-compact .attention-fact-action {
+  gap: 6px;
+  padding-top: 3px;
+}
+.is-compact .attention-fact-action strong {
+  font-size: 16px;
+}
+.is-compact .attention-fact-action .button {
+  font-size: 13px;
+  padding-inline: 10px;
+  white-space: normal;
+}
+.is-compact > .button {
+  font-size: 13px;
+  min-height: 44px;
+  white-space: normal;
+  width: 100%;
+}
+.is-compact .attention-rules {
+  font-size: 13px;
+  margin-top: 12px;
+  padding-top: 10px;
+}
+.is-compact .attention-empty {
+  align-items: flex-start;
+  font-size: 14px;
+  gap: 12px;
+  padding-block: 14px;
+}
+.is-compact .attention-empty p {
+  margin: 0;
 }
 @media (max-width: 640px) {
   .attention-facts li {

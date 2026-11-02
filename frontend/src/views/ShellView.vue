@@ -31,6 +31,7 @@ const product = useProduct();
 import BrandLogo from "../components/BrandLogo.vue";
 import LanguageSwitcher from "../components/LanguageSwitcher.vue";
 import AssistantWidget from "../components/AssistantWidget.vue";
+import AssistantMascot from "../components/AssistantMascot.vue";
 import OnboardingTour from "../components/OnboardingTour.vue";
 import { useDialog } from "../composables/useDialog";
 const { t } = useI18n({ useScope: "global" });
@@ -428,5 +429,19 @@ async function logout() {
       ref="assistant"
       @open-change="assistantOpen = $event"
     />
+    <button
+      v-if="product.accountFeatures.assistant"
+      v-show="!assistantOpen"
+      class="assistant-launcher"
+      type="button"
+      data-tour="ai"
+      aria-label="Abrir Alquivo AI"
+      aria-controls="alquivo-assistant-panel"
+      :aria-expanded="assistantOpen"
+      @click="assistant?.toggle()"
+    >
+      <AssistantMascot :animated="false" />
+      <span class="assistant-launcher-label">Alquivo AI</span>
+    </button>
   </div>
 </template>

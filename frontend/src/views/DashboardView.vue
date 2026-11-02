@@ -2,8 +2,6 @@
 import { ref, onMounted, onBeforeUnmount, computed, inject } from "vue";
 import {
   Building2,
-  BadgeEuro,
-  KeyRound,
   ArrowUpRight,
   ArrowDownLeft,
   ArrowRight,
@@ -18,6 +16,7 @@ import api from "../api";
 import { useSession } from "../session";
 import { formatMoney } from "../money";
 import AttentionPanel from "../components/AttentionPanel.vue";
+import PortfolioOverviewScene from "../components/PortfolioOverviewScene.vue";
 import { useProduct } from "../stores/product";
 import "../dashboard.css";
 
@@ -25,9 +24,6 @@ const session = useSession();
 const product = useProduct();
 const openAssistant = inject("open-assistant", () => {});
 const startTour = inject("start-tour", () => {});
-const assistantNeedsIntroduction = computed(
-  () => !product.accountFeatures.assistant,
-);
 const data = ref(null);
 const error = ref("");
 const loading = ref(true);
@@ -53,32 +49,6 @@ const percent = (value) =>
     : new Intl.NumberFormat("es-ES", { maximumFractionDigits: 2 }).format(
         value,
       ) + " %";
-const steps = computed(() => [
-  {
-    done: Boolean(data.value?.properties.length),
-    title: "Tu primera propiedad",
-    detail: "Un nombre y una dirección para empezar.",
-    to: "/properties?new=1",
-    icon: Building2,
-  },
-  {
-    done: Number(metrics.value.portfolio_value) > 0,
-    title: "Pon valor a tu patrimonio",
-    detail: "Añade una valoración estimada.",
-    to: data.value?.properties[0]
-      ? `/properties/${data.value.properties[0].id}`
-      : "/properties?new=1",
-    icon: BadgeEuro,
-  },
-  {
-    done: Number(metrics.value.contracted_rent) > 0,
-    title: "Tu primer alquiler",
-    detail: "Asocia un contrato y su renta.",
-    to: data.value?.properties.length ? "/leases?new=1" : "/properties?new=1",
-    icon: KeyRound,
-  },
-]);
-const nextStep = computed(() => steps.value.find((step) => !step.done));
 const metricCards = computed(() => [
   {
     label: "Ingresos cobrados",
@@ -218,136 +188,108 @@ onBeforeUnmount(() => {
         </div>
       </section>
       <template v-else>
-        <section
-          v-if="product.accountFeatures.assistant"
-          class="dashboard-ai-intro is-live"
-          data-tour="ai"
-          aria-labelledby="dashboard-ai-title"
-        >
-          <span class="dashboard-ai-icon"
-            ><Sparkles :size="23" aria-hidden="true"
-          /></span>
-          <div>
-            <h2 id="dashboard-ai-title">Entiende tu patrimonio preguntando</h2>
-            <p>
-              Pregunta por cobros, gastos o contratos. Por ejemplo: «¿Cuánto he
-              cobrado este mes?»
-            </p>
-          </div>
-          <div class="dashboard-ai-action">
-            <button
-              class="button primary"
-              type="button"
-              @click="openAssistant()"
-            >
-              <Sparkles :size="17" aria-hidden="true" />
-              Hablar con Alquivo
-            </button>
-          </div>
-        </section>
-        <section
-          v-if="assistantNeedsIntroduction"
-          class="dashboard-ai-intro"
-          data-tour="ai"
-          aria-labelledby="dashboard-ai-title"
-        >
-          <span class="dashboard-ai-icon"
-            ><Sparkles :size="23" aria-hidden="true"
-          /></span>
-          <div>
-            <p class="eyebrow">El siguiente paso de Alquivo</p>
-            <h2 id="dashboard-ai-title">Tu asistente IA está en preparación</h2>
-            <p>
-              Cuando esté disponible, podrás consultar tu cartera en lenguaje
-              sencillo.
-            </p>
-          </div>
-          <span class="dashboard-ai-status">Próximamente</span>
-        </section>
-        <section
-          v-if="nextStep"
-          class="dashboard-next-step"
-          aria-label="Siguiente paso"
-        >
-          <span class="next-step-icon"
-            ><component :is="nextStep.icon" :size="20" aria-hidden="true"
-          /></span>
-          <div>
-            <strong>Siguiente paso: {{ nextStep.title }}</strong
-            ><span>{{ nextStep.detail }}</span>
-          </div>
-          <RouterLink :to="nextStep.to"
-            >Ir ahora <ArrowRight :size="16"
-          /></RouterLink>
-        </section>
-
-        <section class="wealth-card" aria-label="Valor del patrimonio">
-          <div class="wealth-content">
-            <span class="wealth-label"
-              ><span></span>Tu patrimonio inmobiliario</span
-            ><strong class="wealth-value">{{
-              money(metrics.portfolio_value)
-            }}</strong>
-            <p>Valor estimado de tus propiedades</p>
-            <div class="wealth-foot">
-              <span
-                >Patrimonio neto <b>{{ money(metrics.net_equity) }}</b></span
-              ><RouterLink to="/properties"
-                >Ver mi cartera <ArrowUpRight :size="16"
-              /></RouterLink>
-            </div>
-          </div>
-          <div class="wealth-yield">
-            <span class="wealth-icon"
-              ><TrendingUp :size="24" :stroke-width="1.5" /></span
-            ><span>Rentabilidad bruta anual</span
-            ><strong>{{ percent(metrics.gross_yield) }}</strong
-            ><small>Renta contratada / valor estimado</small>
-          </div>
-          <svg
-            class="wealth-lines"
-            viewBox="0 0 440 280"
-            fill="none"
-            aria-hidden="true"
-          >
-            <path
-              d="M100 290V162L194 125V290M194 125L250 155V290M250 290V67L331 35V290M331 35L389 69V290M28 290V216L100 189"
-              stroke="currentColor"
-              stroke-width="1.5"
-            />
-            <path
-              d="M124 186L170 168M124 211L170 193M124 236L170 218M275 106L310 92M275 133L310 119M275 160L310 146M275 187L310 173M275 214L310 200"
-              stroke="currentColor"
-            />
-          </svg>
-        </section>
-
-        <section
-          class="metrics dashboard-metrics"
-          aria-label="Indicadores del mes"
-        >
-          <article v-for="metric in metricCards" :key="metric.label">
-            <div class="metric-top">
-              <span>{{ metric.label }}</span
-              ><span class="metric-icon" :class="metric.tone"
-                ><component :is="metric.icon" :size="17"
-              /></span>
-            </div>
-            <strong
-              :class="{
-                'negative-value':
-                  metric.label === 'Beneficio neto' && metrics.net_profit < 0,
-              }"
-              >{{ metric.value }}</strong
-            ><small>{{ metric.detail }}</small>
-          </article>
-        </section>
-
-        <AttentionPanel
-          v-if="data?.attention_summary?.total"
-          :items="data.attention"
-          :summary="data.attention_summary"
+        <PortfolioOverviewScene
+          :portfolio-id="session.portfolio?.id"
+          :currency="currency"
         />
+
+        <div class="dashboard-overview">
+          <div class="dashboard-overview-finances">
+            <section class="wealth-card" aria-label="Valor del patrimonio">
+              <div class="wealth-content">
+                <span class="wealth-label"
+                  ><span></span>Tu patrimonio inmobiliario</span
+                ><strong class="wealth-value">{{
+                  money(metrics.portfolio_value)
+                }}</strong>
+                <p>Valor estimado de tus propiedades</p>
+                <div class="wealth-foot">
+                  <span
+                    >Patrimonio neto
+                    <b>{{ money(metrics.net_equity) }}</b></span
+                  ><RouterLink to="/properties"
+                    >Ver mi cartera <ArrowUpRight :size="16"
+                  /></RouterLink>
+                </div>
+              </div>
+              <div class="wealth-yield">
+                <span class="wealth-icon"
+                  ><TrendingUp :size="24" :stroke-width="1.5" /></span
+                ><span>Rentabilidad bruta anual</span
+                ><strong>{{ percent(metrics.gross_yield) }}</strong
+                ><small>Renta contratada / valor estimado</small>
+              </div>
+              <section
+                class="wealth-activity"
+                aria-label="Actividad de los alquileres"
+              >
+                <div>
+                  <span>Inmuebles alquilados</span>
+                  <strong>{{ percent(metrics.occupancy_rate) }}</strong>
+                  <progress
+                    v-if="metrics.occupancy_rate != null"
+                    :value="metrics.occupancy_rate"
+                    max="100"
+                    aria-label="Porcentaje de inmuebles con contrato activo"
+                  ></progress>
+                </div>
+                <div>
+                  <span>Renta contratada / mes</span>
+                  <strong>{{
+                    metrics.contracted_rent == null
+                      ? "—"
+                      : money(metrics.contracted_rent)
+                  }}</strong>
+                  <small>Según contratos activos</small>
+                </div>
+              </section>
+              <section
+                class="dashboard-metrics wealth-metrics"
+                aria-label="Indicadores del mes"
+              >
+                <article v-for="metric in metricCards" :key="metric.label">
+                  <div class="metric-top">
+                    <span>{{ metric.label }}</span>
+                    <span class="metric-icon" :class="metric.tone">
+                      <component :is="metric.icon" :size="17" />
+                    </span>
+                  </div>
+                  <strong
+                    :class="{
+                      'negative-value':
+                        metric.label === 'Beneficio neto' &&
+                        metrics.net_profit < 0,
+                    }"
+                    >{{ metric.value }}</strong
+                  >
+                  <small>{{ metric.detail }}</small>
+                </article>
+              </section>
+              <svg
+                class="wealth-lines"
+                viewBox="0 0 440 280"
+                fill="none"
+                aria-hidden="true"
+              >
+                <path
+                  d="M100 290V162L194 125V290M194 125L250 155V290M250 290V67L331 35V290M331 35L389 69V290M28 290V216L100 189"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                />
+                <path
+                  d="M124 186L170 168M124 211L170 193M124 236L170 218M275 106L310 92M275 133L310 119M275 160L310 146M275 187L310 173M275 214L310 200"
+                  stroke="currentColor"
+                />
+              </svg>
+            </section>
+          </div>
+          <AttentionPanel
+            v-if="data.attention_summary"
+            compact
+            :items="data.attention"
+            :summary="data.attention_summary"
+          />
+        </div>
       </template>
     </template>
   </main>
