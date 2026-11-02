@@ -12,14 +12,12 @@ import {
   mergeAssistantMessages,
 } from "../assistantActions";
 import { assistantContext } from "../assistantHelp";
-import HelpGuides from "./HelpGuides.vue";
 import { useDialog } from "../composables/useDialog";
 import { useAssistantWait } from "../composables/useAssistantWait";
 
 const open = ref(false);
 const emit = defineEmits(["open-change"]);
 const route = useRoute();
-const tab = ref("chat");
 const expanded = ref(false);
 const copiedId = ref(null);
 const copyError = ref("");
@@ -523,23 +521,7 @@ async function scrollToBottom() {
             </button>
           </header>
 
-          <nav class="assistant-tabs" aria-label="Opciones del asistente">
-            <button :aria-pressed="tab === 'chat'" @click="tab = 'chat'">
-              Preguntar por mis datos
-            </button>
-            <button :aria-pressed="tab === 'help'" @click="tab = 'help'">
-              Cómo usar Alquivo
-            </button>
-          </nav>
-          <div v-if="tab === 'help'" class="assistant-help-scroll">
-            <HelpGuides @navigate="close" /><RouterLink
-              class="assistant-support-link"
-              to="/support"
-              @click="close"
-              >Necesito ayuda de soporte →</RouterLink
-            >
-          </div>
-          <div v-show="tab === 'chat'" class="assistant-chat">
+          <div class="assistant-chat">
             <p class="assistant-context">
               Consultando: {{ context.label }}
               <span
@@ -852,17 +834,6 @@ async function scrollToBottom() {
                         @click="close"
                         >Abrir ayuda y soporte →</RouterLink
                       >
-                      <button
-                        v-if="
-                          ['insufficient_data', 'read_only'].includes(
-                            message.metadata?.kind,
-                          )
-                        "
-                        class="assistant-help-action"
-                        @click="tab = 'help'"
-                      >
-                        Ver cómo completar o corregir mis datos
-                      </button>
                     </template>
                   </div>
                 </article>
@@ -909,8 +880,8 @@ async function scrollToBottom() {
             </div>
             <p v-if="quotaExhausted" class="assistant-quota" role="status">
               Has agotado el uso de IA de este mes. Se renueva el
-              {{ resetDate }}. Las guías de «Cómo usar Alquivo» siguen
-              disponibles.
+              {{ resetDate }}. Puedes seguir gestionando tus datos desde las
+              secciones de la aplicación.
             </p>
             <footer class="assistant-composer">
               <textarea
