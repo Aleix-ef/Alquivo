@@ -51,10 +51,36 @@ autenticación, esquema, entorno o firewall. No añade funcionalidades nuevas.
 - Fuentes de cartera/resumen/Finanzas/Documentos coinciden con las revisadas
   localmente. No se consideran publicados los archivos experimentales ajenos.
 
-## Publicación
+## Publicación verificada
 
-Pendiente de completar con el resultado efectivo. Se sustituirán web y runtimes
-de backend/worker/scheduler (misma versión de código); sin migraciones.
-El despliegue limita los cambios de producto a 11 archivos frontend y 2 backend,
-exige configuración, dependencias, seguridad y páginas públicas conservadas,
-guarda las cuatro imágenes anteriores y protege la reversión.
+- Release activa `9f1fa59b062aa9f6d04310621356cfb2f1879d25` desde
+  **02/11/2026 22:10:09 UTC** (23:10:09 peninsular), en `https://alquivo.com`
+  y `https://app.alquivo.com`, rama GitHub `deploy/dashboard-portfolio-20261102`.
+- Copia externa cifrada previa completada correctamente a las 22:04:28 UTC.
+- Web y runtimes backend/worker/scheduler actualizados, sin migraciones.
+  PostgreSQL, antivirus y proxy conservan sus contenedores; entorno y reglas de
+  firewall comprobados idénticos. Worker/scheduler detenidos de forma ordenada
+  durante el intercambio y reanudados con la nueva versión.
+- Alcance comprobado por el procedimiento: 11 archivos frontend y 2 backend de
+  producto; dependencias, configuración, autenticación/IA, archivos públicos y
+  contenido legal conservados. Claves/env no mostrados ni modificados.
+- Nginx y `security:check` correctos. 24 checks HTTP internos y 22 externos;
+  documentos, transacciones, cuenta, cartera, resumen y asistente sin sesión
+  siguen devolviendo 401. CSP y noindex privados conservados.
+- Doce recursos JS/CSS de siete vistas públicas/privadas coinciden por SHA-256
+  con los assets reales del servidor y se referencian desde el bundle activo.
+- QA de navegador sobre el código servido por HTTPS: cuatro grupos de pruebas
+  aprobados, incluidas fechas, seis categorías, cobro contextual, enlace directo
+  y móvil 390/320. Todas las API sintéticas interceptadas antes de red.
+- Monitor sin incidencias; temporizadores de copia, vigilancia de copia y
+  monitor activos. Sin gasto de IA, cuentas nuevas ni documentos de clientes.
+
+Reversión al release `0f0d863c66098f943963942bf84820654c1373ee` conservada en
+`/opt/alquivo/shared/interior-dates-alerts-20261102`, con cuatro imágenes previas
+etiquetadas `alquivo-interior-rollback:9f1fa59b062a-{backend,worker,scheduler,web}`,
+log de build y marcador `ACTIVATED`. No hay migración que deshacer.
+
+Archivo Git SHA-256:
+`f627309fa94dd082aa30fb4c146725e547156c4963bdc37ff55d04c5f92cd251`.
+Script de rollout SHA-256:
+`d5b09b7bcad013d2ba9c738918845912ba05a42ba7f234eda3448d4c2f187a21`.
