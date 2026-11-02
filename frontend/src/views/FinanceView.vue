@@ -5,6 +5,9 @@ import { useRoute, useRouter } from "vue-router";
 import api from "../api";
 import { fetchAllPages } from "../pagination";
 import { rentPaymentLimits } from "../rentPayments";
+import { useRecordAnchor } from "../composables/useRecordAnchor";
+import { useDialog } from "../composables/useDialog";
+import { shortDate, shortPeriod } from "../datePresentation";
 import ConfirmDialog from "../components/ConfirmDialog.vue";
 import { useConfirmDialog } from "../composables/useConfirmDialog";
 const route = useRoute(),
@@ -31,7 +34,23 @@ const route = useRoute(),
     frequency: "monthly",
   });
 const editingTransaction = ref(null);
+const { missing: linkedChargeMissing } = useRecordAnchor(
+  loading,
+  "rent-charge",
+);
 const paymentTarget = ref(null);
+const paymentDialog = ref(null);
+const paymentOpen = computed(() => !!paymentTarget.value);
+const paymentProperty = computed(() => {
+  const charge = paymentTarget.value?.charge;
+  return (
+    charge?.lease?.property?.name ||
+    leases.value.find((lease) => lease.id === charge?.lease_id)?.property
+      ?.name ||
+    "Alquiler registrado"
+  );
+});
+useDialog(paymentOpen, paymentDialog, closePayment);
 const editForm = ref({});
 const paymentForm = ref({
   amount: "",
@@ -340,6 +359,14 @@ onBeforeUnmount(() => {
       <button class="button secondary" @click="load">Volver a intentar</button>
     </section>
     <p v-if="actionError" class="error" role="alert">{{ actionError }}</p>
+    <p
+      v-if="!loading && !loadError && linkedChargeMissing"
+      class="linked-record-notice"
+      role="status"
+    >
+      Este cobro ya no está pendiente o no está disponible en tu cartera. Puedes
+      revisar los movimientos registrados a continuación.
+    </p>
     <section class="finance-summary">
       <article>
         <span>Ingresos cobrados</span><strong>{{ money(income) }}</strong>
@@ -361,17 +388,23 @@ onBeforeUnmount(() => {
       <p class="eyebrow">Por cobrar</p>
       <h2>Alquileres pendientes</h2>
       <div class="movement-list">
-        <div v-for="charge in pendingCharges" :key="charge.id" class="movement">
+        <div
+          v-for="charge in pendingCharges"
+          :key="charge.id"
+          :id="`rent-charge-${charge.id}`"
+          tabindex="-1"
+          class="movement"
+        >
           <span class="pending-dot"></span>
           <div>
             <strong>{{ charge.lease.property?.name }}</strong>
-            <small
-              >Vencimiento {{ charge.due_date }} · {{ charge.period }}</small
-            >
+            <small>{{ shortPeriod(charge.period) }}</small>
+            <small>Vencimiento: {{ shortDate(charge.due_date) }}</small>
           </div>
           <button
             class="button secondary"
             type="button"
+            data-record-action
             @click="openPayment(charge)"
           >
             Cobrar
@@ -397,7 +430,7 @@ onBeforeUnmount(() => {
             <strong>{{ transaction.description }}</strong>
             <small
               >{{ transaction.property?.name || "General" }} ·
-              {{ transaction.due_date }}</small
+              {{ shortDate(transaction.due_date) }}</small
             >
           </div>
           <span class="movement-actions">
@@ -462,7 +495,7 @@ onBeforeUnmount(() => {
             <strong>{{ t.description }}</strong
             ><small
               >{{ t.property?.name || "General" }} ·
-              {{ t.transaction_date }}</small
+              {{ shortDate(t.transaction_date) }}</small
             >
           </div>
           <span class="movement-actions">
@@ -569,13 +602,26 @@ onBeforeUnmount(() => {
       </form>
     </div>
     <div v-if="paymentTarget" class="drawer-bg" @click.self="closePayment">
-      <form class="drawer" @submit.prevent="savePayment">
+      <form
+        ref="paymentDialog"
+        class="drawer"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="rent-payment-title"
+        aria-describedby="rent-payment-context"
+        tabindex="-1"
+        @submit.prevent="savePayment"
+      >
         <p class="eyebrow">Alquiler</p>
-        <h2>
+        <h2 id="rent-payment-title">
           {{
             paymentTarget.transaction ? "Corrige el cobro" : "Registra el cobro"
           }}
         </h2>
+        <p id="rent-payment-context" class="muted">
+          {{ paymentProperty }} · Mensualidad
+          {{ shortPeriod(paymentTarget.charge?.period) }}
+        </p>
         <p v-if="actionError" class="error" role="alert">{{ actionError }}</p>
         <label
           >Importe<input
@@ -711,3 +757,25 @@ onBeforeUnmount(() => {
     />
   </main>
 </template>
+
+<style scoped>
+.movement small {
+  font-size: 14px;
+}
+@media (max-width: 560px) {
+  .movement {
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 8px 12px;
+  }
+  .movement > div {
+    min-width: 0;
+  }
+  .movement > button,
+  .movement > .movement-actions {
+    grid-column: 2;
+    justify-self: start;
+    max-width: 100%;
+    flex-wrap: wrap;
+  }
+}
+</style>

@@ -194,7 +194,12 @@ onMounted(load);
           }}</strong
           ><small>{{ labels[issue.status] }}</small>
         </div>
-        <button class="button secondary" type="button" @click="edit(issue)">
+        <button
+          class="button secondary"
+          type="button"
+          data-record-action
+          @click="edit(issue)"
+        >
           Gestionar
         </button>
       </article>

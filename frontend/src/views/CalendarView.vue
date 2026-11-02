@@ -415,6 +415,7 @@ useRecordAnchor(loading, "reminder");
                 type="button"
                 :disabled="loading"
                 :aria-label="`Completar ${event.title}`"
+                data-record-action
                 @click="complete(event)"
               >
                 <Check :size="17" />Completar

@@ -54,7 +54,7 @@ final class PortfolioAttention
             $type = $date < $today ? 'rent_overdue' : ($partial ? 'rent_partial' : 'rent_pending');
             $items[] = $this->item('rents', $type, 'rent_charge', $charge->id, $charge->lease->property,
                 $type === 'rent_overdue' ? 'Alquiler con saldo atrasado' : ($partial ? 'Alquiler cobrado parcialmente' : 'Alquiler pendiente'),
-                $date, $today, $remaining, '/leases/'.$charge->lease_id, 'Ver mensualidad',
+                $date, $today, $remaining, '/finance#rent-charge-'.$charge->id, 'Registrar cobro',
                 ['rule' => 'recorded_rent_balance', 'lease_id' => $charge->lease_id, 'period' => $charge->period,
                     'amount' => $charge->amount, 'recorded_paid' => $received, 'remaining' => $remaining,
                     'payment_state' => $partial ? 'partial' : 'pending', 'due_date' => $date, 'window_days' => $windows['rent'],
@@ -69,7 +69,7 @@ final class PortfolioAttention
             $date = $lease->end_date->toDateString();
             $items[] = $this->item('leases', $date < $today ? 'lease_end_passed' : 'lease_expiring', 'lease', $lease->id, $lease->property,
                 $date < $today ? 'Fecha de fin superada' : 'Contrato próximo a su fecha de fin', $date, $today, null,
-                '/leases/'.$lease->id, 'Revisar contrato', ['rule' => 'active_lease_end', 'status' => 'active', 'end_date' => $date, 'window_days' => $windows['lease']],
+                '/leases/'.$lease->id.'#lease-'.$lease->id, 'Revisar contrato', ['rule' => 'active_lease_end', 'status' => 'active', 'end_date' => $date, 'window_days' => $windows['lease']],
                 'El contrato sigue marcado como activo. La fecha registrada no determina su finalización legal.');
         }
         $issues = $this->scoped(Issue::query(), $portfolio, $propertyId, false)->whereNotIn('status', ['resolved', 'cancelled'])
@@ -77,7 +77,7 @@ final class PortfolioAttention
         foreach ($issues as $issue) {
             $date = $issue->due_date?->toDateString();
             $items[] = $this->item('issues', 'issue', 'issue', $issue->id, $issue->property, 'Incidencia pendiente', $date, $today, null,
-                '/issues#issue-'.$issue->id, 'Ver incidencia', ['rule' => 'open_issue_due_or_flagged', 'status' => $issue->status, 'recorded_priority' => $issue->priority, 'due_date' => $date, 'window_days' => $windows['issue']],
+                '/issues#issue-'.$issue->id, 'Gestionar incidencia', ['rule' => 'open_issue_due_or_flagged', 'status' => $issue->status, 'recorded_priority' => $issue->priority, 'due_date' => $date, 'window_days' => $windows['issue']],
                 $issue->title, $issue->priority === 'high' && ($date === null || $date > $cutoff('issue')));
         }
         $documents = $this->scoped(Document::query(), $portfolio, $propertyId)->whereNotNull('expires_at')
@@ -88,7 +88,7 @@ final class PortfolioAttention
         foreach ($documents as $document) {
             $date = $document->expires_at->toDateString();
             $items[] = $this->item('documents', 'document_expiry', 'document', $document->id, $document->property,
-                'Fecha de revisión documental', $date, $today, null, '/documents#document-'.$document->id, 'Ver documento',
+                'Fecha de revisión documental', $date, $today, null, '/documents#document-'.$document->id, 'Revisar documento',
                 ['rule' => 'recorded_document_expiry', 'expires_at' => $date, 'window_days' => $windows['document']], $document->name.' · Fecha registrada, no verificación de validez legal.');
         }
         $reminders = $this->scoped(Reminder::query(), $portfolio, $propertyId)->whereNull('completed_at')

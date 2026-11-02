@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, watch } from "vue";
 import { useRecordAnchor } from "../composables/useRecordAnchor";
 import { FileText, Plus, Download, Pencil, Trash2 } from "@lucide/vue";
 import { useRoute, useRouter } from "vue-router";
@@ -9,6 +9,10 @@ const session = useSession();
 import { fetchAllPages } from "../pagination";
 import ConfirmDialog from "../components/ConfirmDialog.vue";
 import { useConfirmDialog } from "../composables/useConfirmDialog";
+import { useDialog } from "../composables/useDialog";
+import DocumentDateFields from "../components/DocumentDateFields.vue";
+import { documentType, documentTypes } from "../documentTypes.js";
+import { shortDate } from "../datePresentation.js";
 const confirmation = useConfirmDialog();
 const route = useRoute(),
   router = useRouter(),
@@ -27,15 +31,45 @@ const route = useRoute(),
     docs.value.find((d) => d.id === Number(route.query.edit)),
   ),
   show = computed(() => route.query.new === "1" || Boolean(editing.value)),
-  form = ref({
+  form = ref(blankForm());
+const drawer = ref(null);
+const selectedType = computed(() => documentType(form.value.category));
+function blankForm() {
+  return {
     name: "",
-    category: "contract",
+    category: documentTypes.some(
+      (type) => type.value === filters.value.category,
+    )
+      ? filters.value.category
+      : "contract",
     property_id: route.query.property || "",
     lease_id: route.query.lease || "",
     issued_at: "",
     expires_at: "",
     file: null,
-  });
+  };
+}
+function closeForm() {
+  if (saving.value) return;
+  if (route.query.from === "property" && route.query.property) {
+    router.replace(`/properties/${route.query.property}?tab=documentos`);
+    return;
+  }
+  const query = { ...route.query };
+  delete query.new;
+  delete query.edit;
+  router.replace({ query, hash: route.hash });
+}
+useDialog(show, drawer, closeForm);
+watch(
+  () => route.query.new,
+  (value) => {
+    if (value === "1") {
+      form.value = blankForm();
+      error.value = "";
+    }
+  },
+);
 async function load() {
   loading.value = true;
   loadError.value = "";
@@ -79,7 +113,9 @@ async function save() {
       await api.post("/documents", data);
     }
     if (route.query.from === "property" && route.query.property) {
-      await router.replace(`/properties/${route.query.property}?tab=documentos`);
+      await router.replace(
+        `/properties/${route.query.property}?tab=documentos`,
+      );
     } else {
       await router.replace("/documents");
       await load();
@@ -154,7 +190,9 @@ onMounted(load);
         to="/documents/import"
         >Importación IA · demo</RouterLink
       >
-      <RouterLink class="button primary" to="?new=1"
+      <RouterLink
+        class="button primary"
+        :to="{ query: { ...route.query, new: '1', edit: undefined } }"
         ><Plus :size="16" />Subir documento</RouterLink
       >
     </header>
@@ -179,12 +217,13 @@ onMounted(load);
         @change="load"
       >
         <option value="">Todas las categorías</option>
-        <option value="contract">Contratos</option>
-        <option value="invoice">Facturas</option>
-        <option value="insurance">Seguros</option>
-        <option value="tax">Impuestos</option>
-        <option value="certificate">Certificados</option>
-        <option value="other">Otros</option></select
+        <option
+          v-for="type in documentTypes"
+          :key="type.value"
+          :value="type.value"
+        >
+          {{ type.plural }}
+        </option></select
       ><select
         v-model="filters.status"
         aria-label="Vencimiento de documentos"
@@ -217,7 +256,7 @@ onMounted(load);
             >{{
               d.property?.name || d.lease?.property?.name || "Cartera general"
             }}
-            · {{ d.category }}</small
+            · {{ documentType(d.category).label }}</small
           >
           <small v-if="d.transaction_id"
             ><RouterLink to="/finance"
@@ -227,14 +266,21 @@ onMounted(load);
           <small
             v-if="d.expires_at"
             :class="{ 'expiry-alert': new Date(d.expires_at) < new Date() }"
-            >Vence {{ d.expires_at.slice(0, 10) }}</small
+            >Revisar: {{ shortDate(d.expires_at) }}</small
           >
         </div>
         <span class="document-actions">
           <button @click="download(d)" title="Descargar">
             <Download :size="17" />
           </button>
-          <button @click="edit(d)" title="Editar"><Pencil :size="17" /></button>
+          <button
+            @click="edit(d)"
+            title="Editar"
+            :aria-label="`Editar documento ${d.name}`"
+            data-record-action
+          >
+            <Pencil :size="17" />
+          </button>
           <button @click="remove(d)" title="Eliminar">
             <Trash2 :size="17" />
           </button>
@@ -255,16 +301,23 @@ onMounted(load);
         correcto.
       </p>
     </section>
-    <div
-      v-if="show"
-      class="drawer-bg"
-      @click.self="router.replace(route.query.from === 'property' && route.query.property ? `/properties/${route.query.property}?tab=documentos` : '/documents')"
-    >
-      <form class="drawer" @submit.prevent="save">
+    <div v-if="show" class="drawer-bg" @click.self="closeForm">
+      <form
+        ref="drawer"
+        class="drawer document-drawer"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="document-form-title"
+        tabindex="-1"
+        @submit.prevent="save"
+      >
         <p class="eyebrow">
           {{ editing ? "Editar documento" : "Nuevo documento" }}
         </p>
-        <h2>{{ editing ? "Corrige sus datos" : "Sube un archivo" }}</h2>
+        <h2 id="document-form-title">
+          {{ editing ? "Editar" : "Subir" }}
+          {{ selectedType.label.toLowerCase() }}
+        </h2>
         <p v-if="error" class="error">{{ error }}</p>
         <label v-if="!editing"
           >Archivo<input
@@ -273,15 +326,20 @@ onMounted(load);
             accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
             @change="form.file = $event.target.files[0]" /></label
         ><label
-          >Nombre<input v-model="form.name" placeholder="Opcional" /></label
+          >Nombre<input
+            v-model="form.name"
+            :placeholder="selectedType.placeholder"
+            :required="!!editing"
+            maxlength="150" /></label
         ><label
           >Categoría<select v-model="form.category">
-            <option value="contract">Contrato</option>
-            <option value="invoice">Factura</option>
-            <option value="insurance">Seguro</option>
-            <option value="tax">Impuestos</option>
-            <option value="certificate">Certificado</option>
-            <option value="other">Otro</option>
+            <option
+              v-for="type in documentTypes"
+              :key="type.value"
+              :value="type.value"
+            >
+              {{ type.label }}
+            </option>
           </select></label
         ><label
           >Propiedad<select v-model="form.property_id">
@@ -291,12 +349,21 @@ onMounted(load);
             </option>
           </select></label
         >
-        <label
-          >Fecha de emisión<input v-model="form.issued_at" type="date" /></label
-        ><label
-          >Fecha de vencimiento<input v-model="form.expires_at" type="date"
-        /></label>
+        <DocumentDateFields
+          :category="form.category"
+          v-model:issued-at="form.issued_at"
+          v-model:expires-at="form.expires_at"
+          :original-expiry="!!editing?.expires_at"
+        />
         <footer>
+          <button
+            class="button secondary"
+            type="button"
+            :disabled="saving"
+            @click="closeForm"
+          >
+            Cancelar
+          </button>
           <button class="button primary" :disabled="saving">
             {{ saving ? "Guardando…" : "Guardar documento" }}
           </button>
@@ -310,3 +377,10 @@ onMounted(load);
     />
   </main>
 </template>
+
+<style scoped>
+.document-drawer input[type="file"] {
+  width: 100%;
+  min-width: 0;
+}
+</style>

@@ -12,7 +12,7 @@ use App\Http\Controllers\Controller;
 use App\Support\SecurityAudit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 
 class DocumentController extends Controller
@@ -41,7 +41,8 @@ class DocumentController extends Controller
     public function store(Request $request)
     {
         $portfolio = $request->user()->portfolio();
-        $data = $request->validate(['file' => ['required', 'file', 'max:10240', 'mimes:pdf,jpg,jpeg,png,doc,docx'], 'name' => ['nullable', 'string', 'max:150'], 'category' => ['required', Rule::in(['contract', 'invoice', 'insurance', 'tax', 'certificate', 'other'])], 'property_id' => ['nullable', 'integer'], 'lease_id' => ['nullable', 'integer'], 'issued_at' => ['nullable', 'date'], 'expires_at' => ['nullable', 'date', 'after_or_equal:issued_at']]);
+        $data = $request->validate(['file' => ['required', 'file', 'max:10240', 'mimes:pdf,jpg,jpeg,png,doc,docx'], 'name' => ['nullable', 'string', 'max:150'], 'category' => ['required', Rule::in(['contract', 'invoice', 'insurance', 'tax', 'certificate', 'other'])], 'property_id' => ['nullable', 'integer'], 'lease_id' => ['nullable', 'integer'], 'issued_at' => ['nullable', 'date'], 'expires_at' => ['nullable', 'date']]);
+        $this->validateDateRange($data);
         if (! empty($data['property_id'])) {
             Property::where('portfolio_id', $portfolio->id)->findOrFail($data['property_id']);
         }if (! empty($data['lease_id'])) {
@@ -60,7 +61,7 @@ class DocumentController extends Controller
 
         $bytes = app(PrivateFileVault::class)->read($document->storage_key);
 
-        return response()->streamDownload(fn () => print($bytes), $document->original_filename, ['Content-Type' => $document->mime_type, 'Cache-Control' => 'private, no-store']);
+        return response()->streamDownload(fn () => print ($bytes), $document->original_filename, ['Content-Type' => $document->mime_type, 'Cache-Control' => 'private, no-store']);
     }
 
     public function update(Request $request, Document $document)
@@ -72,8 +73,9 @@ class DocumentController extends Controller
             'category' => ['sometimes', Rule::in(['contract', 'invoice', 'insurance', 'tax', 'certificate', 'other'])],
             'property_id' => ['sometimes', 'nullable', 'integer'],
             'issued_at' => ['sometimes', 'nullable', 'date'],
-            'expires_at' => ['sometimes', 'nullable', 'date', 'after_or_equal:issued_at'],
+            'expires_at' => ['sometimes', 'nullable', 'date'],
         ]);
+        $this->validateDateRange($data, $document);
         if (array_key_exists('property_id', $data) && $data['property_id']) {
             Property::where('portfolio_id', $portfolio->id)->findOrFail($data['property_id']);
         }
@@ -94,6 +96,24 @@ class DocumentController extends Controller
         app(PrivateFileDeletion::class)->process($id);
 
         return response()->noContent();
+    }
+
+    private function validateDateRange(array $data, ?Document $document = null): void
+    {
+        if (! array_key_exists('issued_at', $data) && ! array_key_exists('expires_at', $data)) {
+            return;
+        }
+
+        // A missing field in a partial update keeps its stored value; explicit null clears it.
+        $issuedAt = array_key_exists('issued_at', $data) ? $data['issued_at'] : $document?->issued_at?->toDateString();
+        $expiresAt = array_key_exists('expires_at', $data) ? $data['expires_at'] : $document?->expires_at?->toDateString();
+        if ($issuedAt && $expiresAt) {
+            Validator::make(
+                ['issued_at' => $issuedAt, 'expires_at' => $expiresAt],
+                ['expires_at' => ['after_or_equal:issued_at']],
+                ['expires_at.after_or_equal' => 'La fecha de fin o revisión no puede ser anterior a la fecha del documento.'],
+            )->validate();
+        }
     }
 
     private function ensureOwned(Request $request, Document $document): void

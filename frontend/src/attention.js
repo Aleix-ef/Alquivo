@@ -2,15 +2,25 @@
 export function attentionDestination(item) {
   if (item?.action?.mode !== "navigate") return null;
   const path = item.action.path;
-  const id =
-    item.entity?.type === "rent_charge"
-      ? item.evidence?.lease_id
-      : item.entity?.id;
-  if (["rent_charge", "lease"].includes(item.entity?.type))
-    return Number.isSafeInteger(id) && id > 0 && path === `/leases/${id}`
-      ? path
-      : null;
+  const id = item.entity?.id;
   if (!Number.isSafeInteger(id) || id < 1) return null;
+  if (item.entity?.type === "rent_charge") {
+    const destination = `/finance#rent-charge-${id}`;
+    const leaseId = item.evidence?.lease_id;
+    // Existing snapshots may still point to the lease. Upgrade only the exact
+    // old destination backed by its evidence, never a supplied arbitrary URL.
+    const legacy =
+      Number.isSafeInteger(leaseId) &&
+      leaseId > 0 &&
+      path === `/leases/${leaseId}`;
+    return path === destination || legacy ? destination : null;
+  }
+  if (item.entity?.type === "lease") {
+    const destination = `/leases/${id}#lease-${id}`;
+    return path === destination || path === `/leases/${id}`
+      ? destination
+      : null;
+  }
   const fixed = {
     issue: `/issues#issue-${id}`,
     document: `/documents#document-${id}`,

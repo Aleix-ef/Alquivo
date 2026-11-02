@@ -21,7 +21,8 @@ body {
   font-size: 16px;
   line-height: 1.6;
   background: var(--canvas);
-  min-width: 320px;
+  /* Leave room for a classic scrollbar even on a 320px screen. */
+  min-width: min(320px, 100%);
   -webkit-font-smoothing: antialiased;
 }
 a {
@@ -38,6 +39,25 @@ button:focus-visible,
 summary:focus-visible {
   outline: 3px solid var(--focus);
   outline-offset: 4px;
+}
+.record-anchor-active {
+  outline: 2px solid var(--green);
+  outline-offset: 4px;
+  border-radius: 12px;
+  scroll-margin-block: 110px;
+}
+.record-anchor-active [data-record-action] {
+  outline: 3px solid var(--green);
+  outline-offset: 3px;
+  box-shadow: 0 0 0 6px color-mix(in srgb, var(--green) 14%, transparent);
+}
+.linked-record-notice {
+  padding: 14px 18px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  color: var(--muted);
+  background: var(--surface);
+  font-size: 15px;
 }
 .brand {
   display: flex;

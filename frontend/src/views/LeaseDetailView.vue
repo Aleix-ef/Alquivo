@@ -14,6 +14,7 @@ import { fetchAllPages } from "../pagination";
 import TenantSelector from "../components/TenantSelector.vue";
 import PaymentWindowFields from "../components/PaymentWindowFields.vue";
 import { paymentWindowLabel, validPaymentWindow } from "../paymentWindow";
+import { useRecordAnchor } from "../composables/useRecordAnchor";
 
 const route = useRoute();
 const router = useRouter();
@@ -23,6 +24,7 @@ const saving = ref(false);
 const error = ref("");
 const loading = ref(true);
 const loadError = ref("");
+useRecordAnchor(loading, "lease");
 const action = computed(() => route.query.action);
 const money = (value) =>
   new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(
@@ -215,8 +217,13 @@ onBeforeUnmount(() => {
           {{ lease.participants.map((contact) => contact.name).join(", ") }}
         </p>
       </div>
-      <div class="hero-actions">
-        <button class="button secondary" type="button" @click="openEdit">
+      <div :id="`lease-${lease.id}`" tabindex="-1" class="hero-actions">
+        <button
+          class="button secondary"
+          type="button"
+          data-record-action
+          @click="openEdit"
+        >
           <Pencil :size="16" />Editar</button
         ><button
           v-if="!lease.renewal"

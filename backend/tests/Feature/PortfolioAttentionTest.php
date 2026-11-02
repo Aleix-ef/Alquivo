@@ -140,7 +140,8 @@ class PortfolioAttentionTest extends TestCase
         $tool = $this->tool($f, ['property_id' => null, 'page' => 1]);
         $this->assertSame($s['items'], $tool['items']);
         $this->assertSame($s['rents_summary'], $tool['rents_summary']);
-        $this->assertSame('/leases/'.$f['lease']->id, $tool['items'][0]['action']['path']);
+        $this->assertSame('/finance#rent-charge-'.$f['charge']->id, $tool['items'][0]['action']['path']);
+        $this->assertSame('Registrar cobro', $tool['items'][0]['action']['label']);
         $this->assertSame($f['charge']->id, $tool['items'][0]['entity']['id']);
         $this->assertNotSame($other['charge']->id, $tool['items'][0]['entity']['id']);
         foreach (['private-address', 'private-notes', 'storage_key'] as $secret) {
@@ -261,6 +262,14 @@ class PortfolioAttentionTest extends TestCase
         $this->assertNull($s['items'][0]['date']);
         $this->assertNull($s['items'][0]['amount']); // Estimated cost is not debt.
         $this->assertStringNotContainsString('private-', json_encode($s));
+        $byType = collect($s['items'])->keyBy('entity.type');
+        $this->assertSame('/issues#issue-'.$issue->id, $byType['issue']['action']['path']);
+        $this->assertSame('Gestionar incidencia', $byType['issue']['action']['label']);
+        $this->assertSame('/documents#document-'.$doc->id, $byType['document']['action']['path']);
+        $this->assertSame('/calendar?date='.$reminder->starts_at->toDateString().'#reminder-'.$reminder->id, $byType['reminder']['action']['path']);
+        foreach ($s['items'] as $item) {
+            $this->assertSame('navigate', $item['action']['mode']);
+        }
         $reminder->update(['starts_at' => today()->addDays(15)]);
         $doc->update(['expires_at' => today()->addDays(31)]);
         $this->assertSame(1, $this->snapshot($f)['total']);
@@ -271,6 +280,19 @@ class PortfolioAttentionTest extends TestCase
         $this->assertSame('overdue', $this->snapshot($f)['items'][0]['priority']['code']);
         $doc->update(['expires_at' => null]);
         $this->assertSame([], $this->snapshot($f)['items']);
+    }
+
+    public function test_expiring_contract_link_locates_its_review_controls_without_changing_the_lease(): void
+    {
+        $f = $this->fixture();
+        $f['charge']->update(['status' => 'cancelled']);
+        $f['lease']->update(['end_date' => today()->addDays(10)]);
+        $item = $this->snapshot($f)['items'][0];
+        $this->assertSame('/leases/'.$f['lease']->id.'#lease-'.$f['lease']->id, $item['action']['path']);
+        $this->assertSame('navigate', $item['action']['mode']);
+        $this->assertSame('active', $f['lease']->fresh()->status);
+        $this->assertDatabaseCount('transactions', 0);
+        Http::assertNothingSent();
     }
 
     private function fixture(): array

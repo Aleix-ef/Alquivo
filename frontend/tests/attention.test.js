@@ -18,7 +18,30 @@ const item = {
   evidence: { lease_id: 8 },
   action: { mode: "navigate", path: "/leases/8" },
 };
-assert.equal(attentionDestination(item), "/leases/8");
+assert.equal(attentionDestination(item), "/finance#rent-charge-1");
+assert.equal(
+  attentionDestination({
+    ...item,
+    action: { mode: "navigate", path: "/finance#rent-charge-1" },
+  }),
+  "/finance#rent-charge-1",
+);
+for (const path of [
+  "/finance#rent-charge-2",
+  "/finance?charge=1",
+  "/finance#rent-charge-1&confirm=1",
+])
+  assert.equal(
+    attentionDestination({ ...item, action: { mode: "navigate", path } }),
+    null,
+  );
+assert.equal(
+  attentionDestination({
+    entity: { type: "lease", id: 8 },
+    action: { mode: "navigate", path: "/leases/8" },
+  }),
+  "/leases/8#lease-8",
+);
 for (const path of [
   "https://evil.test",
   "javascript:alert(1)",
