@@ -27,10 +27,33 @@ calidad. No cambian backend, rutas, modelos, flags, documentos, pagos ni legal.
   sintéticas antes de red: sin credenciales, cuentas, lecturas reales, escrituras
   ni gasto de modelos. No se presenta esta prueba como auditoría del backend.
 
-## Despliegue
+## Despliegue verificado
 
-Pendiente de completar con el resultado efectivo. Solo se reemplazará el web,
-con copia externa reciente, imagen anterior conservada y reversión ante fallo.
-El procedimiento rechaza cualquier otro cambio en `frontend/src` y exige
-backend, archivos públicos, configuración y herramientas idénticos al release
-`a3dbf0421c4be84f52916b48059ae6fad3586291`.
+- Fuente activa `0f0d863c66098f943963942bf84820654c1373ee` desde
+  **02/11/2026 21:57:27 UTC** (22:57:27 en España peninsular).
+- Publicado en `https://alquivo.com` y `https://app.alquivo.com`; rama de GitHub
+  `deploy/dashboard-portfolio-20261102`.
+- Copia externa cifrada anterior correcta a las 21:40:02 UTC, dentro del margen
+  de 30 minutos requerido. Solo web sustituido; otros seis contenedores,
+  entorno y firewall idénticos durante el rollout. Sin migraciones.
+- El procedimiento verificó que el único cambio de `frontend/src` es el widget;
+  backend, archivos públicos, configuración y herramientas coinciden con
+  `a3dbf0421c4be84f52916b48059ae6fad3586291`.
+- Nginx, 20 checks HTTP internos y 18 externos correctos; API privadas sin
+  sesión devuelven 401. Cuatro assets Dashboard/Shell servidos coinciden por
+  SHA-256 con el build efectivo del servidor. Landing, CSP y noindex conservados.
+- Chrome contra el código servido por HTTPS: las mismas cuatro comprobaciones
+  de escritorio/móvil, historial, cuota y activación aprobadas. Todas las API
+  interceptadas con datos sintéticos; ningún dato real o gasto de IA.
+- Monitor sin incidencias; temporizadores de copias, vigilancia de copias y
+  monitor activos.
+
+Reversión: release anterior `a3dbf0421c4be84f52916b48059ae6fad3586291`, imagen
+conservada en `alquivo-assistant-chat-only-rollback:0f0d863c6609`. Checkpoint
+privado `/opt/alquivo/shared/assistant-chat-only-20261102` con datos de reversión,
+build y marcador `ACTIVATED`. Sin cambios de base de datos que revertir.
+
+Archivo Git SHA-256:
+`f8954aa4b149bae4c584fcaba1d212d3bb689828a59dbc356e9eba02645b920b`.
+Script de rollout SHA-256:
+`ca4c8ef6b4efb543baeb0ac4e3a2fb061fe5bc0bd8536b016ad246857134dcbe`.
