@@ -1,5 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { pageSeo } from "../src/seo.js";
 import {
   adminSection,
   chartBuckets,
@@ -8,6 +10,14 @@ import {
   recentRange,
   storage,
 } from "../src/adminMetrics.js";
+test("admin is reloadable through production nginx but never indexable", () => {
+  const nginx = readFileSync(new URL("../nginx.conf", import.meta.url), "utf8");
+  assert.match(nginx, /\|plans\|admin\)\/\?\$/);
+  assert.match(nginx, /location \/ \{\s+return 404;/);
+  const seo = pageSeo("/admin", { indexable: true, origin: "https://alquivo.com" });
+  assert.equal(seo.robots, "noindex, nofollow");
+  assert.equal(seo.canonical, "");
+});
 test("admin does not disguise missing financial or usage data as zero", () => {
   assert.equal(count(null), "—");
   assert.equal(nanoUsd(null), "—");
