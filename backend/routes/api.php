@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\Api\V1\AccountController;
+use App\Http\Controllers\Api\V1\AdminAccessController;
+use App\Http\Controllers\Api\V1\AdminMetricsController;
 use App\Http\Controllers\Api\V1\AssistantController;
 use App\Http\Controllers\Api\V1\AssistantProposalController;
 use App\Http\Controllers\Api\V1\AuthController;
@@ -25,6 +27,7 @@ use App\Http\Controllers\Api\V1\SupportController;
 use App\Http\Controllers\Api\V1\TransactionController;
 use App\Http\Controllers\Api\V1\TwoFactorController;
 use App\Http\Middleware\AvailableFeature;
+use App\Http\Middleware\RequireBusinessAdmin;
 use App\Http\Middleware\RequirePortfolio;
 use App\Http\Middleware\WithinPropertyPlan;
 use App\Support\ProductFeatures;
@@ -55,6 +58,17 @@ Route::prefix('/public/support/chat')->middleware('throttle:api')->group(functio
 });
 
 Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
+    Route::prefix('admin')->middleware([RequireBusinessAdmin::class.':challenge', 'throttle:30,1'])->group(function () {
+        Route::get('/access', [AdminAccessController::class, 'status']);
+        Route::post('/access/code', [AdminAccessController::class, 'code'])->middleware('throttle:two-factor-settings');
+        Route::post('/access/verify', [AdminAccessController::class, 'verify'])->middleware('throttle:two-factor-settings');
+        Route::delete('/access', [AdminAccessController::class, 'lock']);
+        Route::middleware(RequireBusinessAdmin::class)->group(function () {
+            Route::get('/overview', [AdminMetricsController::class, 'overview']);
+            Route::get('/users', [AdminMetricsController::class, 'users']);
+            Route::get('/ai/users', [AdminMetricsController::class, 'aiUsers']);
+        });
+    });
     Route::get('/support', SupportController::class);
     Route::post('/support', [SupportController::class, 'store'])->middleware('throttle:support');
     foreach (['/support/chat', '/support/team'] as $prefix) {

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Domain\Administration\Services\AdminAccess;
 use App\Domain\Portfolio\Models\Portfolio;
 use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
@@ -20,7 +21,12 @@ use Laravel\Sanctum\TransientToken;
 class User extends Authenticatable implements MustVerifyEmail
 {
     // Informational capability; never accepted from registration/profile payloads.
-    protected $appends = ['local_admin'];
+    protected $appends = ['local_admin', 'can_admin_business'];
+
+    public function getCanAdminBusinessAttribute(): bool
+    {
+        return app(AdminAccess::class)->allowed($this);
+    }
 
     public function getLocalAdminAttribute(): bool
     {

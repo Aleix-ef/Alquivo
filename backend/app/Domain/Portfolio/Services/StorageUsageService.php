@@ -3,10 +3,11 @@
 namespace App\Domain\Portfolio\Services;
 
 use App\Domain\Documents\Models\Document;
-use App\Domain\Documents\Services\UploadScanner;
 use App\Domain\Documents\Services\PrivateFileVault;
+use App\Domain\Documents\Services\UploadScanner;
 use App\Domain\Portfolio\Models\Portfolio;
 use App\Domain\Properties\Models\PropertyPhoto;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -18,8 +19,15 @@ class StorageUsageService
 
     public function used(Portfolio $portfolio): int
     {
-        return (int) Document::where('portfolio_id', $portfolio->id)->sum('size')
-            + (int) PropertyPhoto::whereHas('property', fn ($query) => $query->where('portfolio_id', $portfolio->id))->sum('size');
+        return $this->totalForPortfolios(DB::table('portfolios')->where('id', $portfolio->id));
+    }
+
+    public function totalForPortfolios(Builder $portfolios): int
+    {
+        $ids = (clone $portfolios)->select('portfolios.id');
+
+        return (int) Document::whereIn('portfolio_id', clone $ids)->sum('size')
+            + (int) PropertyPhoto::whereHas('property', fn ($query) => $query->whereIn('portfolio_id', clone $ids))->sum('size');
     }
 
     public function assertCanStore(Portfolio $portfolio, int $bytes): void

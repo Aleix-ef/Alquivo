@@ -19,6 +19,7 @@ import {
   Sparkles,
   LifeBuoy,
   BookOpen,
+  ShieldCheck,
 } from "@lucide/vue";
 import { useRoute, useRouter } from "vue-router";
 import { useI18n } from "vue-i18n";
@@ -284,6 +285,12 @@ async function logout() {
       </nav>
       <div class="sidebar-bottom">
         <RouterLink
+          v-if="s.user?.can_admin_business === true"
+          to="/admin"
+          class="sidebar-settings"
+          ><ShieldCheck :size="19" /><span>Administración</span></RouterLink
+        >
+        <RouterLink
           v-if="s.serverConfirmedAdmin"
           to="/support/inbox"
           class="sidebar-settings"
@@ -350,7 +357,7 @@ async function logout() {
           </button>
           <span class="breadcrumb-root">{{ $t("nav.breadcrumb") }}</span
           ><ChevronRight class="breadcrumb-chevron" :size="14" /><strong>{{
-            $t(currentSection)
+            route.path === "/admin" ? "Administración" : $t(currentSection)
           }}</strong>
         </div>
         <div v-if="s.serverConfirmedAdmin" class="topbar-actions">

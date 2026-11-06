@@ -45,6 +45,7 @@ const router = createRouter({
       path: "/",
       component: () => import("./views/ShellView.vue"),
       children: [
+        { path: "admin", component: () => import("./views/AdminView.vue") },
         { path: "support", component: () => import("./views/SupportView.vue") },
         {
           path: "support/inbox",
