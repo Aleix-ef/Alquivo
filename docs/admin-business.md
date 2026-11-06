@@ -90,9 +90,11 @@ trabajo pendiente de IA. Copia externa y rollback de imágenes antes del cambio.
 Revertir la aplicación no requiere borrar esta tabla/índices. Revocar la nueva
 autorización si se abandona la entrega; no ejecutar migraciones destructivas.
 
-Pruebas: suite ordinaria 624 correctas y 2 pruebas live omitidas; 268 frontend.
+Pruebas: suite ordinaria 624 correctas y 2 pruebas live omitidas; 269 frontend.
 Las diez regresiones del módulo comprueban permiso/denegación/MFA/replay/revocación,
 ausencia de cartera, filtros/DST, beta efectiva, privacidad, consultas acotadas y
 costes sin duplicación. No usan proveedores reales ni consumen saldo de IA.
 La revisión de navegador usa APIs interceptadas y datos ficticios: no sustituye
 la primera entrada del titular con su segundo factor real.
+
+Publicado el 6 de noviembre: [evidencia y límites de la entrega](admin-business-release-20261106.md).
